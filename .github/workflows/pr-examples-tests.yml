@@ -48,8 +48,9 @@ jobs:
         shell: bash
         env:
           TMPDIR: ${{ github.workspace }}/examples/${{ matrix.example }}/.tmp
-          OPTOKEN: ${{ secrets.TANAAB_OP_TEST }}
+          OPTOKEN: ${{ secrets.TANAAB_OP_TESTVAULT }}
         run: |
+          brew update
           mkdir -p "$TMPDIR"
           bun run leia "examples/${{ matrix.example }}/README.md" -c "Destroy tests" --stdin
 
@@ -57,7 +58,7 @@ jobs:
       #   shell: bash
       #   env:
       #     TMPDIR: ${{ github.workspace }}/examples/${{ matrix.example }}/.tmp
-      #     OPTOKEN: ${{ secrets.TANAAB_OP_TEST }}
+      #     OPTOKEN: ${{ secrets.TANAAB_OP_TESTVAULT }}
       #   run: |
       #     boot.sh \
       #       --op-token "$OPTOKEN" \
