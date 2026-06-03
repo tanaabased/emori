@@ -1,0 +1,33 @@
+{
+  "name": "emori",
+  "version": "1.0.0-beta.1",
+  "description": "Tanaab based EMORI.",
+  "author": {
+    "name": "@emoriwan",
+    "email": "emori@tanaab.dev",
+    "url": "https://github.com/emoriwan"
+  },
+  "homepage": "https://github.com/tanaabased/emori",
+  "repository": "https://github.com/tanaabased/emori",
+  "license": "MIT",
+  "keywords": ["emori", "tanaab", "skills", "codex"],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "EMORI",
+    "shortDescription": "Team EMORI.",
+    "longDescription": "Team EMORI related skills, etc",
+    "developerName": "@emoriwan",
+    "category": "Tanaab-based",
+    "capabilities": ["Interactive", "Write"],
+    "defaultPrompt": [
+      "Use $emori-readiness after bootstrapping this EMORI environment.",
+      "Use $emori-skill-author to create, standardize, or validate EMORI-based skills.",
+      "Rework this content for EMORI agent work."
+    ],
+    "brandColor": "#00c88a",
+    "composerIcon": "./assets/composer-icon.svg",
+    "logo": "./assets/icon-large.png",
+    "websiteURL": "https://github.com/tanaabased/emori"
+  }
+}

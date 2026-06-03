@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /
+Sitemap: https://emori.boot.tanaab.sh/sitemap.xml
+Host: https://emori.boot.tanaab.sh
+Allow: /boot.sh
+Allow: /sitemap.xml

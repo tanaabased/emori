@@ -1,0 +1,7 @@
+interface:
+  display_name: 'Skill Author'
+  short_description: 'EMORI-based skill authoring'
+  icon_small: './assets/icon-small.svg'
+  icon_large: './assets/icon-large.png'
+  brand_color: '#00c88a'
+  default_prompt: 'Use $emori-skill-author to create, standardize, or validate canon skills, and challenge whether the reusable surface belongs in a live skill or a repo template.'

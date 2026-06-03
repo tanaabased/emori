@@ -1,0 +1,7 @@
+interface:
+  display_name: 'EMORI Readiness'
+  short_description: 'EMORI-based readiness check for this EMORI machine.'
+  icon_small: './assets/icon-small.svg'
+  icon_large: './assets/icon-large.png'
+  brand_color: '#00c88a'
+  default_prompt: 'Use $emori-readiness after bootstrapping this EMORI environment to verify local setup, 1Password app and Environment readiness, Tailscale readiness, and Codex plugin links.'

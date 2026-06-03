@@ -1,0 +1,13 @@
+node_modules
+dist
+coverage
+temp
+cache
+_site
+.vitepress/cache
+.vitepress/dist
+bun.lock
+skills/**/assets/*.svg
+
+# Skill templates contain nested frontmatter that Prettier rewrites into invalid scaffolds.
+skills/skill-author/templates/coding.md

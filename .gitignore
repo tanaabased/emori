@@ -1,0 +1,47 @@
+# Common sys files
+.*.swp
+._*
+.git
+.hg
+.sign
+.lock-wscript
+.svn
+.wafpickle-*
+.DS_Store
+.idea/
+*.tar
+*.jxp
+*.sublime-*
+
+# tanaab based
+dotfiles/ai/.codex/config.local.toml
+dotfiles/ai/.codex/config.toml
+dotfiles/ai/.codex/plugins/tanaab
+
+# Logs
+*.log
+logs
+
+# JavaScript package manager files
+node_modules
+
+# Build dirs
+build
+
+# coverage reporting
+.nyc_output
+coverage/
+
+# docs
+.temp
+.cache
+_site
+cache
+temp
+.tmp
+.netlify
+config.*.timestamp-*-*.*
+docs/.vitepress/dist
+
+# tmp
+examples/**/.tmp
