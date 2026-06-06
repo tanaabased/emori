@@ -218,7 +218,7 @@ tty_ts="$(tty_escape '38;2;219;39;119')"   # #db2777
 
 SCRIPT_NAME="${0##*/}"
 # Keep a single top-level assignment so release automation can stamp the entrypoint in place.
-SCRIPT_VERSION="v1.0.0-beta.5"
+SCRIPT_VERSION="v1.0.0-beta.1"
 
 DEBUG="${EMORI_DEBUG:-${DEBUG:-${RUNNER_DEBUG:-}}}"
 FORCE="${EMORI_FORCE:-}"
