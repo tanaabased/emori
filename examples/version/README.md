@@ -33,8 +33,8 @@ git -C "$HOME/tanaab/canon" remote get-url origin > "$TMPDIR/tanaab.ssh.origin"
 boot.sh \
   --op-token "$OPTOKEN" \
   --ssh-key 'omfsw2uztmi2xqpid5g3kiv6ba/id_test' \
-  --emori v1.0.0-beta.4 \
-  --tanaab v0.2.0 \
+  --emori v1.0.0-beta.1 \
+  --tanaab v0.4.0 \
   --force
 ```
 
