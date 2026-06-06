@@ -23,7 +23,7 @@ perform external service automation, or validate releases.
 ## When to Use
 
 - Run after `boot.sh` and the README manual setup checklist have completed.
-- Run before relying on Codex plugin skills, 1Password-backed local setup, or Tailscale network
+- Run before relying on Codex plugin skills, 1Password CLI beta behavior, or Tailscale network
   access.
 - Run when moving this EMORI environment to a new interactive macOS user profile.
 
@@ -49,12 +49,13 @@ perform external service automation, or validate releases.
    ```
 
    This helper is read-only, strips 1Password token fallback environment variables from `op`
-   subprocesses, and intentionally verifies local desktop/daemon services such as 1Password and
-   Tailscale. The unsandboxed default is specific to this bundled helper and should not be treated
-   as permission to run unrelated repo commands unsandboxed.
+   subprocesses, and intentionally verifies local desktop/daemon services such as Tailscale. It
+   does not require or exercise the 1Password macOS desktop app. The unsandboxed default is specific
+   to this bundled helper and should not be treated as permission to run unrelated repo commands
+   unsandboxed.
 
    If a local permission prompt appears during this helper run, tell the user it is expected for
-   1Password or Tailscale desktop readiness. Denying the prompt may make readiness fail.
+   Tailscale desktop readiness. Denying the prompt may make readiness fail.
 
    If unsandboxed access is denied or unavailable, run the helper sandboxed. If that sandboxed run
    fails only on retryable local desktop or daemon access checks, report those checks as unresolved
@@ -91,8 +92,7 @@ perform external service automation, or validate releases.
    - ✅ Homebrew
    - ✅ Packages and Brewfile contract
    - ✅ Dotfiles
-   - ✅ 1Password app and CLI vault access
-   - ✅ 1Password Environment
+   - ✅ 1Password CLI beta
    - ✅ Tailscale tailnet
    - ✅ Codex plugin links
 
@@ -109,15 +109,11 @@ perform external service automation, or validate releases.
   browser/computer automation fallback.
 - Do not print tokens, secret values, raw environment contents, or raw command stderr that may
   contain sensitive data.
-- Do not add readiness checks for general environment values, token provisioning, task
-  automation, setup mutation, release builds, or Leia. The only Environment value this skill may
-  verify is the hashed readiness authorization sentinel.
+- Do not add readiness checks for general environment values, token provisioning, authenticated
+  1Password access, task automation, setup mutation, release builds, or Leia.
 - Do not add a new helper check id without assigning it to one of the five allowed local buckets.
-- Treat `op vault list --format json` as the local 1Password readiness gate because it proves the
-  app is unlocked and integrated enough for authenticated CLI access.
-- Treat `op environment read --help` and `op run --environment zsstdfqknicwfv5glv76gd6tue` as the
-  local protected-resource fallback readiness gate. The helper must verify only the hashed
-  readiness authorization sentinel and must not print or commit the sentinel value.
+- Treat `op environment read --help` as the 1Password CLI beta readiness gate because it verifies
+  the expected CLI surface without granting the agent access to the 1Password macOS desktop app.
 - Treat `tailscale status --json` as the local Tailscale readiness gate. Require the local node to
   be running, online, present in the network map, assigned a Tailscale IP, and connected to
   `tanaab.dev`. Peer pings are troubleshooting tools, not readiness gates.
@@ -136,8 +132,8 @@ perform external service automation, or validate releases.
 - The helper JSON was parsed successfully.
 - Every local `fail` or `warn` was reported with a remediation step.
 - Every helper check included a known bucket and bucket order matched the dependency order.
-- 1Password Environment readiness either proved `op run --environment` access to the readiness
-  Environment or reported the setup mismatch without printing the authorization sentinel.
+- 1Password CLI beta readiness verified the expected `op environment read --help` surface without
+  running authenticated vault or Environment access.
 
 ## Bundled Resources
 
@@ -152,5 +148,5 @@ perform external service automation, or validate releases.
 - Confirm every `warn` and `fail` local check includes remediation.
 - Confirm every helper check includes a known bucket.
 - Confirm local helper checks stay within the five allowed buckets and do not print or commit
-  Environment values.
-- Confirm 1Password Environment validation strips token fallback env vars from `op` subprocesses.
+  protected values.
+- Confirm 1Password CLI beta validation strips token fallback env vars from `op` subprocesses.

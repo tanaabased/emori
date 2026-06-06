@@ -31,9 +31,9 @@ This root `AGENTS.md` is the repo-local override for Codex work in this reposito
 ## EMORI Readiness Maintenance
 
 - Treat `$emori-readiness` as a verification surface for this `emori` checkout and macOS user profile. It should not become a token-management, environment-management, external-service automation, setup, release, Leia, or general machine-admin workflow.
-- For protected resource access, use native Codex connectors only when a workflow explicitly needs them and they are available. When a script or skill needs protected resources without a native connector, wrap it with `op run --environment zsstdfqknicwfv5glv76gd6tue` instead of using committed `.env` files, persistent shell environment secrets, or local token fallback.
-- Local readiness probes must prove desktop-app-backed 1Password access. Strip 1Password service-account, connect, session, and bootstrap token environment variables from `op` subprocesses so readiness does not pass through token fallback.
-- `$emori-readiness` may run its bundled read-only local helper unsandboxed by default because it verifies 1Password and Tailscale desktop/daemon readiness. Do not extend that unsandboxed default to unrelated repo commands, setup, package installation, tests, release validation, or broad machine administration.
+- For protected resource access, use native Codex connectors only when a workflow explicitly needs them and they are available. When a script or skill needs protected resources without a native connector, use the 1Password CLI beta intentionally instead of committed `.env` files or persistent shell environment secrets.
+- Local readiness probes must not require or exercise the 1Password macOS desktop app. Readiness may verify that the 1Password CLI beta is installed and exposes expected CLI surfaces, but it must not run authenticated 1Password vault or Environment access probes.
+- `$emori-readiness` may run its bundled read-only local helper unsandboxed by default because it verifies Tailscale desktop/daemon readiness. Do not extend that unsandboxed default to unrelated repo commands, setup, package installation, tests, release validation, protected-resource access, or broad machine administration.
 - Keep README readiness content limited to human bootstrap/manual setup steps and a brief pointer to run `$emori-readiness` after setup. Do not put detailed readiness bucket or maintenance policy in README.
 - Keep readiness maintenance policy in this `AGENTS.md`. Keep `skills/emori-readiness/SKILL.md` focused on how to run readiness, parse helper output, and report local setup status.
 - Skill changes under `skills/**` do not automatically require readiness updates. Update readiness only when a skill adds or changes a stable machine prerequisite: a Brewfile dependency, a repo-owned dotfile, a manual app/auth/network step, or a Codex plugin install/link surface.
@@ -46,7 +46,7 @@ This root `AGENTS.md` is the repo-local override for Codex work in this reposito
   - `homebrew`: Homebrew command availability.
   - `packages`: Brewfile declarations and required command availability.
   - `dotfiles`: repo-owned stowed files and generated local config readiness.
-  - `manual_apps`: installed apps and local app/auth/network readiness that cannot be fully handled by Brewfile alone, including 1Password and Tailscale.
+  - `manual_apps`: installed apps and local app/auth/network readiness that cannot be fully handled by Brewfile alone, such as Codex, OpenClaw, and Tailscale.
   - `codex_plugins`: local Codex plugin links or plugin install surfaces owned by this repo.
 
 ## Validation Policy
