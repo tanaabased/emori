@@ -1,0 +1,14 @@
+[user]
+	name = EMORI
+	email = emori@tanaab.dev
+	signingkey = ~/.ssh/id_emori.pub
+[gpg]
+	format = ssh
+[commit]
+	gpgsign = true
+
+[includeIf "gitdir:~/lando/"]
+	path = ~/.gitconfig-lando
+
+[gpg "ssh"]
+	allowedSignersFile = ~/.config/git/allowed_signers

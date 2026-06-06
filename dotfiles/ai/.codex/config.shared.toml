@@ -1,0 +1,14 @@
+personality = "pragmatic"
+model = "gpt-5.5"
+model_reasoning_effort = "xhigh"
+commit_attribution = ""
+file_opener = "vscode"
+service_tier = "fast"
+
+[features]
+memories = true
+multi_agent = true
+fast_mode = true
+
+[memories]
+disable_on_external_context = true
