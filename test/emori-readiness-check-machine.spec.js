@@ -3,7 +3,6 @@ import path from 'node:path';
 
 import {
   CHECK_BUCKET_ORDER,
-  EXPECTED_ONEPASSWORD_ENVIRONMENT_ID,
   ONEPASSWORD_TOKEN_ENV_KEYS,
   REQUIRED_COMMANDS,
   checkMachine,
@@ -47,7 +46,8 @@ function healthyExistingPaths(...missingPaths) {
   const missing = new Set(missingPaths);
 
   return [
-    '/Applications/1Password.app',
+    '/Applications/Codex.app',
+    '/Applications/OpenClaw.app',
     '/Applications/Tailscale.app',
     makePath('.zshrc'),
     makePath('.zprofile'),
@@ -61,33 +61,29 @@ function healthyExistingPaths(...missingPaths) {
 
 function makeDeps({
   brewfile = [
-    'cask "1password"',
     'cask "1password-cli@beta"',
+    'cask "codex"',
+    'cask "codex-app"',
+    'cask "openclaw"',
     'cask "tailscale"',
     'brew "node@24"',
+    'brew "openclaw-cli"',
+    'brew "ripgrep"',
   ].join('\n'),
   brewPrefixError = false,
   commands = REQUIRED_COMMANDS,
   configMode = 0o100600,
   environmentCliHelp = true,
-  environmentExecError = false,
-  environmentStdout,
-  environmentValues = {
-    matches: true,
-    present: true,
-  },
   execCalls,
   existingPaths,
   nodePath = NODE_BREW_PATH,
   nodeVersion = 'v24.11.1',
   nodeVersionError = false,
-  opExecError = false,
   opEnvironmentHelpError = false,
   symbolicLinks,
   tailscaleExecError = false,
   tailscaleStatus = makeHealthyTailscaleStatus(),
   tailscaleStdout,
-  vaults = [{ id: 'vault' }],
   whichNodeError = false,
 } = {}) {
   const existing = new Set(existingPaths ?? healthyExistingPaths());
@@ -145,16 +141,6 @@ function makeDeps({
       }
 
       if (command === 'op') {
-        if (args[0] === 'vault') {
-          assert.deepEqual(args, ['vault', 'list', '--format', 'json']);
-
-          if (opExecError) {
-            throw opExecError instanceof Error ? opExecError : new Error('op failed');
-          }
-
-          return { stdout: JSON.stringify(vaults) };
-        }
-
         if (args[0] === 'environment') {
           assert.deepEqual(args, ['environment', 'read', '--help']);
 
@@ -167,22 +153,6 @@ function makeDeps({
           return {
             stdout: 'Read environment variables from a 1Password Environment.\n',
           };
-        }
-
-        if (args[0] === 'run' && args[1] === '--environment') {
-          assert.equal(args[2], EXPECTED_ONEPASSWORD_ENVIRONMENT_ID);
-          assert.equal(args[3], '--');
-          assert.equal(args[4], 'bun');
-          assert.equal(args[5], '-e');
-          assert.equal(typeof args[6], 'string');
-
-          if (environmentExecError) {
-            throw environmentExecError instanceof Error
-              ? environmentExecError
-              : new Error('op environment failed');
-          }
-
-          return { stdout: environmentStdout ?? JSON.stringify(environmentValues) };
         }
 
         throw new Error(`unexpected op args ${args.join(' ')}`);
@@ -314,7 +284,6 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
         makePath('.codex', 'plugins', 'emori'),
         makePath('.codex', 'plugins', 'tanaab'),
       ],
-      vaults: [],
     });
 
     assert.equal(report.ok, false);
@@ -326,20 +295,27 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
       }
     }
 
-    assert.ok(report.checks.some((check) => check.id === 'brewfile_cask_1password'));
     assert.ok(report.checks.some((check) => check.id === 'brewfile_cask_1password_cli_beta'));
+    assert.ok(report.checks.some((check) => check.id === 'brewfile_cask_codex'));
+    assert.ok(report.checks.some((check) => check.id === 'brewfile_cask_codex_app'));
+    assert.ok(report.checks.some((check) => check.id === 'brewfile_cask_openclaw'));
     assert.ok(report.checks.some((check) => check.id === 'brewfile_formula_node_24'));
+    assert.ok(report.checks.some((check) => check.id === 'brewfile_formula_openclaw_cli'));
+    assert.ok(report.checks.some((check) => check.id === 'brewfile_formula_ripgrep'));
     assert.ok(
       report.checks.some((check) => check.id === 'brewfile_cask_1password_cli_stable_absent'),
     );
     assert.ok(report.checks.some((check) => check.id === 'brewfile_cask_tailscale'));
     assert.ok(report.checks.some((check) => check.id === 'zshrc_link'));
     assert.ok(report.checks.some((check) => check.id === 'zprofile_link'));
+    assert.ok(report.checks.some((check) => check.id === 'command_codex'));
     assert.ok(report.checks.some((check) => check.id === 'command_gh'));
+    assert.ok(report.checks.some((check) => check.id === 'command_openclaw'));
+    assert.ok(report.checks.some((check) => check.id === 'command_rg'));
     assert.ok(report.checks.some((check) => check.id === 'command_tailscale'));
-    assert.ok(report.checks.some((check) => check.id === 'onepassword_app'));
+    assert.ok(report.checks.some((check) => check.id === 'codex_app'));
+    assert.ok(report.checks.some((check) => check.id === 'openclaw_app'));
     assert.ok(report.checks.some((check) => check.id === 'onepassword_environment_cli'));
-    assert.ok(report.checks.some((check) => check.id === 'onepassword_environment_run'));
     assert.ok(report.checks.some((check) => check.id === 'tailscale_app'));
     assert.ok(report.checks.some((check) => check.id === 'tailscale_status'));
     assert.ok(report.checks.some((check) => check.id === 'bootstrap_token_env'));
@@ -359,7 +335,7 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
     assert.match(output, /OP_SERVICE_ACCOUNT_TOKEN/);
   });
 
-  it('should call 1Password vault list without token fallback environment variables', async () => {
+  it('should check 1Password Environment CLI help without token fallback environment variables', async () => {
     const execCalls = [];
 
     await runCheck({
@@ -378,7 +354,7 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
 
     const opCall = execCalls.find((call) => call.command === 'op');
 
-    assert.deepEqual(opCall.args, ['vault', 'list', '--format', 'json']);
+    assert.deepEqual(opCall.args, ['environment', 'read', '--help']);
     assert.equal(opCall.options.env.KEEP_ME, 'yes');
 
     for (const key of [...ONEPASSWORD_TOKEN_ENV_KEYS, 'OP_SESSION_tanaab']) {
@@ -389,10 +365,14 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
   it('should require the beta 1Password CLI cask and reject the stable cask', async () => {
     const report = await runCheck({
       brewfile: [
-        'cask "1password"',
         'cask "1password-cli"',
+        'cask "codex"',
+        'cask "codex-app"',
+        'cask "openclaw"',
         'cask "tailscale"',
         'brew "node@24"',
+        'brew "openclaw-cli"',
+        'brew "ripgrep"',
       ].join('\n'),
       existingPaths: healthyExistingPaths(),
     });
@@ -410,7 +390,15 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
 
   it('should require the node@24 Brewfile formula', async () => {
     const report = await runCheck({
-      brewfile: ['cask "1password"', 'cask "1password-cli@beta"', 'cask "tailscale"'].join('\n'),
+      brewfile: [
+        'cask "1password-cli@beta"',
+        'cask "codex"',
+        'cask "codex-app"',
+        'cask "openclaw"',
+        'cask "tailscale"',
+        'brew "openclaw-cli"',
+        'brew "ripgrep"',
+      ].join('\n'),
       existingPaths: healthyExistingPaths(),
     });
     const formulaCheck = report.checks.find((check) => check.id === 'brewfile_formula_node_24');
@@ -419,6 +407,43 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
     assert.equal(formulaCheck.status, 'fail');
     assert.match(formulaCheck.message, /node@24/);
     assert.match(formulaCheck.remediation, /Brewfile/);
+  });
+
+  it('should require Codex and OpenClaw Brewfile packages', async () => {
+    const report = await runCheck({
+      brewfile: ['cask "1password-cli@beta"', 'cask "tailscale"', 'brew "node@24"'].join('\n'),
+      existingPaths: healthyExistingPaths(),
+    });
+    const requiredIds = [
+      'brewfile_cask_codex',
+      'brewfile_cask_codex_app',
+      'brewfile_cask_openclaw',
+      'brewfile_formula_openclaw_cli',
+      'brewfile_formula_ripgrep',
+    ];
+
+    assert.equal(report.ok, false);
+    for (const id of requiredIds) {
+      const check = report.checks.find((candidate) => candidate.id === id);
+      assert.equal(check.status, 'fail', id);
+      assert.match(check.remediation, /Brewfile/);
+    }
+  });
+
+  it('should require Codex, OpenClaw, and ripgrep commands', async () => {
+    const report = await runCheck({
+      commands: REQUIRED_COMMANDS.filter(
+        (command) => !['codex', 'openclaw', 'rg'].includes(command),
+      ),
+      existingPaths: healthyExistingPaths(),
+    });
+
+    assert.equal(report.ok, false);
+    for (const id of ['command_codex', 'command_openclaw', 'command_rg']) {
+      const check = report.checks.find((candidate) => candidate.id === id);
+      assert.equal(check.status, 'fail', id);
+      assert.match(check.remediation, /Brewfile/);
+    }
   });
 
   it('should fail when node resolves outside Homebrew node@24', async () => {
@@ -475,114 +500,20 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
     assert.match(zshrcCheck.remediation, /restow/);
   });
 
-  it('should fail 1Password Environment readiness when the beta CLI surface is missing', async () => {
+  it('should fail 1Password Environment CLI support when the beta CLI surface is missing', async () => {
     const report = await runCheck({
       environmentCliHelp: false,
       existingPaths: healthyExistingPaths(),
     });
     const cliCheck = report.checks.find((check) => check.id === 'onepassword_environment_cli');
-    const runCheckResult = report.checks.find(
-      (check) => check.id === 'onepassword_environment_run',
-    );
 
     assert.equal(cliCheck.status, 'fail');
     assert.match(cliCheck.remediation, /1password-cli@beta/);
-    assert.equal(runCheckResult.status, 'fail');
-    assert.match(runCheckResult.message, /Environment CLI support is missing/);
-  });
-
-  it('should call op run environment without printing the authorization code', async () => {
-    const execCalls = [];
-
-    await runCheck({
-      env: {
-        KEEP_ME: 'yes',
-        OP_CONNECT_TOKEN: 'do-not-pass',
-        OP_SERVICE_ACCOUNT_TOKEN: 'do-not-pass',
-        OP_SESSION: 'do-not-pass',
-        OP_SESSION_tanaab: 'do-not-pass',
-        EMORI_OP_TOKEN: 'do-not-pass',
-        TANAAB_OP_TOKEN: 'do-not-pass',
-      },
-      execCalls,
-      existingPaths: healthyExistingPaths(),
-    });
-
-    const environmentCall = execCalls.find(
-      (call) => call.command === 'op' && call.args[0] === 'run' && call.args[1] === '--environment',
-    );
-
-    assert.deepEqual(environmentCall.args.slice(0, 6), [
-      'run',
-      '--environment',
-      EXPECTED_ONEPASSWORD_ENVIRONMENT_ID,
-      '--',
-      'bun',
-      '-e',
-    ]);
-    assert.doesNotMatch(environmentCall.args[6], /console\.log|printenv/);
-    assert.doesNotMatch(environmentCall.args[6], /READINESS_AUTHORIZATION_CODE=/);
-    assert.match(
-      environmentCall.args[6],
-      /a924fd4b1d47841c36ae7663db374cf040b913ffa56541fe0f345435e3cce267/,
-    );
-    assert.equal(environmentCall.options.env.KEEP_ME, 'yes');
-
-    for (const key of [...ONEPASSWORD_TOKEN_ENV_KEYS, 'OP_SESSION_tanaab']) {
-      assert.equal(Object.hasOwn(environmentCall.options.env, key), false, key);
-    }
-  });
-
-  it('should fail when the 1Password Environment authorization code is missing or wrong', async () => {
-    const missingReport = await runCheck({
-      environmentValues: {
-        matches: false,
-        present: false,
-      },
-      existingPaths: healthyExistingPaths(),
-    });
-    const wrongReport = await runCheck({
-      environmentValues: {
-        matches: false,
-        present: true,
-      },
-      existingPaths: healthyExistingPaths(),
-    });
-    const missingCheck = missingReport.checks.find(
-      (check) => check.id === 'onepassword_environment_run',
-    );
-    const wrongCheck = wrongReport.checks.find(
-      (check) => check.id === 'onepassword_environment_run',
-    );
-    const output = `${formatReport(missingReport)}${formatReport(wrongReport)}`;
-
-    assert.equal(missingCheck.status, 'fail');
-    assert.match(missingCheck.message, /was not provided/);
-    assert.equal(wrongCheck.status, 'fail');
-    assert.match(wrongCheck.message, /did not match/);
-    assert.doesNotMatch(output, /a924fd4b1d47841c36ae7663db374cf040b913ffa56541fe0f345435e3cce267/);
-  });
-
-  it('should identify 1Password Environment desktop app connection failures as local access issues', async () => {
-    const report = await runCheck({
-      environmentExecError: Object.assign(new Error('op environment failed'), {
-        stderr:
-          "1Password CLI couldn't connect to the 1Password desktop app. To fix this, update the 1Password app.",
-      }),
-      existingPaths: healthyExistingPaths(),
-    });
-    const environmentRunCheck = report.checks.find(
-      (check) => check.id === 'onepassword_environment_run',
-    );
-
-    assert.equal(environmentRunCheck.status, 'fail');
-    assert.match(environmentRunCheck.message, /could not connect/);
-    assert.match(environmentRunCheck.remediation, /unsandboxed local access/);
   });
 
   it('should emit parseable JSON with only supported statuses', async () => {
     const report = await runCheck({
-      opExecError: true,
+      environmentCliHelp: false,
       existingPaths: healthyExistingPaths(),
     });
 
@@ -591,22 +522,6 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
 
     assert.deepEqual([...statuses].sort(), ['fail', 'pass']);
   });
-
-  it('should identify 1Password desktop app connection failures as local access issues', async () => {
-    const report = await runCheck({
-      opExecError: Object.assign(new Error('op failed'), {
-        stderr:
-          "1Password CLI couldn't connect to the 1Password desktop app. To fix this, update the 1Password app.",
-      }),
-      existingPaths: healthyExistingPaths(),
-    });
-    const accountCheck = report.checks.find((check) => check.id === 'onepassword_cli_vault_access');
-
-    assert.equal(accountCheck.status, 'fail');
-    assert.match(accountCheck.message, /could not connect/);
-    assert.match(accountCheck.remediation, /unsandboxed local access/);
-  });
-
   it('should fail when the Tailscale app is missing', async () => {
     const report = await runCheck({
       existingPaths: healthyExistingPaths('/Applications/Tailscale.app'),
@@ -615,6 +530,20 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
 
     assert.equal(report.ok, false);
     assert.equal(tailscaleAppCheck.status, 'fail');
+  });
+
+  it('should fail when the Codex or OpenClaw desktop apps are missing', async () => {
+    const report = await runCheck({
+      existingPaths: healthyExistingPaths('/Applications/Codex.app', '/Applications/OpenClaw.app'),
+    });
+    const codexAppCheck = report.checks.find((check) => check.id === 'codex_app');
+    const openClawAppCheck = report.checks.find((check) => check.id === 'openclaw_app');
+
+    assert.equal(report.ok, false);
+    assert.equal(codexAppCheck.status, 'fail');
+    assert.match(codexAppCheck.remediation, /Codex desktop app/);
+    assert.equal(openClawAppCheck.status, 'fail');
+    assert.match(openClawAppCheck.remediation, /OpenClaw desktop app/);
   });
 
   it('should fail Tailscale status when the command is missing', async () => {

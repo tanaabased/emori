@@ -15,24 +15,37 @@ const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_REPO_ROOT = path.resolve(SCRIPT_DIR, '..', '..', '..');
 const PRIVATE_CONFIG_MODE = 0o600;
 const EXPECTED_TAILNET_NAME = 'tanaab.dev';
-export const EXPECTED_ONEPASSWORD_ENVIRONMENT_ID = 'zsstdfqknicwfv5glv76gd6tue';
 const MINIMUM_ONEPASSWORD_ENVIRONMENT_CLI_VERSION = '2.33.0-beta.02';
-const READINESS_AUTHORIZATION_CODE_KEY = 'READINESS_AUTHORIZATION_CODE';
-const EXPECTED_READINESS_AUTHORIZATION_CODE_SHA256 =
-  'a924fd4b1d47841c36ae7663db374cf040b913ffa56541fe0f345435e3cce267';
-const ONEPASSWORD_ENVIRONMENT_VALIDATION_SCRIPT = `import { createHash } from "node:crypto";const value=process.env.${READINESS_AUTHORIZATION_CODE_KEY};const hash=value?createHash("sha256").update(value).digest("hex"):"";process.stdout.write(JSON.stringify({present:Boolean(value),matches:hash==="${EXPECTED_READINESS_AUTHORIZATION_CODE_SHA256}"}));`;
 const EXPECTED_NODE_FORMULA = 'node@24';
 const EXPECTED_NODE_MAJOR_VERSION = 24;
 
-export const REQUIRED_BREWFILE_CASKS = ['1password', '1password-cli@beta', 'tailscale'];
-export const REQUIRED_BREWFILE_FORMULAS = [EXPECTED_NODE_FORMULA];
+export const REQUIRED_BREWFILE_CASKS = [
+  '1password-cli@beta',
+  'codex',
+  'codex-app',
+  'openclaw',
+  'tailscale',
+];
+export const REQUIRED_BREWFILE_FORMULAS = [EXPECTED_NODE_FORMULA, 'openclaw-cli', 'ripgrep'];
 export const FORBIDDEN_BREWFILE_CASKS = [
   {
     cask: '1password-cli',
     id: 'brewfile_cask_1password_cli_stable_absent',
   },
 ];
-export const REQUIRED_COMMANDS = ['brew', 'bun', 'git', 'gh', 'node', 'op', 'stow', 'tailscale'];
+export const REQUIRED_COMMANDS = [
+  'brew',
+  'bun',
+  'codex',
+  'git',
+  'gh',
+  'node',
+  'op',
+  'openclaw',
+  'rg',
+  'stow',
+  'tailscale',
+];
 export const ONEPASSWORD_TOKEN_ENV_KEYS = [
   'EMORI_OP_TOKEN',
   'TANAAB_OP_TOKEN',
@@ -104,6 +117,7 @@ const CHECK_BUCKET_BY_ID = new Map([
     'packages',
   ]),
   ...FORBIDDEN_BREWFILE_CASKS.map(({ id }) => [id, 'packages']),
+  ['onepassword_environment_cli', 'packages'],
   ['node_homebrew_path', 'packages'],
   ['node_version', 'packages'],
   ['zshrc_link', 'dotfiles'],
@@ -111,10 +125,8 @@ const CHECK_BUCKET_BY_ID = new Map([
   ['codex_agents_link', 'dotfiles'],
   ['codex_shared_config_link', 'dotfiles'],
   ['codex_generated_config', 'dotfiles'],
-  ['onepassword_app', 'manual_apps'],
-  ['onepassword_cli_vault_access', 'manual_apps'],
-  ['onepassword_environment_cli', 'manual_apps'],
-  ['onepassword_environment_run', 'manual_apps'],
+  ['codex_app', 'manual_apps'],
+  ['openclaw_app', 'manual_apps'],
   ['tailscale_app', 'manual_apps'],
   ['tailscale_status', 'manual_apps'],
   ['bootstrap_token_env', 'manual_apps'],
@@ -198,43 +210,6 @@ function formatErrorDetail(error) {
   return (stderr || message).replace(/\s+/g, ' ').trim();
 }
 
-function formatOnePasswordCommandError(error) {
-  const detail = formatErrorDetail(error);
-
-  if (/couldn'?t connect to the 1Password desktop app/i.test(detail)) {
-    return {
-      message: '1Password CLI could not connect to the 1Password desktop app from this process.',
-      remediation:
-        'If this was a sandboxed run and op vault list --format json works in your terminal, rerun the readiness helper with unsandboxed local access from Codex. Otherwise open 1Password, sign in, unlock it, and enable Developer > Integrate with 1Password CLI.',
-    };
-  }
-
-  return {
-    message: '1Password CLI vault access check failed.',
-    remediation:
-      'Open 1Password, sign in, unlock it, enable Developer > Integrate with 1Password CLI, then rerun op vault list.',
-  };
-}
-
-function formatOnePasswordEnvironmentCommandError(error) {
-  const detail = formatErrorDetail(error);
-
-  if (/couldn'?t connect to the 1Password desktop app/i.test(detail)) {
-    return {
-      message:
-        '1Password Environment access could not connect to the desktop app from this process.',
-      remediation:
-        'If this was a sandboxed run and op run --environment works in your terminal, rerun the readiness helper with unsandboxed local access from Codex. Otherwise open 1Password, sign in, unlock it, enable Developer > Integrate with 1Password CLI, and enable Developer > Show 1Password Developer experience.',
-    };
-  }
-
-  return {
-    message: '1Password Environment access check failed.',
-    remediation:
-      'Open 1Password, sign in, unlock it, enable Developer > Integrate with 1Password CLI, enable Developer > Show 1Password Developer experience, confirm the readiness Environment is accessible, then rerun the readiness helper.',
-  };
-}
-
 function formatTailscaleCommandError(error) {
   const detail = formatErrorDetail(error);
 
@@ -289,37 +264,6 @@ async function commandCheck(command, deps) {
 
 function getCheck(checks, id) {
   return checks.find((check) => check.id === id);
-}
-
-function checkOnePasswordEnvironmentRun(result) {
-  if (!result || typeof result !== 'object') {
-    return fail(
-      'onepassword_environment_run',
-      '1Password Environment readiness output was not a JSON object.',
-      'Rerun the readiness helper after confirming the readiness Environment is accessible through 1Password Developer.',
-    );
-  }
-
-  if (result.present !== true) {
-    return fail(
-      'onepassword_environment_run',
-      `${READINESS_AUTHORIZATION_CODE_KEY} was not provided by the 1Password Environment.`,
-      'Open 1Password, enable Developer > Show 1Password Developer experience, and confirm the readiness Environment includes the authorization sentinel.',
-    );
-  }
-
-  if (result.matches !== true) {
-    return fail(
-      'onepassword_environment_run',
-      `${READINESS_AUTHORIZATION_CODE_KEY} did not match the expected readiness sentinel.`,
-      'Update the readiness Environment authorization sentinel in 1Password, then rerun the readiness helper.',
-    );
-  }
-
-  return pass(
-    'onepassword_environment_run',
-    '1Password Environment provided the expected readiness authorization sentinel.',
-  );
 }
 
 function checkTailscaleStatus(status) {
@@ -574,14 +518,25 @@ async function appendRequiredCommandChecks(checks, deps) {
 }
 
 async function appendAppPresenceChecks(checks, deps) {
-  const onePasswordAppPath = '/Applications/1Password.app';
+  const codexAppPath = '/Applications/Codex.app';
   checks.push(
-    (await pathInfo(onePasswordAppPath, deps))
-      ? pass('onepassword_app', '1Password.app was found.')
+    (await pathInfo(codexAppPath, deps))
+      ? pass('codex_app', 'Codex.app was found.')
       : fail(
-          'onepassword_app',
-          '1Password.app was not found.',
-          'Rerun https://emori.boot.tanaab.sh or install the 1Password desktop app, then open it and sign in.',
+          'codex_app',
+          'Codex.app was not found.',
+          'Rerun https://emori.boot.tanaab.sh or install the Codex desktop app from the Brewfile, then open it and complete any required sign-in.',
+        ),
+  );
+
+  const openClawAppPath = '/Applications/OpenClaw.app';
+  checks.push(
+    (await pathInfo(openClawAppPath, deps))
+      ? pass('openclaw_app', 'OpenClaw.app was found.')
+      : fail(
+          'openclaw_app',
+          'OpenClaw.app was not found.',
+          'Rerun https://emori.boot.tanaab.sh or install the OpenClaw desktop app from the Brewfile, then open it and complete onboarding.',
         ),
   );
 
@@ -597,43 +552,7 @@ async function appendAppPresenceChecks(checks, deps) {
   );
 }
 
-async function appendOnePasswordVaultAccessCheck(checks, env, deps) {
-  if (getCheck(checks, 'command_op')?.status === 'fail') {
-    checks.push(
-      fail(
-        'onepassword_cli_vault_access',
-        '1Password CLI vault access could not be checked because op is missing.',
-        'Install 1Password CLI, open 1Password, sign in, unlock it, and enable Developer > Integrate with 1Password CLI.',
-      ),
-    );
-    return;
-  }
-
-  try {
-    const { stdout } = await deps.execFile('op', ['vault', 'list', '--format', 'json'], {
-      env: commandEnvWithoutOnePasswordTokenFallbacks(env),
-    });
-    const vaults = JSON.parse(stdout);
-    checks.push(
-      Array.isArray(vaults) && vaults.length > 0
-        ? pass('onepassword_cli_vault_access', `1Password CLI can list ${vaults.length} vault(s).`)
-        : fail(
-            'onepassword_cli_vault_access',
-            '1Password CLI cannot list vaults for a signed-in account.',
-            'Open 1Password, sign in, unlock it, enable Developer > Integrate with 1Password CLI, then rerun op vault list.',
-          ),
-    );
-  } catch (error) {
-    const formattedError = formatOnePasswordCommandError(error);
-    checks.push(
-      fail('onepassword_cli_vault_access', formattedError.message, formattedError.remediation),
-    );
-  }
-}
-
-async function appendOnePasswordEnvironmentChecks(checks, env, deps) {
-  let environmentCliSupported = false;
-
+async function appendOnePasswordEnvironmentCliCheck(checks, env, deps) {
   if (getCheck(checks, 'command_op')?.status === 'fail') {
     checks.push(
       fail(
@@ -642,79 +561,28 @@ async function appendOnePasswordEnvironmentChecks(checks, env, deps) {
         'Install the 1Password CLI beta cask from the Brewfile, then rerun op environment read --help.',
       ),
     );
-  } else {
-    try {
-      await deps.execFile('op', ['environment', 'read', '--help'], {
-        env: commandEnvWithoutOnePasswordTokenFallbacks(env),
-      });
-      environmentCliSupported = true;
-      checks.push(
-        pass(
-          'onepassword_environment_cli',
-          '1Password CLI supports reading values from 1Password Environments.',
-        ),
-      );
-    } catch {
-      checks.push(
-        fail(
-          'onepassword_environment_cli',
-          '1Password Environment CLI support check failed.',
-          `Install or update to 1Password CLI beta ${MINIMUM_ONEPASSWORD_ENVIRONMENT_CLI_VERSION} or newer through cask "1password-cli@beta".`,
-        ),
-      );
-    }
-  }
-
-  if (!environmentCliSupported) {
-    checks.push(
-      fail(
-        'onepassword_environment_run',
-        '1Password Environment readiness could not be checked because Environment CLI support is missing.',
-        `Install or update to 1Password CLI beta ${MINIMUM_ONEPASSWORD_ENVIRONMENT_CLI_VERSION} or newer through cask "1password-cli@beta", then rerun the readiness helper.`,
-      ),
-    );
     return;
   }
 
   try {
-    const { stdout } = await deps.execFile(
-      'op',
-      [
-        'run',
-        '--environment',
-        EXPECTED_ONEPASSWORD_ENVIRONMENT_ID,
-        '--',
-        'bun',
-        '-e',
-        ONEPASSWORD_ENVIRONMENT_VALIDATION_SCRIPT,
-      ],
-      {
-        env: commandEnvWithoutOnePasswordTokenFallbacks(env),
-      },
-    );
-    checks.push(checkOnePasswordEnvironmentRun(JSON.parse(stdout)));
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      checks.push(
-        fail(
-          'onepassword_environment_run',
-          '1Password Environment readiness output was not parseable JSON.',
-          'Rerun the readiness helper after confirming the readiness Environment is accessible through 1Password Developer.',
-        ),
-      );
-      return;
-    }
-
-    const formattedError = formatOnePasswordEnvironmentCommandError(error);
+    await deps.execFile('op', ['environment', 'read', '--help'], {
+      env: commandEnvWithoutOnePasswordTokenFallbacks(env),
+    });
     checks.push(
-      fail('onepassword_environment_run', formattedError.message, formattedError.remediation),
+      pass(
+        'onepassword_environment_cli',
+        '1Password CLI supports reading values from 1Password Environments.',
+      ),
+    );
+  } catch {
+    checks.push(
+      fail(
+        'onepassword_environment_cli',
+        '1Password Environment CLI support check failed.',
+        `Install or update to 1Password CLI beta ${MINIMUM_ONEPASSWORD_ENVIRONMENT_CLI_VERSION} or newer through cask "1password-cli@beta".`,
+      ),
     );
   }
-}
-
-async function appendOnePasswordChecks(checks, env, deps) {
-  await appendOnePasswordVaultAccessCheck(checks, env, deps);
-  await appendOnePasswordEnvironmentChecks(checks, env, deps);
 }
 
 async function appendTailscaleStatusCheck(checks, deps) {
@@ -760,7 +628,7 @@ function appendTokenFallbackCheck(checks, env) {
       : warn(
           'bootstrap_token_env',
           `1Password token fallback environment variable(s) are still set: ${presentTokenKeys.join(', ')}.`,
-          'Unset 1Password token fallback environment variables so readiness proves desktop app and Environment access without persistent token material.',
+          'Unset 1Password token fallback environment variables so readiness does not run with persistent token material in the process environment.',
         ),
   );
 }
@@ -788,11 +656,11 @@ export async function checkMachine(options = {}) {
   checks.push(await commandCheck('brew', deps));
   await appendBrewfileChecks(checks, repoRoot, deps);
   await appendRequiredCommandChecks(checks, deps);
+  await appendOnePasswordEnvironmentCliCheck(checks, env, deps);
   await appendNodeRuntimeChecks(checks, deps);
   await appendStowedLinkChecks(checks, DOTFILE_LINKS, homeDir, deps);
   await appendGeneratedConfigCheck(checks, homeDir, deps);
   await appendAppPresenceChecks(checks, deps);
-  await appendOnePasswordChecks(checks, env, deps);
   await appendTailscaleStatusCheck(checks, deps);
   appendTokenFallbackCheck(checks, env);
   await appendStowedLinkChecks(checks, CODEX_PLUGIN_LINKS, homeDir, deps);
