@@ -19,6 +19,9 @@ rm -f "$HOME/.codex/plugins/tanaab"
 # should have the op token test secret available
 test -n "$OPTOKEN"
 
+# should also brew trust oven-sh/bun for legacy version support
+brew trust oven-sh/bun
+
 # should run boot.sh successfully using the default ssh emori and tanaab sources
 boot.sh \
   --op-token "$OPTOKEN" \
