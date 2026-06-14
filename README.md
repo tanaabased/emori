@@ -45,9 +45,14 @@ When the script finishes, complete the manual setup checklist below.
   - `emori`
   - `tanaab`
 
+### Desktop Apps
+
+- Open Codex and OpenClaw from EMORI's macOS user session.
+- Complete any required sign-in or onboarding for those apps.
+
 After completing this checklist, ask Codex to run `$emori-readiness`. Readiness may trigger
-macOS, Codex, or 1Password permission prompts while it verifies local desktop app access. Approve
-those prompts only when you intentionally asked Codex to run readiness.
+macOS, Codex, or Tailscale permission prompts while it verifies local desktop app and daemon
+access. Approve those prompts only when you intentionally asked Codex to run readiness.
 
 ## What Gets Installed
 
@@ -55,7 +60,8 @@ those prompts only when you intentionally asked Codex to run readiness.
 
 [`Brewfile`](./Brewfile) is the single source of truth for base machine dependencies. It covers
 Homebrew tooling plus the core CLI and runtime stack used here, including Git and GitHub CLI,
-Bun, Homebrew Node 24, Python, Stow, the 1Password desktop app and CLI, Tailscale, and Zsh.
+Bun, Codex CLI and desktop app, OpenClaw CLI and desktop app, Homebrew Node 24, Python,
+ripgrep, Stow, the 1Password CLI beta, Tailscale, and Zsh.
 
 ### Dotpkgs
 
