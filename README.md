@@ -1,5 +1,9 @@
 # EMORI
 
+<p align="center">
+  <img src="./assets/icon-large-circle.png" alt="EMORI" width="180" />
+</p>
+
 `emori` seeds a macOS 26+ machine with the dependencies, dotfiles, and Codex plugin assets that
 support EMORI and `@emoriwan`. It is primarily consumed through the hosted `boot.sh` wrapper at
 `https://emori.boot.tanaab.sh`, and it also ships the `emori` Codex plugin bundle built from this
