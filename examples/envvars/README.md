@@ -43,6 +43,7 @@ EMORI_FORCE=1 \
 EMORI_SSH_KEY='omfsw2uztmi2xqpid5g3kiv6ba/id_test' \
 EMORI_SSH_KEYS='omfsw2uztmi2xqpid5g3kiv6ba/id_test:id_test_envvars' \
 EMORI_SOURCE="$GITHUB_WORKSPACE" \
+EMORI_SKIP_OPENCLAW=1 \
 boot.sh
 ```
 

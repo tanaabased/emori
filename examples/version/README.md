@@ -26,7 +26,8 @@ brew trust oven-sh/bun
 boot.sh \
   --op-token "$OPTOKEN" \
   --ssh-key 'omfsw2uztmi2xqpid5g3kiv6ba/id_test' \
-  --emori ssh
+  --emori ssh \
+  --skip-openclaw
 test -d "$HOME/tanaab/emori/.git"
 git -C "$HOME/tanaab/emori" remote get-url origin > "$TMPDIR/emori.ssh.origin"
 test -d "$HOME/tanaab/canon/.git"
@@ -38,7 +39,8 @@ boot.sh \
   --ssh-key 'omfsw2uztmi2xqpid5g3kiv6ba/id_test' \
   --emori v1.0.0-beta.1 \
   --tanaab v0.4.0 \
-  --force
+  --force \
+  --skip-openclaw
 ```
 
 ## Testing

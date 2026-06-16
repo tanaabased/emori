@@ -8,7 +8,7 @@ import path from 'node:path';
 import {
   REPO_ROOT,
   booleanFromEnv,
-  commonTanaabEnvironmentVariables,
+  commonEmoriEnvironmentVariables,
   createCli,
   extractCommonFlags,
 } from '../lib/bun-cli-support.js';
@@ -19,53 +19,53 @@ const CLI_NAME = 'aisync';
 const cli = createCli(import.meta.url);
 
 function buildEnvironment() {
-  const target = process.env.TANAAB_STOW_TARGET?.trim() || os.homedir();
+  const target = process.env.EMORI_STOW_TARGET?.trim() || os.homedir();
   const codexDir = path.join(target, '.codex');
 
   return {
     codexConfigLocal:
-      process.env.TANAAB_CODEX_CONFIG_LOCAL?.trim() || path.join(codexDir, 'config.local.toml'),
+      process.env.EMORI_CODEX_CONFIG_LOCAL?.trim() || path.join(codexDir, 'config.local.toml'),
     codexConfigOutput:
-      process.env.TANAAB_CODEX_CONFIG_OUTPUT?.trim() || path.join(codexDir, 'config.toml'),
+      process.env.EMORI_CODEX_CONFIG_OUTPUT?.trim() || path.join(codexDir, 'config.toml'),
     codexConfigShared:
-      process.env.TANAAB_CODEX_CONFIG_SHARED?.trim() || path.join(codexDir, 'config.shared.toml'),
-    codexConfigSync: booleanFromEnv(process.env.TANAAB_CODEX_CONFIG_SYNC, true),
-    dotfilesDir: process.env.TANAAB_STOW_DOTFILES_DIR?.trim() || path.join(REPO_ROOT, 'dotfiles'),
-    packageName: process.env.TANAAB_STOW_PACKAGE?.trim() || 'ai',
-    prune: booleanFromEnv(process.env.TANAAB_STOW_PRUNE, true),
-    simulate: booleanFromEnv(process.env.TANAAB_STOW_SIMULATE, false),
+      process.env.EMORI_CODEX_CONFIG_SHARED?.trim() || path.join(codexDir, 'config.shared.toml'),
+    codexConfigSync: booleanFromEnv(process.env.EMORI_CODEX_CONFIG_SYNC, true),
+    dotfilesDir: process.env.EMORI_STOW_DOTFILES_DIR?.trim() || path.join(REPO_ROOT, 'dotfiles'),
+    packageName: process.env.EMORI_STOW_PACKAGE?.trim() || 'ai',
+    prune: booleanFromEnv(process.env.EMORI_STOW_PRUNE, true),
+    simulate: booleanFromEnv(process.env.EMORI_STOW_SIMULATE, false),
     target,
   };
 }
 
 function buildEnvironmentVariables() {
   return [
-    ...commonTanaabEnvironmentVariables(),
-    { label: 'TANAAB_STOW_TARGET', description: 'target home directory' },
-    { label: 'TANAAB_STOW_DOTFILES_DIR', description: 'stow directory containing the ai package' },
-    { label: 'TANAAB_STOW_PACKAGE', description: 'stow package name' },
+    ...commonEmoriEnvironmentVariables(),
+    { label: 'EMORI_STOW_TARGET', description: 'target home directory' },
+    { label: 'EMORI_STOW_DOTFILES_DIR', description: 'stow directory containing the ai package' },
+    { label: 'EMORI_STOW_PACKAGE', description: 'stow package name' },
     {
-      label: 'TANAAB_STOW_SIMULATE',
+      label: 'EMORI_STOW_SIMULATE',
       description: 'set to a truthy value to simulate the stow run',
     },
     {
-      label: 'TANAAB_STOW_PRUNE',
+      label: 'EMORI_STOW_PRUNE',
       description: 'set to a truthy value to prune dangling links after restow',
     },
     {
-      label: 'TANAAB_CODEX_CONFIG_SYNC',
+      label: 'EMORI_CODEX_CONFIG_SYNC',
       description: 'set to a falsey value to skip generated Codex config sync',
     },
     {
-      label: 'TANAAB_CODEX_CONFIG_SHARED',
+      label: 'EMORI_CODEX_CONFIG_SHARED',
       description: 'portable shared Codex config fragment',
     },
     {
-      label: 'TANAAB_CODEX_CONFIG_LOCAL',
+      label: 'EMORI_CODEX_CONFIG_LOCAL',
       description: 'machine-local Codex config fragment',
     },
     {
-      label: 'TANAAB_CODEX_CONFIG_OUTPUT',
+      label: 'EMORI_CODEX_CONFIG_OUTPUT',
       description: 'generated Codex config output path',
     },
   ];

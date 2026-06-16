@@ -28,6 +28,12 @@ boot.sh --help | grep -- '--emori'
 # should show the tanaab flag in help output
 boot.sh --help | grep -- '--tanaab'
 
+# should show the OpenClaw auth flag in help output
+boot.sh --help | grep -- '--openclaw-auth'
+
+# should show the OpenClaw skip flag in help output
+boot.sh --help | grep -- '--skip-openclaw'
+
 # should show the default ssh key in help output
 boot.sh --help | grep -F '2mh2ny4tegbi33yt3furutomzu/id_emori'
 
@@ -45,6 +51,12 @@ boot.sh --help | grep -F 'EMORI_SOURCE'
 
 # should show the EMORI_TANAAB envvar in help output
 boot.sh --help | grep -F 'EMORI_TANAAB'
+
+# should show the EMORI_OPENCLAW_AUTH envvar in help output
+boot.sh --help | grep -F 'EMORI_OPENCLAW_AUTH'
+
+# should show the EMORI_SKIP_OPENCLAW envvar in help output
+boot.sh --help | grep -F 'EMORI_SKIP_OPENCLAW'
 
 # should show the EMORI_FORCE envvar in help output
 boot.sh --help | grep -F 'EMORI_FORCE'
@@ -69,6 +81,15 @@ EMORI_SOURCE='/tmp/example-emori-source' boot.sh --help | grep -F '/tmp/example-
 
 # should let EMORI_TANAAB override the displayed tanaab default
 EMORI_TANAAB='/tmp/example-tanaab-source' boot.sh --help | grep -F '/tmp/example-tanaab-source'
+
+# should let EMORI_OPENCLAW_AUTH override the displayed OpenClaw auth default
+EMORI_OPENCLAW_AUTH='openai-api-key' boot.sh --help | grep -F '[default: openai-api-key]'
+
+# should let --openclaw-auth override EMORI_OPENCLAW_AUTH
+EMORI_OPENCLAW_AUTH='openai-api-key' boot.sh --openclaw-auth openai-device-code --help | grep -F '[default: openai-device-code]'
+
+# should let --skip-openclaw show OpenClaw onboarding as skipped
+boot.sh --skip-openclaw --help | grep -F '[default: on]'
 
 # should normalize semantic version emori defaults for display
 boot.sh --emori 0.3.1 --help | grep -F 'v0.3.1'

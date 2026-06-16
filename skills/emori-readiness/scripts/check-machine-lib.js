@@ -25,6 +25,7 @@ export const REQUIRED_BREWFILE_CASKS = [
   'codex-app',
   'openclaw',
   'tailscale',
+  'warp',
 ];
 export const REQUIRED_BREWFILE_FORMULAS = [EXPECTED_NODE_FORMULA, 'openclaw-cli', 'ripgrep'];
 export const FORBIDDEN_BREWFILE_CASKS = [
@@ -48,7 +49,6 @@ export const REQUIRED_COMMANDS = [
 ];
 export const ONEPASSWORD_TOKEN_ENV_KEYS = [
   'EMORI_OP_TOKEN',
-  'TANAAB_OP_TOKEN',
   'OP_SERVICE_ACCOUNT_TOKEN',
   'OP_CONNECT_TOKEN',
   'OP_SESSION',
@@ -128,6 +128,7 @@ const CHECK_BUCKET_BY_ID = new Map([
   ['codex_app', 'manual_apps'],
   ['openclaw_app', 'manual_apps'],
   ['tailscale_app', 'manual_apps'],
+  ['warp_app', 'manual_apps'],
   ['tailscale_status', 'manual_apps'],
   ['bootstrap_token_env', 'manual_apps'],
   ['codex_emori_link', 'codex_plugins'],
@@ -548,6 +549,17 @@ async function appendAppPresenceChecks(checks, deps) {
           'tailscale_app',
           'Tailscale.app was not found.',
           'Rerun https://emori.boot.tanaab.sh or install the Tailscale desktop app, then open it and sign in.',
+        ),
+  );
+
+  const warpAppPath = '/Applications/Warp.app';
+  checks.push(
+    (await pathInfo(warpAppPath, deps))
+      ? pass('warp_app', 'Warp.app was found.')
+      : fail(
+          'warp_app',
+          'Warp.app was not found.',
+          'Rerun https://emori.boot.tanaab.sh or install Warp from the Brewfile so /Applications/Warp.app exists.',
         ),
   );
 }
