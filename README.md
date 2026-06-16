@@ -36,7 +36,11 @@ available.
 bootstrap. Provide it with `EMORI_OP_TOKEN` or `--op-token`.
 
 ```sh
-curl -fsSL https://emori.boot.tanaab.sh | EMORI_OP_TOKEN="$OP_TOKEN" bash
+# ENVVARS
+curl -fsSL https://emori.boot.tanaab.sh/boot.sh | EMORI_OP_TOKEN="$OP_TOKEN" bash
+
+# OPTS
+curl -sL https://emori.boot.tanaab.sh/boot.sh | bash -s -- --op-token "$OP_TOKEN"
 ```
 
 This default flow:
