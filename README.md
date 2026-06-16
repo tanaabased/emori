@@ -60,7 +60,7 @@ access. Approve those prompts only when you intentionally asked Codex to run rea
 
 [`Brewfile`](./Brewfile) is the single source of truth for base machine dependencies. It covers
 Homebrew tooling plus the core CLI and runtime stack used here, including Git and GitHub CLI,
-Bun, Codex CLI and desktop app, OpenClaw CLI and desktop app, Homebrew Node 24, Python,
+Bun, Codex CLI and desktop app, OpenClaw CLI and desktop app, Warp, Homebrew Node 24, Python,
 ripgrep, Stow, the 1Password CLI beta, Tailscale, and Zsh.
 
 ### Dotpkgs

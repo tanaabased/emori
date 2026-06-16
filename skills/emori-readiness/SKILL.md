@@ -92,6 +92,7 @@ perform external service automation, or validate releases.
    - ✅ Homebrew
    - ✅ Packages and Brewfile contract
    - ✅ Dotfiles
+   - ✅ Desktop apps (Codex, OpenClaw, Warp)
    - ✅ 1Password CLI beta
    - ✅ Tailscale tailnet
    - ✅ Codex plugin links

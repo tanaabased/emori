@@ -49,6 +49,7 @@ function healthyExistingPaths(...missingPaths) {
     '/Applications/Codex.app',
     '/Applications/OpenClaw.app',
     '/Applications/Tailscale.app',
+    '/Applications/Warp.app',
     makePath('.zshrc'),
     makePath('.zprofile'),
     makePath('.codex', 'AGENTS.md'),
@@ -66,6 +67,7 @@ function makeDeps({
     'cask "codex-app"',
     'cask "openclaw"',
     'cask "tailscale"',
+    'cask "warp"',
     'brew "node@24"',
     'brew "openclaw-cli"',
     'brew "ripgrep"',
@@ -299,6 +301,7 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
     assert.ok(report.checks.some((check) => check.id === 'brewfile_cask_codex'));
     assert.ok(report.checks.some((check) => check.id === 'brewfile_cask_codex_app'));
     assert.ok(report.checks.some((check) => check.id === 'brewfile_cask_openclaw'));
+    assert.ok(report.checks.some((check) => check.id === 'brewfile_cask_warp'));
     assert.ok(report.checks.some((check) => check.id === 'brewfile_formula_node_24'));
     assert.ok(report.checks.some((check) => check.id === 'brewfile_formula_openclaw_cli'));
     assert.ok(report.checks.some((check) => check.id === 'brewfile_formula_ripgrep'));
@@ -317,6 +320,7 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
     assert.ok(report.checks.some((check) => check.id === 'openclaw_app'));
     assert.ok(report.checks.some((check) => check.id === 'onepassword_environment_cli'));
     assert.ok(report.checks.some((check) => check.id === 'tailscale_app'));
+    assert.ok(report.checks.some((check) => check.id === 'warp_app'));
     assert.ok(report.checks.some((check) => check.id === 'tailscale_status'));
     assert.ok(report.checks.some((check) => check.id === 'bootstrap_token_env'));
   });
@@ -370,6 +374,7 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
         'cask "codex-app"',
         'cask "openclaw"',
         'cask "tailscale"',
+        'cask "warp"',
         'brew "node@24"',
         'brew "openclaw-cli"',
         'brew "ripgrep"',
@@ -396,6 +401,7 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
         'cask "codex-app"',
         'cask "openclaw"',
         'cask "tailscale"',
+        'cask "warp"',
         'brew "openclaw-cli"',
         'brew "ripgrep"',
       ].join('\n'),
@@ -409,7 +415,7 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
     assert.match(formulaCheck.remediation, /Brewfile/);
   });
 
-  it('should require Codex and OpenClaw Brewfile packages', async () => {
+  it('should require Codex, OpenClaw, and Warp Brewfile packages', async () => {
     const report = await runCheck({
       brewfile: ['cask "1password-cli@beta"', 'cask "tailscale"', 'brew "node@24"'].join('\n'),
       existingPaths: healthyExistingPaths(),
@@ -418,6 +424,7 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
       'brewfile_cask_codex',
       'brewfile_cask_codex_app',
       'brewfile_cask_openclaw',
+      'brewfile_cask_warp',
       'brewfile_formula_openclaw_cli',
       'brewfile_formula_ripgrep',
     ];
@@ -426,6 +433,7 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
     for (const id of requiredIds) {
       const check = report.checks.find((candidate) => candidate.id === id);
       assert.equal(check.status, 'fail', id);
+      assert.equal(check.bucket, 'packages', id);
       assert.match(check.remediation, /Brewfile/);
     }
   });
@@ -444,6 +452,18 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
       assert.equal(check.status, 'fail', id);
       assert.match(check.remediation, /Brewfile/);
     }
+  });
+
+  it('should not require a Warp command', async () => {
+    const report = await runCheck({
+      existingPaths: healthyExistingPaths(),
+    });
+
+    assert.equal(REQUIRED_COMMANDS.includes('warp'), false);
+    assert.equal(
+      report.checks.some((check) => check.id === 'command_warp'),
+      false,
+    );
   });
 
   it('should fail when node resolves outside Homebrew node@24', async () => {
@@ -544,6 +564,18 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
     assert.match(codexAppCheck.remediation, /Codex desktop app/);
     assert.equal(openClawAppCheck.status, 'fail');
     assert.match(openClawAppCheck.remediation, /OpenClaw desktop app/);
+  });
+
+  it('should fail when the Warp app is missing', async () => {
+    const report = await runCheck({
+      existingPaths: healthyExistingPaths('/Applications/Warp.app'),
+    });
+    const warpAppCheck = report.checks.find((check) => check.id === 'warp_app');
+
+    assert.equal(report.ok, false);
+    assert.equal(warpAppCheck.status, 'fail');
+    assert.equal(warpAppCheck.bucket, 'manual_apps');
+    assert.match(warpAppCheck.remediation, /Brewfile/);
   });
 
   it('should fail Tailscale status when the command is missing', async () => {

@@ -5,6 +5,7 @@ cask "codex"
 cask "codex-app"
 cask "openclaw"
 cask "tailscale"
+cask "warp"
 
 brew "curl"
 brew "gh"
