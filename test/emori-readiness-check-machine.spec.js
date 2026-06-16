@@ -350,7 +350,6 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
         OP_SESSION: 'do-not-pass',
         OP_SESSION_tanaab: 'do-not-pass',
         EMORI_OP_TOKEN: 'do-not-pass',
-        TANAAB_OP_TOKEN: 'do-not-pass',
       },
       execCalls,
       existingPaths: healthyExistingPaths(),

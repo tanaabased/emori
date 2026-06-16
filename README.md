@@ -198,7 +198,7 @@ The Codex config files under the `ai` dotpkg use a shared/local/generated model:
   `dotfiles/ai/.codex/AGENTS.md`; this repo intentionally does not use `developer_instructions`
   in shared config.
 
-Set `TANAAB_CODEX_CONFIG_SYNC=false` or pass `--no-codex-config` to skip config generation for one
+Set `EMORI_CODEX_CONFIG_SYNC=false` or pass `--no-codex-config` to skip config generation for one
 run.
 
 Run `bun run test` for JavaScript library and helper changes before the relevant lint and plugin
