@@ -20,6 +20,7 @@ BOOTBOX_URL="https://bootbox.tanaab.sh/bootbox.sh"
 DEFAULT_SSH_KEY="2mh2ny4tegbi33yt3furutomzu/id_emori"
 DEFAULT_EMORI_SOURCE="ssh"
 DEFAULT_TANAAB_SOURCE="ssh"
+DEFAULT_OPENCLAW_AUTH="openai"
 EMORI_REPO_SSH_URL="git@github.com:tanaabased/emori.git"
 EMORI_REPO_RELEASE_BASE_URL="https://github.com/tanaabased/emori/releases/download"
 EMORI_REPO_RELEASE_ARCHIVE_PREFIX="emoriplugin"
@@ -218,7 +219,7 @@ tty_ts="$(tty_escape '38;2;219;39;119')"   # #db2777
 
 SCRIPT_NAME="${0##*/}"
 # Keep a single top-level assignment so release automation can stamp the entrypoint in place.
-SCRIPT_VERSION="v1.0.0-beta.1"
+SCRIPT_VERSION="v1.0.0-beta.2"
 
 DEBUG="${EMORI_DEBUG:-${DEBUG:-${RUNNER_DEBUG:-}}}"
 FORCE="${EMORI_FORCE:-}"
@@ -226,6 +227,8 @@ OP_TOKEN="${EMORI_OP_TOKEN:-${OP_SERVICE_ACCOUNT_TOKEN:-}}"
 SSH_KEYS_CSV="${EMORI_SSH_KEY:-${DEFAULT_SSH_KEY}}"
 EMORI_SOURCE="${EMORI_SOURCE:-${DEFAULT_EMORI_SOURCE}}"
 TANAAB_SOURCE="${EMORI_TANAAB:-${DEFAULT_TANAAB_SOURCE}}"
+OPENCLAW_AUTH="${EMORI_OPENCLAW_AUTH:-${DEFAULT_OPENCLAW_AUTH}}"
+SKIP_OPENCLAW="${EMORI_SKIP_OPENCLAW:-}"
 declare -a ORIGINAL_ARGS=("$@")
 declare -a SSH_KEYS=()
 declare -a SSH_KEYS_TO_INSTALL=()
@@ -250,6 +253,7 @@ TANAAB_SOURCE_LOCAL_PATH=""
 TANAAB_SOURCE_VERSION_TAG=""
 TANAAB_TARGET_PATH=""
 EMORI_APPLY_BREWFILE=""
+OPENCLAW_CMD=""
 
 if [[ -n "${EMORI_SSH_KEYS:-}" ]]; then
   SSH_KEYS_CSV="${SSH_KEYS_CSV}${SSH_KEYS_CSV:+,}${EMORI_SSH_KEYS}"
@@ -322,6 +326,7 @@ usage() {
   local op_token_display="none"
   local emori_display="none"
   local tanaab_display="none"
+  local openclaw_skip_display="off"
 
   if debug_enabled; then
     debug_display="on"
@@ -341,6 +346,10 @@ usage() {
   emori_display="$(normalize_repo_source_value "${EMORI_SOURCE}")"
   tanaab_display="$(normalize_repo_source_value "${TANAAB_SOURCE}")"
 
+  if [[ -n "${SKIP_OPENCLAW:-}" ]]; then
+    openclaw_skip_display="on"
+  fi
+
   cat <<EOS
 Usage: ${tty_dim}[NONINTERACTIVE=1] [CI=1]${tty_reset} ${tty_bold}${SCRIPT_NAME}${tty_reset} ${tty_dim}[options]${tty_reset}
 
@@ -349,6 +358,8 @@ ${tty_tp}Options:${tty_reset}
   --op-token       auths with 1password service account token ${tty_dim}[default: ${op_token_display}]${tty_reset}
   --emori          fetches emori from ssh, a local git repo path, or a release version ${tty_dim}[default: ${emori_display}]${tty_reset}
   --tanaab         fetches tanaab from ssh, a local git repo path, a release version, or a falsey disable value ${tty_dim}[default: ${tanaab_display}]${tty_reset}
+  --openclaw-auth  OpenClaw onboarding auth choice ${tty_dim}[default: ${OPENCLAW_AUTH}]${tty_reset}
+  --skip-openclaw  skips OpenClaw onboarding ${tty_dim}[default: ${openclaw_skip_display}]${tty_reset}
   --version        shows version of this script
   --debug          shows debug messages ${tty_dim}[default: ${debug_display}]${tty_reset}
   --force          forces supported bootbox operations ${tty_dim}[default: ${force_display}]${tty_reset}
@@ -360,6 +371,8 @@ ${tty_tp}Environment Variables:${tty_reset}
   EMORI_OP_TOKEN     1password service account token; falls back to OP_SERVICE_ACCOUNT_TOKEN
   EMORI_SOURCE       source for ~/tanaab/emori; supports ssh, local repo paths, or release versions
   EMORI_TANAAB       source for ~/tanaab/canon; supports ssh, local repo paths, release versions, or falsey disable values
+  EMORI_OPENCLAW_AUTH  auth choice passed to OpenClaw onboarding
+  EMORI_SKIP_OPENCLAW  set to any value to skip OpenClaw onboarding
   EMORI_FORCE        set to a truthy value to force supported operations
   EMORI_DEBUG        set to a truthy value to show debug messages
   NONINTERACTIVE      installs without prompting for user input
@@ -444,6 +457,20 @@ parse_args() {
       --tanaab=*)
         require_inline_option_value "--tanaab" "${1#*=}"
         TANAAB_SOURCE="${1#*=}"
+        shift
+        ;;
+      --openclaw-auth)
+        require_next_option_value "--openclaw-auth" "$#"
+        OPENCLAW_AUTH="$2"
+        shift 2
+        ;;
+      --openclaw-auth=*)
+        require_inline_option_value "--openclaw-auth" "${1#*=}"
+        OPENCLAW_AUTH="${1#*=}"
+        shift
+        ;;
+      --skip-openclaw)
+        SKIP_OPENCLAW="1"
         shift
         ;;
       --debug)
@@ -902,6 +929,19 @@ plan_emori_apply() {
   plan_action "${tty_tp}run${tty_reset} ${tty_ts}bootbox${tty_reset} against the ${tty_ts}emori${tty_reset} checkout at ${tty_ts}$(emori_target_display)${tty_reset} using its ${tty_ts}Brewfile${tty_reset} and dotpkgs on ${tty_ts}~${tty_reset}"
 }
 
+skip_openclaw_enabled() {
+  [[ -n "${SKIP_OPENCLAW:-}" ]]
+}
+
+plan_openclaw_onboarding() {
+  if skip_openclaw_enabled; then
+    plan_action "${tty_tp}skip${tty_reset} ${tty_ts}OpenClaw${tty_reset} onboarding because ${tty_bold}--skip-openclaw${tty_reset} or ${tty_bold}EMORI_SKIP_OPENCLAW${tty_reset} is set"
+    return 0
+  fi
+
+  plan_action "${tty_tp}check${tty_reset} ${tty_ts}OpenClaw${tty_reset} app and CLI readiness, then run onboarding if it is not already ready"
+}
+
 run_emori_fetch() {
   fetch_repo_source_to_target \
     "emori" \
@@ -933,6 +973,120 @@ run_bootbox_for_emori_apply() {
   done
 
   bootbox_run_or_abort emori "bootbox failed while applying emori checkout ${tty_ts}$(emori_target_display)${tty_reset}." "${bootbox_args[@]}"
+}
+
+resolve_openclaw_command() {
+  local brew_path
+  local brew_prefix
+  local command_path
+
+  if [[ -n "${OPENCLAW_CMD:-}" && -x "${OPENCLAW_CMD}" ]]; then
+    return 0
+  fi
+
+  command_path="$(command -v openclaw || true)"
+  if [[ -n "${command_path}" && -x "${command_path}" ]]; then
+    OPENCLAW_CMD="${command_path}"
+    return 0
+  fi
+
+  for brew_path in "$(command -v brew || true)" /opt/homebrew/bin/brew /usr/local/bin/brew; do
+    if [[ ! -x "${brew_path}" ]]; then
+      continue
+    fi
+
+    brew_prefix="$("${brew_path}" --prefix 2>/dev/null || true)"
+    if [[ -n "${brew_prefix}" && -x "${brew_prefix}/bin/openclaw" ]]; then
+      OPENCLAW_CMD="${brew_prefix}/bin/openclaw"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+ensure_openclaw_installed() {
+  if [[ ! -d "/Applications/OpenClaw.app" ]]; then
+    abort_multi "$(cat <<EOABORT
+OpenClaw.app was not found at ${tty_ts}/Applications/OpenClaw.app${tty_reset}.
+Rerun this wrapper so the Brewfile can install ${tty_ts}cask "openclaw"${tty_reset}, or pass ${tty_bold}--skip-openclaw${tty_reset} to skip onboarding.
+EOABORT
+)"
+  fi
+
+  if ! resolve_openclaw_command; then
+    abort_multi "$(cat <<EOABORT
+the ${tty_ts}openclaw${tty_reset} CLI was not found after applying the Brewfile.
+Rerun this wrapper so the Brewfile can install ${tty_ts}brew "openclaw-cli"${tty_reset}, or pass ${tty_bold}--skip-openclaw${tty_reset} to skip onboarding.
+EOABORT
+)"
+  fi
+}
+
+openclaw_appears_ready() {
+  if ! resolve_openclaw_command; then
+    return 1
+  fi
+
+  debug "${tty_tp}checking${tty_reset}" "${tty_ts}OpenClaw${tty_reset}" "status with" "${OPENCLAW_CMD}" status --deep
+  "${OPENCLAW_CMD}" status --deep >/dev/null 2>&1
+}
+
+validate_openclaw_onboarding_mode() {
+  if [[ -n "${NONINTERACTIVE-}" && "${OPENCLAW_AUTH}" == "${DEFAULT_OPENCLAW_AUTH}" ]]; then
+    abort_multi "$(cat <<EOABORT
+OpenClaw auth choice ${tty_ts}${OPENCLAW_AUTH}${tty_reset} requires browser or device interaction, but this wrapper is running non-interactively.
+Set ${tty_bold}EMORI_OPENCLAW_AUTH=openai-api-key${tty_reset} with the provider-required ${tty_bold}OPENAI_API_KEY${tty_reset}, choose another non-interactive OpenClaw auth choice with its required environment variables, or pass ${tty_bold}--skip-openclaw${tty_reset}.
+EOABORT
+)"
+  fi
+}
+
+run_openclaw_onboarding() {
+  local -a openclaw_args=(
+    onboard
+    --mode local
+    --auth-choice "${OPENCLAW_AUTH}"
+    --install-daemon
+    --daemon-runtime node
+  )
+
+  if [[ -n "${NONINTERACTIVE-}" ]]; then
+    openclaw_args+=(--non-interactive --json)
+  fi
+
+  if [[ -n "${CI-}" ]]; then
+    openclaw_args+=(--secret-input-mode ref --accept-risk)
+  fi
+
+  log "${tty_tp}onboarding${tty_reset} ${tty_ts}OpenClaw${tty_reset} with auth choice ${tty_ts}${OPENCLAW_AUTH}${tty_reset}"
+  debug "${tty_tp}running${tty_reset}" "${OPENCLAW_CMD}" "${openclaw_args[@]}"
+
+  if ! "${OPENCLAW_CMD}" "${openclaw_args[@]}"; then
+    abort_multi "$(cat <<EOABORT
+OpenClaw onboarding failed.
+Check that auth choice ${tty_ts}${OPENCLAW_AUTH}${tty_reset} is supported by the installed OpenClaw CLI and that the provider-required environment variables are set. For ${tty_ts}openai-api-key${tty_reset}, set ${tty_bold}OPENAI_API_KEY${tty_reset}; to skip this step, rerun with ${tty_bold}--skip-openclaw${tty_reset}.
+EOABORT
+)"
+  fi
+}
+
+run_openclaw_post_apply() {
+  if skip_openclaw_enabled; then
+    log "${tty_tp}skipping${tty_reset} ${tty_ts}OpenClaw${tty_reset} onboarding because ${tty_bold}--skip-openclaw${tty_reset} or ${tty_bold}EMORI_SKIP_OPENCLAW${tty_reset} is set"
+    return 0
+  fi
+
+  ensure_openclaw_installed
+
+  if openclaw_appears_ready; then
+    log "${tty_tp}skipping${tty_reset} ${tty_ts}OpenClaw${tty_reset} onboarding because OpenClaw already appears ready"
+    return 0
+  fi
+
+  warn "${tty_tp}running${tty_reset} ${tty_ts}OpenClaw${tty_reset} onboarding because the status check did not pass."
+  validate_openclaw_onboarding_mode
+  run_openclaw_onboarding
 }
 
 plan_action() {
@@ -1298,6 +1452,7 @@ plan_wrapper_execution() {
     plan_tanaab_plugin_link
   fi
   plan_emori_apply
+  plan_openclaw_onboarding
 }
 
 prepare_bootbox_script() {
@@ -1387,6 +1542,8 @@ main() {
   debug raw SSH_KEYS="$(array_join "," SSH_KEYS)"
   debug raw EMORI="$(normalize_repo_source_value "${EMORI_SOURCE}")"
   debug raw TANAAB="$(normalize_repo_source_value "${TANAAB_SOURCE}")"
+  debug raw OPENCLAW_AUTH="${OPENCLAW_AUTH}"
+  debug raw SKIP_OPENCLAW="${SKIP_OPENCLAW:-}"
   debug raw BOOTBOX_URL="${BOOTBOX_URL}"
   debug raw CURL="${CURL}"
   debug raw ARCH="${ARCH}"
@@ -1419,6 +1576,7 @@ main() {
   debug raw EMORI_APPLY_BREWFILE="$(emori_apply_brewfile_display)"
   debug raw EMORI_APPLY_DOTPKGS="$(array_join "," EMORI_APPLY_DOTPKGS)"
   run_bootbox_for_emori_apply
+  run_openclaw_post_apply
 }
 
 main "$@"
