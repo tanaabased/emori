@@ -20,6 +20,7 @@ jobs:
           - cli-contract
           - options
           - envvars
+          - openclaw
           - version
     steps:
       - name: Checkout code
@@ -49,6 +50,7 @@ jobs:
         env:
           TMPDIR: ${{ github.workspace }}/examples/${{ matrix.example }}/.tmp
           OPTOKEN: ${{ secrets.TANAAB_OP_TESTVAULT }}
+          OPENAI_API_KEY: ${{ secrets.TANAAB_ALTERNATE_MALE_KEY }}
         run: |
           brew update
           mkdir -p "$TMPDIR"

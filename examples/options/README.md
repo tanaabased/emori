@@ -39,13 +39,15 @@ test -n "$OPTOKEN"
 boot.sh \
   --op-token "$OPTOKEN" \
   --ssh-key 'omfsw2uztmi2xqpid5g3kiv6ba/id_test' \
-  --emori "$GITHUB_WORKSPACE"
+  --emori "$GITHUB_WORKSPACE" \
+  --skip-openclaw
 boot.sh \
   --op-token "$OPTOKEN" \
   --ssh-key 'omfsw2uztmi2xqpid5g3kiv6ba/id_test' \
   --ssh-key 'omfsw2uztmi2xqpid5g3kiv6ba/id_test:id_test_options' \
   --debug \
-  --emori "$GITHUB_WORKSPACE"
+  --emori "$GITHUB_WORKSPACE" \
+  --skip-openclaw
 ```
 
 ## Testing

@@ -14,7 +14,8 @@ repo.
 `boot.sh` is a thin hosted wrapper around [bootbox](https://github.com/tanaabased/bootbox). It
 installs core tools and requested SSH keys, materializes `~/tanaab/emori`, materializes
 `~/tanaab/canon` unless disabled, and then applies the `emori` checkout's [`Brewfile`](./Brewfile)
-plus top-level [`dotfiles/`](./dotfiles/) packages onto `$HOME`.
+plus top-level [`dotfiles/`](./dotfiles/) packages onto `$HOME`. After the apply step, it checks
+OpenClaw and runs `openclaw onboard` when OpenClaw does not already appear ready.
 
 After bootstrap, complete the manual setup checklist so the expected apps and plugins are
 available.
@@ -34,6 +35,7 @@ This default flow:
 - materializes the profile checkout into `~/tanaab/emori`
 - clones `git@github.com:tanaabased/canon.git` into `~/tanaab/canon`
 - applies the `emori` Brewfile and dotpkgs onto `$HOME`
+- onboards OpenClaw if its app and CLI are installed but its status check does not pass
 
 When the script finishes, complete the manual setup checklist below.
 
@@ -48,7 +50,8 @@ When the script finishes, complete the manual setup checklist below.
 ### Desktop Apps
 
 - Open Codex and OpenClaw from EMORI's macOS user session.
-- Complete any required sign-in or onboarding for those apps.
+- Complete any required sign-in or onboarding prompts for those apps. The wrapper attempts
+  OpenClaw onboarding automatically unless `--skip-openclaw` or `EMORI_SKIP_OPENCLAW` is set.
 
 After completing this checklist, ask Codex to run `$emori-readiness`. Readiness may trigger
 macOS, Codex, or Tailscale permission prompts while it verifies local desktop app and daemon
@@ -88,8 +91,12 @@ customize it without installing a local command first.
 - `EMORI_OP_TOKEN` or `--op-token` is required for 1Password-backed SSH-key install.
 - `--emori` / `EMORI_SOURCE` defaults to `ssh` and supports `ssh`, a local git repo path, or a release version.
 - `--tanaab` / `EMORI_TANAAB` defaults to `ssh` and supports `ssh`, a local git repo path, a release version, or a falsey disable value such as `off`.
+- `--openclaw-auth` / `EMORI_OPENCLAW_AUTH` defaults to `openai` and is passed to `openclaw onboard --auth-choice`.
+- `--skip-openclaw` / `EMORI_SKIP_OPENCLAW` skips OpenClaw onboarding. Any non-empty `EMORI_SKIP_OPENCLAW` value skips it.
 - The wrapper installs into fixed checkouts at `~/tanaab/emori` and `~/tanaab/canon`, then applies the `emori` checkout onto the default target of `$HOME`.
 - Set `EMORI_TANAAB=off` or `--tanaab off` if you want to skip the canon checkout.
+- Provider secrets for OpenClaw stay in the provider's environment variables. For example, use
+  `EMORI_OPENCLAW_AUTH=openai-api-key` with `OPENAI_API_KEY` when running non-interactively.
 
 ```sh
 curl -fsSL https://emori.boot.tanaab.sh | \
@@ -115,6 +122,8 @@ Common wrapper options:
 - `--ssh-key`: one or more `vault/item[:filename]` SSH key specs.
 - `--emori`: `ssh`, a local repo path, or a release version for `~/tanaab/emori`.
 - `--tanaab`: `ssh`, a local repo path, a release version, or a falsey disable value for `~/tanaab/canon`.
+- `--openclaw-auth`: OpenClaw onboarding auth choice.
+- `--skip-openclaw`: skip OpenClaw onboarding.
 - `--yes`: accept defaults and disable prompts.
 - `--force`: replace supported existing targets.
 - `--debug`: show wrapper debug output.
