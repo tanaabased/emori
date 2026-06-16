@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/tanaabased/emori/releases"><img src="https://img.shields.io/github/v/release/tanaabased/emori?&sort=semver" alt="Latest release" /></a>
+  <a href="https://github.com/tanaabased/emori/releases"><img src="https://img.shields.io/github/v/release/tanaabased/emori?include_prereleases&sort=semver" alt="Latest release" /></a>
   <img src="https://img.shields.io/badge/macOS-26%2B-111827" alt="macOS 26+" />
   <img src="https://img.shields.io/badge/Codex-emori-00c88a" alt="Codex plugin: emori" />
 </p>
