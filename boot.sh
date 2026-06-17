@@ -1335,23 +1335,38 @@ show_planned_actions() {
 }
 
 getc() {
+  local input_path
   local save_state
-  save_state="$(/bin/stty -g)"
-  /bin/stty raw -echo
-  IFS='' read -r -n 1 -d '' "$@"
-  /bin/stty "${save_state}"
+
+  input_path="$(interactive_tty_input)"
+  save_state="$(/bin/stty -g < "${input_path}")"
+  /bin/stty raw -echo < "${input_path}"
+  IFS='' read -r -n 1 -d '' "$@" < "${input_path}"
+  /bin/stty "${save_state}" < "${input_path}"
 }
 
 wait_for_user() {
   local c
 
-  trap 'stty sane; tput sgr0; echo; exit 1' SIGINT
+  trap 'if [[ -r /dev/tty ]]; then /bin/stty sane < /dev/tty; else /bin/stty sane; fi; tput sgr0; echo; exit 1' SIGINT
 
   echo
   echo "press ${tty_bold}RETURN${tty_reset}/${tty_bold}ENTER${tty_reset} to continue or any other key to abort:"
   getc c
   if ! [[ "${c}" == $'\r' || "${c}" == $'\n' ]]; then
     exit 1
+  fi
+}
+
+interactive_tty_available() {
+  [[ -r /dev/tty && -w /dev/tty ]] || [[ -t 0 ]]
+}
+
+interactive_tty_input() {
+  if [[ -r /dev/tty && -w /dev/tty ]]; then
+    printf "/dev/tty"
+  else
+    printf "/dev/stdin"
   fi
 }
 
@@ -1435,13 +1450,15 @@ apply_noninteractive_mode() {
     if [[ -n "${CI-}" ]]; then
       warn "${tty_tp}running${tty_reset} in ${tty_ts}non-interactive mode${tty_reset} because \`\$CI\` is set."
       NONINTERACTIVE=1
-    elif [[ ! -t 0 ]]; then
+    elif ! interactive_tty_available; then
       if [[ -z "${INTERACTIVE-}" ]]; then
-        warn "${tty_tp}running${tty_reset} in ${tty_ts}non-interactive mode${tty_reset} because \`stdin\` is not a TTY."
+        warn "${tty_tp}running${tty_reset} in ${tty_ts}non-interactive mode${tty_reset} because no interactive terminal is available."
         NONINTERACTIVE=1
       else
-        warn "${tty_tp}running${tty_reset} in ${tty_ts}interactive mode${tty_reset} despite \`stdin\` not being a TTY because \`\$INTERACTIVE\` is set."
+        abort "cannot run interactive mode because no interactive terminal is available."
       fi
+    elif [[ ! -t 0 ]]; then
+      debug "${tty_tp}using${tty_reset} ${tty_ts}/dev/tty${tty_reset} for interactive confirmation because \`stdin\` is not a TTY."
     fi
   else
     log "${tty_tp}running${tty_reset} in ${tty_ts}non-interactive mode${tty_reset} ${tty_dim}because \$NONINTERACTIVE is set${tty_reset}"
