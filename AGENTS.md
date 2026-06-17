@@ -33,7 +33,7 @@ This root `AGENTS.md` is the repo-local override for Codex work in this reposito
 - Treat `$emori-readiness` as a verification surface for this `emori` checkout and macOS user profile. It should not become a token-management, environment-management, external-service automation, setup, release, Leia, or general machine-admin workflow.
 - For protected resource access, use native Codex connectors only when a workflow explicitly needs them and they are available. When a script or skill needs protected resources without a native connector, use the 1Password CLI beta intentionally instead of committed `.env` files or persistent shell environment secrets.
 - Local readiness probes must not require or exercise the 1Password macOS desktop app. Readiness may verify that the 1Password CLI beta is installed and exposes expected CLI surfaces, but it must not run authenticated 1Password vault or Environment access probes.
-- `$emori-readiness` may run its bundled read-only local helper unsandboxed by default because it verifies Tailscale desktop/daemon readiness. Do not extend that unsandboxed default to unrelated repo commands, setup, package installation, tests, release validation, protected-resource access, or broad machine administration.
+- `$emori-readiness` runs its bundled read-only local helper to verify EMORI-owned local setup. Do not extend that helper to unrelated repo commands, setup, package installation, tests, release validation, protected-resource access, networking administration, or broad machine administration.
 - Keep README readiness content limited to human bootstrap/manual setup steps and a brief pointer to run `$emori-readiness` after setup. Do not put detailed readiness bucket or maintenance policy in README.
 - Keep readiness maintenance policy in this `AGENTS.md`. Keep `skills/emori-readiness/SKILL.md` focused on how to run readiness, parse helper output, and report local setup status.
 - Skill changes under `skills/**` do not automatically require readiness updates. Update readiness only when a skill adds or changes a stable machine prerequisite: a Brewfile dependency, a repo-owned dotfile, a manual app/auth/network step, or a Codex plugin install/link surface.
@@ -43,10 +43,10 @@ This root `AGENTS.md` is the repo-local override for Codex work in this reposito
   - Human app/auth/network setup belongs in the README manual setup checklist; then update the `manual_apps` bucket only if a local read-only probe can verify it.
   - Codex plugin install or link layout belongs in the plugin/dotfile source of truth; then update the `codex_plugins` bucket only if the local installed surface should be asserted.
 - Use these helper buckets only:
-  - `homebrew`: Homebrew command availability.
+  - `homebrew`: Homebrew command availability and prefix access.
   - `packages`: Brewfile declarations and required command availability.
   - `dotfiles`: repo-owned stowed files and generated local config readiness.
-  - `manual_apps`: installed apps and local app/auth/network readiness that cannot be fully handled by Brewfile alone, such as Codex, OpenClaw, and Tailscale.
+  - `manual_apps`: installed apps and local app/auth readiness that cannot be fully handled by Brewfile alone, such as Codex, OpenClaw, and Warp.
   - `codex_plugins`: local Codex plugin links or plugin install surfaces owned by this repo.
 
 ## Validation Policy

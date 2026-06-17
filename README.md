@@ -69,9 +69,7 @@ When the script finishes, complete the manual setup checklist below.
 - Complete any required sign-in or onboarding prompts for those apps. The wrapper attempts
   OpenClaw onboarding automatically unless `--skip-openclaw` or `EMORI_SKIP_OPENCLAW` is set.
 
-After completing this checklist, ask Codex to run `$emori-readiness`. Readiness may trigger
-macOS, Codex, or Tailscale permission prompts while it verifies local desktop app and daemon
-access. Approve those prompts only when you intentionally asked Codex to run readiness.
+After completing this checklist, ask Codex to run `$emori-readiness`.
 
 ## What Gets Installed
 
@@ -80,7 +78,8 @@ access. Approve those prompts only when you intentionally asked Codex to run rea
 [`Brewfile`](./Brewfile) is the single source of truth for base machine dependencies. It covers
 Homebrew tooling plus the core CLI and runtime stack used here, including Git and GitHub CLI,
 Bun, Codex CLI and desktop app, OpenClaw CLI and desktop app, Warp, Homebrew Node 24, Python,
-ripgrep, Stow, the 1Password CLI beta, Tailscale, and Zsh.
+ripgrep, Stow, the 1Password CLI beta, and Zsh. Homebrew cask apps install into
+`~/Applications` for the non-admin EMORI user.
 
 ### Dotpkgs
 

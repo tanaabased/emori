@@ -1,10 +1,11 @@
 tap "oven-sh/bun", trusted: true
 
+cask_args appdir: "~/Applications"
+
 cask "1password-cli@beta"
 cask "codex"
 cask "codex-app"
 cask "openclaw"
-cask "tailscale"
 cask "warp"
 
 brew "curl"
