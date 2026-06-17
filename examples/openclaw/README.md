@@ -56,7 +56,7 @@ test -d "$HOME/tanaab/emori/.git"
 ! test -e "$HOME/tanaab/canon"
 
 # should install the OpenClaw app from the Brewfile
-test -d "/Applications/OpenClaw.app"
+test -d "$HOME/Applications/OpenClaw.app"
 
 # should install the OpenClaw CLI from the Brewfile
 command -v openclaw >/dev/null

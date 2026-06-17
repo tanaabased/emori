@@ -23,8 +23,7 @@ perform external service automation, or validate releases.
 ## When to Use
 
 - Run after `boot.sh` and the README manual setup checklist have completed.
-- Run before relying on Codex plugin skills, 1Password CLI beta behavior, or Tailscale network
-  access.
+- Run before relying on Codex plugin skills, 1Password CLI beta behavior, or desktop app readiness.
 - Run when moving this EMORI environment to a new interactive macOS user profile.
 
 ## When Not to Use
@@ -42,32 +41,21 @@ perform external service automation, or validate releases.
 
 ## Workflow
 
-1. Run the bundled local probe with unsandboxed/elevated local access by default:
+1. Run the bundled local probe:
 
    ```sh
    bun ./skills/emori-readiness/scripts/check-machine.js
    ```
 
    This helper is read-only, strips 1Password token fallback environment variables from `op`
-   subprocesses, and intentionally verifies local desktop/daemon services such as Tailscale. It
-   does not require or exercise the 1Password macOS desktop app. The unsandboxed default is specific
-   to this bundled helper and should not be treated as permission to run unrelated repo commands
-   unsandboxed.
-
-   If a local permission prompt appears during this helper run, tell the user it is expected for
-   Tailscale desktop readiness. Denying the prompt may make readiness fail.
-
-   If unsandboxed access is denied or unavailable, run the helper sandboxed. If that sandboxed run
-   fails only on retryable local desktop or daemon access checks, report those checks as unresolved
-   local access failures and explain that an unsandboxed read-only run is needed for an authoritative
-   local readiness result.
+   subprocesses, and does not require or exercise the 1Password macOS desktop app.
 
 2. Parse the JSON output and summarize each `fail` and `warn` check with its `remediation` text.
    The helper emits checks in dependency order and every check includes one stable `bucket`:
    `homebrew`, `packages`, `dotfiles`, `manual_apps`, then `codex_plugins`.
 
    Bucket meanings:
-   - `homebrew`: Homebrew command availability.
+   - `homebrew`: Homebrew command availability and prefix access.
    - `packages`: Brewfile declarations and required command availability.
    - `dotfiles`: repo-owned stowed files and generated local config readiness.
    - `manual_apps`: installed apps and local app/auth/network readiness.
@@ -89,20 +77,16 @@ perform external service automation, or validate releases.
    ```markdown
    🟢 **Ready**
 
-   - ✅ Homebrew
+   - ✅ Homebrew (command and prefix access)
    - ✅ Packages and Brewfile contract
    - ✅ Dotfiles
    - ✅ Desktop apps (Codex, OpenClaw, Warp)
    - ✅ 1Password CLI beta
-   - ✅ Tailscale tailnet
    - ✅ Codex plugin links
-
-   Local access note: sandboxed helper could not reach local desktop services, but the unsandboxed read-only retry passed.
    ```
 
    If any surface fails or warns, mark it with `❌` or `⚠️` and list only the failed or warning
-   checks below the status list with their remediation text. Include `Local access note` only when
-   the sandboxed and unsandboxed helper results differ.
+   checks below the status list with their remediation text.
 
 ## Checkpoints
 
@@ -115,16 +99,8 @@ perform external service automation, or validate releases.
 - Do not add a new helper check id without assigning it to one of the five allowed local buckets.
 - Treat `op environment read --help` as the 1Password CLI beta readiness gate because it verifies
   the expected CLI surface without granting the agent access to the 1Password macOS desktop app.
-- Treat `tailscale status --json` as the local Tailscale readiness gate. Require the local node to
-  be running, online, present in the network map, assigned a Tailscale IP, and connected to
-  `tanaab.dev`. Peer pings are troubleshooting tools, not readiness gates.
 - Treat the README as human setup guidance. Use the helper JSON as the machine-readable source of
   readiness truth.
-- Run only the bundled readiness helper unsandboxed by default. Do not generalize that default to
-  tests, setup commands, package managers, release validation, or other repo commands.
-- If the sandboxed helper only fails on retryable local desktop or daemon access and the
-  unsandboxed read-only retry passes, base the final readiness status on the unsandboxed result.
-  Report the sandboxed failures as a local access note, not as readiness failures.
 - Follow the root `AGENTS.md` readiness maintenance policy when deciding whether future repo or
   skill changes should update this readiness skill.
 

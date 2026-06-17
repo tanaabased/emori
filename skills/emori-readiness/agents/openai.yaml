@@ -4,4 +4,4 @@ interface:
   icon_small: './assets/icon-small.svg'
   icon_large: './assets/icon-large.png'
   brand_color: '#00c88a'
-  default_prompt: 'Use $emori-readiness after bootstrapping this EMORI environment to verify local setup, 1Password CLI beta readiness, Tailscale readiness, and Codex plugin links.'
+  default_prompt: 'Use $emori-readiness after bootstrapping this EMORI environment to verify local setup, 1Password CLI beta readiness, desktop app readiness, and Codex plugin links.'

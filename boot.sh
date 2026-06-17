@@ -17,6 +17,7 @@ set -euo pipefail
 MACOS_OLDEST_SUPPORTED="26.0"
 REQUIRED_CURL_VERSION="7.41.0"
 BOOTBOX_URL="https://bootbox.tanaab.sh/bootbox.sh"
+AGENTBOX_HEALTH_SCRIPT="/opt/tanaab/agentbox/bin/health.sh"
 DEFAULT_SSH_KEY="2mh2ny4tegbi33yt3furutomzu/id_emori"
 DEFAULT_EMORI_SOURCE="ssh"
 DEFAULT_TANAAB_SOURCE="ssh"
@@ -28,6 +29,9 @@ TANAAB_REPO_SSH_URL="git@github.com:tanaabased/canon.git"
 TANAAB_REPO_RELEASE_BASE_URL="https://github.com/tanaabased/canon/releases/download"
 TANAAB_REPO_RELEASE_ARCHIVE_PREFIX="tanaab"
 TANAAB_PLUGIN_RELATIVE_TARGET="../../../../../canon"
+AGENTBOX_PREPARED="0"
+AGENTBOX_BREWGROUP=""
+HOMEBREW_PREFIX_PATH=""
 
 abort() {
   printf "%serror%s: %s\n" "${tty_red-}" "${tty_reset-}" "$@" >&2
@@ -176,6 +180,101 @@ shell_join() {
     printf " "
     printf "%s" "${arg// /\ }"
   done
+}
+
+discover_agentbox_context() {
+  local brewgroup_output
+
+  if [[ ! -e "${AGENTBOX_HEALTH_SCRIPT}" ]]; then
+    AGENTBOX_PREPARED="0"
+    AGENTBOX_BREWGROUP=""
+    return 0
+  fi
+
+  AGENTBOX_PREPARED="1"
+  AGENTBOX_BREWGROUP=""
+
+  if [[ ! -x "${AGENTBOX_HEALTH_SCRIPT}" ]]; then
+    return 0
+  fi
+
+  brewgroup_output="$("${AGENTBOX_HEALTH_SCRIPT}" --brewgroup 2>/dev/null || true)"
+  brewgroup_output="$(trim_whitespace "${brewgroup_output}")"
+  if value_enabled "${brewgroup_output}"; then
+    AGENTBOX_BREWGROUP="${brewgroup_output}"
+  fi
+}
+
+default_homebrew_prefix() {
+  case "${ARCH}" in
+    arm64)
+      printf "/opt/homebrew"
+      ;;
+    *)
+      printf "/usr/local"
+      ;;
+  esac
+}
+
+resolve_homebrew_prefix() {
+  local brew_command
+  local prefix
+
+  if [[ -n "${HOMEBREW_PREFIX:-}" ]]; then
+    printf "%s" "${HOMEBREW_PREFIX}"
+    return 0
+  fi
+
+  brew_command="$(command -v brew || true)"
+  if [[ -n "${brew_command}" ]]; then
+    prefix="$("${brew_command}" --prefix 2>/dev/null || true)"
+    prefix="$(trim_whitespace "${prefix}")"
+    if [[ -n "${prefix}" ]]; then
+      printf "%s" "${prefix}"
+      return 0
+    fi
+  fi
+
+  default_homebrew_prefix
+}
+
+ensure_homebrew_prefix_access() {
+  local user_name
+
+  discover_agentbox_context
+  HOMEBREW_PREFIX_PATH="$(resolve_homebrew_prefix)"
+
+  debug raw AGENTBOX_PREPARED="${AGENTBOX_PREPARED}"
+  debug raw AGENTBOX_BREWGROUP="${AGENTBOX_BREWGROUP:-}"
+  debug raw HOMEBREW_PREFIX="${HOMEBREW_PREFIX_PATH}"
+
+  if [[ ! -e "${HOMEBREW_PREFIX_PATH}" ]]; then
+    debug "${tty_ts}${HOMEBREW_PREFIX_PATH}${tty_reset} does not exist; bootbox may install Homebrew if needed"
+    return 0
+  fi
+
+  if [[ -d "${HOMEBREW_PREFIX_PATH}" &&
+    -r "${HOMEBREW_PREFIX_PATH}" &&
+    -w "${HOMEBREW_PREFIX_PATH}" &&
+    -x "${HOMEBREW_PREFIX_PATH}" ]]; then
+    debug "${tty_ts}${HOMEBREW_PREFIX_PATH}${tty_reset} is readable, writable, and traversable"
+    return 0
+  fi
+
+  user_name="$(id -un 2>/dev/null || printf "current user")"
+  if [[ "${AGENTBOX_PREPARED}" == "1" && -n "${AGENTBOX_BREWGROUP}" ]]; then
+    abort_multi "$(cat <<EOABORT
+Homebrew prefix ${tty_ts}${HOMEBREW_PREFIX_PATH}${tty_reset} exists, but ${tty_ts}${user_name}${tty_reset} cannot read, traverse, and write it.
+This appears to be an agentbox-prepared machine. Add ${tty_ts}${user_name}${tty_reset} to the Homebrew brewgroup ${tty_ts}${AGENTBOX_BREWGROUP}${tty_reset}, start a new login session, then rerun this wrapper.
+EOABORT
+)"
+  fi
+
+  abort_multi "$(cat <<EOABORT
+Homebrew prefix ${tty_ts}${HOMEBREW_PREFIX_PATH}${tty_reset} exists, but ${tty_ts}${user_name}${tty_reset} cannot read, traverse, and write it.
+Grant the invoking user read/write/traverse access to ${tty_ts}${HOMEBREW_PREFIX_PATH}${tty_reset} through agentbox or admin-owned machine prep, then rerun this wrapper.
+EOABORT
+)"
 }
 
 # shellcheck disable=SC2292
@@ -1006,10 +1105,10 @@ resolve_openclaw_command() {
 }
 
 ensure_openclaw_installed() {
-  if [[ ! -d "/Applications/OpenClaw.app" ]]; then
+  if [[ ! -d "${HOME}/Applications/OpenClaw.app" && ! -d "/Applications/OpenClaw.app" ]]; then
     abort_multi "$(cat <<EOABORT
-OpenClaw.app was not found at ${tty_ts}/Applications/OpenClaw.app${tty_reset}.
-Rerun this wrapper so the Brewfile can install ${tty_ts}cask "openclaw"${tty_reset}, or pass ${tty_bold}--skip-openclaw${tty_reset} to skip onboarding.
+OpenClaw.app was not found at ${tty_ts}~/Applications/OpenClaw.app${tty_reset} or ${tty_ts}/Applications/OpenClaw.app${tty_reset}.
+Rerun this wrapper so the Brewfile can install ${tty_ts}cask "openclaw"${tty_reset} into ${tty_ts}~/Applications${tty_reset}, or pass ${tty_bold}--skip-openclaw${tty_reset} to skip onboarding.
 EOABORT
 )"
   fi
@@ -1530,6 +1629,7 @@ main() {
   parse_args "$@"
   validate_inputs
   validate_platform
+  ensure_homebrew_prefix_access
   apply_noninteractive_mode
   sync_bootbox_env
 

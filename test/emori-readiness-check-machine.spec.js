@@ -24,32 +24,22 @@ function makeFileInfo({ symbolicLink = false } = {}) {
   };
 }
 
-function makeHealthyTailscaleStatus(overrides = {}) {
-  return {
-    BackendState: 'Running',
-    TailscaleIPs: ['100.64.0.1'],
-    CurrentTailnet: {
-      Name: 'tanaab.dev',
-    },
-    Self: {
-      InNetworkMap: true,
-      Online: true,
-    },
-    ...overrides,
-  };
-}
-
 const NODE_BREW_PREFIX = '/opt/homebrew/opt/node@24';
 const NODE_BREW_PATH = path.join(NODE_BREW_PREFIX, 'bin', 'node');
+const HOMEBREW_PREFIX = '/opt/homebrew';
+const AGENTBOX_HEALTH_SCRIPT = '/opt/tanaab/agentbox/bin/health.sh';
+
+function userAppPath(appName) {
+  return makePath('Applications', `${appName}.app`);
+}
 
 function healthyExistingPaths(...missingPaths) {
   const missing = new Set(missingPaths);
 
   return [
-    '/Applications/Codex.app',
-    '/Applications/OpenClaw.app',
-    '/Applications/Tailscale.app',
-    '/Applications/Warp.app',
+    userAppPath('Codex'),
+    userAppPath('OpenClaw'),
+    userAppPath('Warp'),
     makePath('.zshrc'),
     makePath('.zprofile'),
     makePath('.codex', 'AGENTS.md'),
@@ -61,17 +51,22 @@ function healthyExistingPaths(...missingPaths) {
 }
 
 function makeDeps({
+  agentboxBrewgroup = null,
   brewfile = [
+    'cask_args appdir: "~/Applications"',
     'cask "1password-cli@beta"',
     'cask "codex"',
     'cask "codex-app"',
     'cask "openclaw"',
-    'cask "tailscale"',
     'cask "warp"',
     'brew "node@24"',
     'brew "openclaw-cli"',
     'brew "ripgrep"',
   ].join('\n'),
+  homebrewPrefix = HOMEBREW_PREFIX,
+  homebrewPrefixError = false,
+  homebrewPrefixExists = true,
+  homebrewPrefixWritable = true,
   brewPrefixError = false,
   commands = REQUIRED_COMMANDS,
   configMode = 0o100600,
@@ -83,9 +78,6 @@ function makeDeps({
   nodeVersionError = false,
   opEnvironmentHelpError = false,
   symbolicLinks,
-  tailscaleExecError = false,
-  tailscaleStatus = makeHealthyTailscaleStatus(),
-  tailscaleStdout,
   whichNodeError = false,
 } = {}) {
   const existing = new Set(existingPaths ?? healthyExistingPaths());
@@ -102,6 +94,21 @@ function makeDeps({
   const commandSet = new Set(commands);
 
   return {
+    access(targetPath, mode) {
+      if (targetPath === homebrewPrefix) {
+        if (!homebrewPrefixExists) {
+          throw new Error(`missing ${targetPath}`);
+        }
+
+        if (mode !== 0 && !homebrewPrefixWritable) {
+          throw new Error(`not writable ${targetPath}`);
+        }
+
+        return;
+      }
+
+      throw new Error(`unexpected access ${targetPath}`);
+    },
     commandExists(command) {
       return commandSet.has(command);
     },
@@ -109,6 +116,18 @@ function makeDeps({
       execCalls?.push({ args, command, options });
 
       if (command === 'brew') {
+        if (args.length === 1) {
+          assert.deepEqual(args, ['--prefix']);
+
+          if (homebrewPrefixError) {
+            throw homebrewPrefixError instanceof Error
+              ? homebrewPrefixError
+              : new Error('brew prefix failed');
+          }
+
+          return { stdout: `${homebrewPrefix}\n` };
+        }
+
         assert.deepEqual(args, ['--prefix', 'node@24']);
 
         if (brewPrefixError) {
@@ -118,6 +137,16 @@ function makeDeps({
         }
 
         return { stdout: `${NODE_BREW_PREFIX}\n` };
+      }
+
+      if (command === AGENTBOX_HEALTH_SCRIPT) {
+        assert.deepEqual(args, ['--brewgroup']);
+
+        if (agentboxBrewgroup === null) {
+          throw new Error('agentbox health unavailable');
+        }
+
+        return { stdout: `${agentboxBrewgroup}\n` };
       }
 
       if (command === 'which') {
@@ -158,18 +187,6 @@ function makeDeps({
         }
 
         throw new Error(`unexpected op args ${args.join(' ')}`);
-      }
-
-      if (command === 'tailscale') {
-        assert.deepEqual(args, ['status', '--json']);
-
-        if (tailscaleExecError) {
-          throw tailscaleExecError instanceof Error
-            ? tailscaleExecError
-            : new Error('tailscale failed');
-        }
-
-        return { stdout: tailscaleStdout ?? JSON.stringify(tailscaleStatus) };
       }
 
       throw new Error(`unexpected command ${command}`);
@@ -227,6 +244,75 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
 
     assert.equal(report.checks[0].id, 'command_brew');
     assert.equal(report.checks[0].bucket, 'homebrew');
+    assert.equal(report.checks[1].id, 'homebrew_prefix_writable');
+    assert.equal(report.checks[1].bucket, 'homebrew');
+  });
+
+  it('should verify the Homebrew prefix is writable', async () => {
+    const report = await runCheck({
+      existingPaths: healthyExistingPaths(),
+    });
+    const prefixCheck = report.checks.find((check) => check.id === 'homebrew_prefix_writable');
+
+    assert.equal(prefixCheck.status, 'pass');
+    assert.match(prefixCheck.message, /\/opt\/homebrew/);
+  });
+
+  it('should fail Homebrew prefix access cleanly when brew is missing', async () => {
+    const report = await runCheck({
+      commands: REQUIRED_COMMANDS.filter((command) => command !== 'brew'),
+      existingPaths: healthyExistingPaths(),
+    });
+    const commandCheck = report.checks.find((check) => check.id === 'command_brew');
+    const prefixCheck = report.checks.find((check) => check.id === 'homebrew_prefix_writable');
+
+    assert.equal(commandCheck.status, 'fail');
+    assert.equal(prefixCheck.status, 'fail');
+    assert.match(prefixCheck.message, /brew is missing/);
+    assert.match(prefixCheck.remediation, /Install Homebrew/);
+  });
+
+  it('should fail Homebrew prefix access with generic remediation when agentbox is unavailable', async () => {
+    const report = await runCheck({
+      existingPaths: healthyExistingPaths(),
+      homebrewPrefixWritable: false,
+    });
+    const prefixCheck = report.checks.find((check) => check.id === 'homebrew_prefix_writable');
+
+    assert.equal(report.ok, false);
+    assert.equal(prefixCheck.status, 'fail');
+    assert.match(prefixCheck.message, /not readable, writable, and traversable/);
+    assert.match(prefixCheck.remediation, /agentbox or admin-owned machine prep/);
+    assert.doesNotMatch(prefixCheck.remediation, /brewer/);
+  });
+
+  it('should fail Homebrew prefix access with brewgroup remediation on agentbox machines', async () => {
+    const report = await runCheck({
+      agentboxBrewgroup: 'brewer',
+      existingPaths: healthyExistingPaths(),
+      homebrewPrefixWritable: false,
+    });
+    const prefixCheck = report.checks.find((check) => check.id === 'homebrew_prefix_writable');
+
+    assert.equal(report.ok, false);
+    assert.equal(prefixCheck.status, 'fail');
+    assert.match(prefixCheck.remediation, /brewer/);
+    assert.match(prefixCheck.remediation, /new login session/);
+  });
+
+  it('should use generic Homebrew prefix remediation for falsey agentbox brewgroup output', async () => {
+    for (const agentboxBrewgroup of ['off', 'false', '0', '']) {
+      const report = await runCheck({
+        agentboxBrewgroup,
+        existingPaths: healthyExistingPaths(),
+        homebrewPrefixWritable: false,
+      });
+      const prefixCheck = report.checks.find((check) => check.id === 'homebrew_prefix_writable');
+
+      assert.equal(prefixCheck.status, 'fail');
+      assert.match(prefixCheck.remediation, /agentbox or admin-owned machine prep/);
+      assert.doesNotMatch(prefixCheck.remediation, /brewgroup "/);
+    }
   });
 
   it('should verify Homebrew node@24 is the active node runtime', async () => {
@@ -269,7 +355,7 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
   it('should include remediation for every warning and failure', async () => {
     const report = await runCheck({
       brewfile: 'cask "1password-cli"\n',
-      commands: REQUIRED_COMMANDS.filter((command) => !['gh', 'tailscale'].includes(command)),
+      commands: REQUIRED_COMMANDS.filter((command) => command !== 'gh'),
       configMode: 0o100644,
       env: {
         EMORI_OP_TOKEN: 'super-secret-token',
@@ -302,26 +388,23 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
     assert.ok(report.checks.some((check) => check.id === 'brewfile_cask_codex_app'));
     assert.ok(report.checks.some((check) => check.id === 'brewfile_cask_openclaw'));
     assert.ok(report.checks.some((check) => check.id === 'brewfile_cask_warp'));
+    assert.ok(report.checks.some((check) => check.id === 'brewfile_cask_appdir_user_applications'));
     assert.ok(report.checks.some((check) => check.id === 'brewfile_formula_node_24'));
     assert.ok(report.checks.some((check) => check.id === 'brewfile_formula_openclaw_cli'));
     assert.ok(report.checks.some((check) => check.id === 'brewfile_formula_ripgrep'));
     assert.ok(
       report.checks.some((check) => check.id === 'brewfile_cask_1password_cli_stable_absent'),
     );
-    assert.ok(report.checks.some((check) => check.id === 'brewfile_cask_tailscale'));
     assert.ok(report.checks.some((check) => check.id === 'zshrc_link'));
     assert.ok(report.checks.some((check) => check.id === 'zprofile_link'));
     assert.ok(report.checks.some((check) => check.id === 'command_codex'));
     assert.ok(report.checks.some((check) => check.id === 'command_gh'));
     assert.ok(report.checks.some((check) => check.id === 'command_openclaw'));
     assert.ok(report.checks.some((check) => check.id === 'command_rg'));
-    assert.ok(report.checks.some((check) => check.id === 'command_tailscale'));
     assert.ok(report.checks.some((check) => check.id === 'codex_app'));
     assert.ok(report.checks.some((check) => check.id === 'openclaw_app'));
     assert.ok(report.checks.some((check) => check.id === 'onepassword_environment_cli'));
-    assert.ok(report.checks.some((check) => check.id === 'tailscale_app'));
     assert.ok(report.checks.some((check) => check.id === 'warp_app'));
-    assert.ok(report.checks.some((check) => check.id === 'tailscale_status'));
     assert.ok(report.checks.some((check) => check.id === 'bootstrap_token_env'));
   });
 
@@ -368,11 +451,11 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
   it('should require the beta 1Password CLI cask and reject the stable cask', async () => {
     const report = await runCheck({
       brewfile: [
+        'cask_args appdir: "~/Applications"',
         'cask "1password-cli"',
         'cask "codex"',
         'cask "codex-app"',
         'cask "openclaw"',
-        'cask "tailscale"',
         'cask "warp"',
         'brew "node@24"',
         'brew "openclaw-cli"',
@@ -395,11 +478,11 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
   it('should require the node@24 Brewfile formula', async () => {
     const report = await runCheck({
       brewfile: [
+        'cask_args appdir: "~/Applications"',
         'cask "1password-cli@beta"',
         'cask "codex"',
         'cask "codex-app"',
         'cask "openclaw"',
-        'cask "tailscale"',
         'cask "warp"',
         'brew "openclaw-cli"',
         'brew "ripgrep"',
@@ -416,7 +499,11 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
 
   it('should require Codex, OpenClaw, and Warp Brewfile packages', async () => {
     const report = await runCheck({
-      brewfile: ['cask "1password-cli@beta"', 'cask "tailscale"', 'brew "node@24"'].join('\n'),
+      brewfile: [
+        'cask_args appdir: "~/Applications"',
+        'cask "1password-cli@beta"',
+        'brew "node@24"',
+      ].join('\n'),
       existingPaths: healthyExistingPaths(),
     });
     const requiredIds = [
@@ -435,6 +522,30 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
       assert.equal(check.bucket, 'packages', id);
       assert.match(check.remediation, /Brewfile/);
     }
+  });
+
+  it('should require cask apps to install into user Applications', async () => {
+    const report = await runCheck({
+      brewfile: [
+        'cask "1password-cli@beta"',
+        'cask "codex"',
+        'cask "codex-app"',
+        'cask "openclaw"',
+        'cask "warp"',
+        'brew "node@24"',
+        'brew "openclaw-cli"',
+        'brew "ripgrep"',
+      ].join('\n'),
+      existingPaths: healthyExistingPaths(),
+    });
+    const appdirCheck = report.checks.find(
+      (check) => check.id === 'brewfile_cask_appdir_user_applications',
+    );
+
+    assert.equal(report.ok, false);
+    assert.equal(appdirCheck.status, 'fail');
+    assert.match(appdirCheck.message, /cask_args appdir/);
+    assert.match(appdirCheck.remediation, /~\/Applications/);
   });
 
   it('should require Codex, OpenClaw, and ripgrep commands', async () => {
@@ -463,6 +574,26 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
       report.checks.some((check) => check.id === 'command_warp'),
       false,
     );
+  });
+
+  it('should not require Tailscale packages, app, command, or status', async () => {
+    const report = await runCheck({
+      existingPaths: healthyExistingPaths(),
+    });
+
+    assert.equal(REQUIRED_COMMANDS.includes('tailscale'), false);
+    for (const id of [
+      'brewfile_cask_tailscale',
+      'command_tailscale',
+      'tailscale_app',
+      'tailscale_status',
+    ]) {
+      assert.equal(
+        report.checks.some((check) => check.id === id),
+        false,
+        id,
+      );
+    }
   });
 
   it('should fail when node resolves outside Homebrew node@24', async () => {
@@ -541,113 +672,50 @@ describe('skills/emori-readiness/scripts/check-machine-lib', () => {
 
     assert.deepEqual([...statuses].sort(), ['fail', 'pass']);
   });
-  it('should fail when the Tailscale app is missing', async () => {
-    const report = await runCheck({
-      existingPaths: healthyExistingPaths('/Applications/Tailscale.app'),
-    });
-    const tailscaleAppCheck = report.checks.find((check) => check.id === 'tailscale_app');
-
-    assert.equal(report.ok, false);
-    assert.equal(tailscaleAppCheck.status, 'fail');
-  });
-
   it('should fail when the Codex or OpenClaw desktop apps are missing', async () => {
     const report = await runCheck({
-      existingPaths: healthyExistingPaths('/Applications/Codex.app', '/Applications/OpenClaw.app'),
+      existingPaths: healthyExistingPaths(userAppPath('Codex'), userAppPath('OpenClaw')),
     });
     const codexAppCheck = report.checks.find((check) => check.id === 'codex_app');
     const openClawAppCheck = report.checks.find((check) => check.id === 'openclaw_app');
 
     assert.equal(report.ok, false);
     assert.equal(codexAppCheck.status, 'fail');
-    assert.match(codexAppCheck.remediation, /Codex desktop app/);
+    assert.match(codexAppCheck.remediation, /~\/Applications/);
     assert.equal(openClawAppCheck.status, 'fail');
-    assert.match(openClawAppCheck.remediation, /OpenClaw desktop app/);
+    assert.match(openClawAppCheck.remediation, /~\/Applications/);
+  });
+
+  it('should pass desktop app checks when apps are installed in system Applications', async () => {
+    const report = await runCheck({
+      existingPaths: [
+        '/Applications/Codex.app',
+        '/Applications/OpenClaw.app',
+        '/Applications/Warp.app',
+        makePath('.zshrc'),
+        makePath('.zprofile'),
+        makePath('.codex', 'AGENTS.md'),
+        makePath('.codex', 'config.shared.toml'),
+        makePath('.codex', 'plugins', 'emori'),
+        makePath('.codex', 'plugins', 'tanaab'),
+        makePath('.codex', 'config.toml'),
+      ],
+    });
+
+    assert.equal(report.checks.find((check) => check.id === 'codex_app').status, 'pass');
+    assert.equal(report.checks.find((check) => check.id === 'openclaw_app').status, 'pass');
+    assert.equal(report.checks.find((check) => check.id === 'warp_app').status, 'pass');
   });
 
   it('should fail when the Warp app is missing', async () => {
     const report = await runCheck({
-      existingPaths: healthyExistingPaths('/Applications/Warp.app'),
+      existingPaths: healthyExistingPaths(userAppPath('Warp')),
     });
     const warpAppCheck = report.checks.find((check) => check.id === 'warp_app');
 
     assert.equal(report.ok, false);
     assert.equal(warpAppCheck.status, 'fail');
     assert.equal(warpAppCheck.bucket, 'manual_apps');
-    assert.match(warpAppCheck.remediation, /Brewfile/);
-  });
-
-  it('should fail Tailscale status when the command is missing', async () => {
-    const report = await runCheck({
-      commands: REQUIRED_COMMANDS.filter((command) => command !== 'tailscale'),
-      existingPaths: healthyExistingPaths(),
-    });
-    const commandCheck = report.checks.find((check) => check.id === 'command_tailscale');
-    const statusCheck = report.checks.find((check) => check.id === 'tailscale_status');
-
-    assert.equal(commandCheck.status, 'fail');
-    assert.equal(statusCheck.status, 'fail');
-    assert.match(statusCheck.message, /tailscale is missing/);
-  });
-
-  it('should fail Tailscale status when connected to the wrong tailnet', async () => {
-    const report = await runCheck({
-      existingPaths: healthyExistingPaths(),
-      tailscaleStatus: makeHealthyTailscaleStatus({
-        CurrentTailnet: {
-          Name: 'other.example',
-        },
-      }),
-    });
-    const statusCheck = report.checks.find((check) => check.id === 'tailscale_status');
-
-    assert.equal(statusCheck.status, 'fail');
-    assert.match(statusCheck.message, /other\.example/);
-  });
-
-  it('should fail Tailscale status when the local node is offline or not running', async () => {
-    const report = await runCheck({
-      existingPaths: healthyExistingPaths(),
-      tailscaleStatus: makeHealthyTailscaleStatus({
-        BackendState: 'Stopped',
-        Self: {
-          InNetworkMap: false,
-          Online: false,
-        },
-        TailscaleIPs: [],
-      }),
-    });
-    const statusCheck = report.checks.find((check) => check.id === 'tailscale_status');
-
-    assert.equal(statusCheck.status, 'fail');
-    assert.match(statusCheck.message, /BackendState/);
-    assert.match(statusCheck.message, /not online/);
-    assert.match(statusCheck.message, /no Tailscale IPs/);
-  });
-
-  it('should fail Tailscale status when JSON output is invalid', async () => {
-    const report = await runCheck({
-      existingPaths: healthyExistingPaths(),
-      tailscaleStdout: '{not json',
-    });
-    const statusCheck = report.checks.find((check) => check.id === 'tailscale_status');
-
-    assert.equal(statusCheck.status, 'fail');
-    assert.match(statusCheck.message, /not parseable JSON/);
-  });
-
-  it('should identify Tailscale daemon connection failures as local access issues', async () => {
-    const report = await runCheck({
-      existingPaths: healthyExistingPaths(),
-      tailscaleExecError: Object.assign(new Error('tailscale failed'), {
-        stderr:
-          'failed to connect to local Tailscaled process and failed to enumerate processes while looking for it',
-      }),
-    });
-    const statusCheck = report.checks.find((check) => check.id === 'tailscale_status');
-
-    assert.equal(statusCheck.status, 'fail');
-    assert.match(statusCheck.message, /local Tailscale service/);
-    assert.match(statusCheck.remediation, /unsandboxed local access/);
+    assert.match(warpAppCheck.remediation, /~\/Applications/);
   });
 });

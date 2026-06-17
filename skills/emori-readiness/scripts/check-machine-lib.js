@@ -1,5 +1,7 @@
 import { execFile as execFileCallback } from 'node:child_process';
+import { constants as fsConstants } from 'node:fs';
 import {
+  access as defaultAccess,
   lstat as defaultLstat,
   readFile as defaultReadFile,
   stat as defaultStat,
@@ -14,17 +16,17 @@ const execFileAsync = promisify(execFileCallback);
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_REPO_ROOT = path.resolve(SCRIPT_DIR, '..', '..', '..');
 const PRIVATE_CONFIG_MODE = 0o600;
-const EXPECTED_TAILNET_NAME = 'tanaab.dev';
 const MINIMUM_ONEPASSWORD_ENVIRONMENT_CLI_VERSION = '2.33.0-beta.02';
 const EXPECTED_NODE_FORMULA = 'node@24';
 const EXPECTED_NODE_MAJOR_VERSION = 24;
+const AGENTBOX_HEALTH_SCRIPT = '/opt/tanaab/agentbox/bin/health.sh';
+const HOMEBREW_PREFIX_ACCESS_MODE = fsConstants.R_OK | fsConstants.W_OK | fsConstants.X_OK;
 
 export const REQUIRED_BREWFILE_CASKS = [
   '1password-cli@beta',
   'codex',
   'codex-app',
   'openclaw',
-  'tailscale',
   'warp',
 ];
 export const REQUIRED_BREWFILE_FORMULAS = [EXPECTED_NODE_FORMULA, 'openclaw-cli', 'ripgrep'];
@@ -45,7 +47,6 @@ export const REQUIRED_COMMANDS = [
   'openclaw',
   'rg',
   'stow',
-  'tailscale',
 ];
 export const ONEPASSWORD_TOKEN_ENV_KEYS = [
   'EMORI_OP_TOKEN',
@@ -110,12 +111,14 @@ const CHECK_BUCKET_BY_ID = new Map([
     `command_${command}`,
     command === 'brew' ? 'homebrew' : 'packages',
   ]),
+  ['homebrew_prefix_writable', 'homebrew'],
   ['brewfile_readable', 'packages'],
   ...REQUIRED_BREWFILE_CASKS.map((cask) => [`brewfile_cask_${checkIdSegment(cask)}`, 'packages']),
   ...REQUIRED_BREWFILE_FORMULAS.map((formula) => [
     `brewfile_formula_${checkIdSegment(formula)}`,
     'packages',
   ]),
+  ['brewfile_cask_appdir_user_applications', 'packages'],
   ...FORBIDDEN_BREWFILE_CASKS.map(({ id }) => [id, 'packages']),
   ['onepassword_environment_cli', 'packages'],
   ['node_homebrew_path', 'packages'],
@@ -127,9 +130,7 @@ const CHECK_BUCKET_BY_ID = new Map([
   ['codex_generated_config', 'dotfiles'],
   ['codex_app', 'manual_apps'],
   ['openclaw_app', 'manual_apps'],
-  ['tailscale_app', 'manual_apps'],
   ['warp_app', 'manual_apps'],
-  ['tailscale_status', 'manual_apps'],
   ['bootstrap_token_env', 'manual_apps'],
   ['codex_emori_link', 'codex_plugins'],
   ['codex_tanaab_link', 'codex_plugins'],
@@ -182,6 +183,10 @@ function hasFormula(brewfile, formula) {
   ).test(brewfile);
 }
 
+function hasUserApplicationsCaskArgs(brewfile) {
+  return /^\s*cask_args\s+appdir:\s*["']~\/Applications["']/m.test(brewfile);
+}
+
 function formatMode(mode) {
   return `0${(mode & 0o777).toString(8)}`;
 }
@@ -205,30 +210,6 @@ async function defaultExecFile(command, args, options = {}) {
   return { stdout };
 }
 
-function formatErrorDetail(error) {
-  const stderr = typeof error?.stderr === 'string' ? error.stderr : '';
-  const message = error instanceof Error ? error.message : String(error ?? '');
-  return (stderr || message).replace(/\s+/g, ' ').trim();
-}
-
-function formatTailscaleCommandError(error) {
-  const detail = formatErrorDetail(error);
-
-  if (/failed to connect to local Tailscaled|local tailscaled|tailscaled process/i.test(detail)) {
-    return {
-      message: 'Tailscale CLI could not connect to the local Tailscale service from this process.',
-      remediation:
-        'If this was a sandboxed run and tailscale status --json works in your terminal, rerun the readiness helper with unsandboxed local access from Codex. Otherwise open Tailscale, sign in, and connect this machine to the tanaab.dev tailnet.',
-    };
-  }
-
-  return {
-    message: 'Tailscale status check failed.',
-    remediation:
-      'Open Tailscale, sign in, connect this machine to the tanaab.dev tailnet, then rerun tailscale status --json.',
-  };
-}
-
 async function pathInfo(targetPath, deps) {
   try {
     return await deps.lstat(targetPath);
@@ -241,6 +222,23 @@ function onePasswordTokenEnvKeys(env) {
   return Object.keys(env).filter(
     (key) => ONEPASSWORD_TOKEN_ENV_KEYS.includes(key) || key.startsWith('OP_SESSION_'),
   );
+}
+
+function valueEnabled(value) {
+  switch (
+    String(value ?? '')
+      .trim()
+      .toLowerCase()
+  ) {
+    case '':
+    case '0':
+    case 'false':
+    case 'no':
+    case 'off':
+      return false;
+    default:
+      return true;
+  }
 }
 
 function commandEnvWithoutOnePasswordTokenFallbacks(env) {
@@ -263,50 +261,95 @@ async function commandCheck(command, deps) {
       );
 }
 
-function getCheck(checks, id) {
-  return checks.find((check) => check.id === id);
+async function agentboxBrewgroup(deps) {
+  try {
+    const { stdout } = await deps.execFile(AGENTBOX_HEALTH_SCRIPT, ['--brewgroup']);
+    const brewgroup = stdout.trim();
+    return valueEnabled(brewgroup) ? brewgroup : '';
+  } catch {
+    return '';
+  }
 }
 
-function checkTailscaleStatus(status) {
-  if (!status || typeof status !== 'object') {
-    return fail(
-      'tailscale_status',
-      'Tailscale status output was not a JSON object.',
-      'Open Tailscale, sign in, connect this machine to the tanaab.dev tailnet, then rerun tailscale status --json.',
+function homebrewPrefixAccessRemediation(prefix, brewgroup) {
+  if (brewgroup) {
+    return `Add the current user to the Homebrew brewgroup "${brewgroup}", start a new login session, then rerun https://emori.boot.tanaab.sh.`;
+  }
+
+  return `Grant the invoking user read/write/traverse access to the Homebrew prefix at ${prefix} through agentbox or admin-owned machine prep, then rerun https://emori.boot.tanaab.sh.`;
+}
+
+async function appendHomebrewPrefixWritableCheck(checks, deps) {
+  const brewCheck = getCheck(checks, 'command_brew');
+
+  if (brewCheck?.status === 'fail') {
+    checks.push(
+      fail(
+        'homebrew_prefix_writable',
+        'Homebrew prefix access could not be checked because brew is missing.',
+        'Install Homebrew, rerun https://emori.boot.tanaab.sh, then rerun the readiness helper.',
+      ),
+    );
+    return;
+  }
+
+  let prefix;
+  try {
+    const { stdout } = await deps.execFile('brew', ['--prefix']);
+    prefix = stdout.trim();
+  } catch {
+    checks.push(
+      fail(
+        'homebrew_prefix_writable',
+        'Homebrew prefix could not be resolved with brew --prefix.',
+        'Repair Homebrew so brew --prefix succeeds, then rerun the readiness helper.',
+      ),
+    );
+    return;
+  }
+
+  if (!prefix) {
+    checks.push(
+      fail(
+        'homebrew_prefix_writable',
+        'Homebrew prefix resolved to an empty path.',
+        'Repair Homebrew so brew --prefix prints the active prefix, then rerun the readiness helper.',
+      ),
+    );
+    return;
+  }
+
+  try {
+    await deps.access(prefix, fsConstants.F_OK);
+  } catch {
+    checks.push(
+      fail(
+        'homebrew_prefix_writable',
+        `Homebrew prefix ${prefix} does not exist.`,
+        `Repair Homebrew so its active prefix exists at ${prefix}, then rerun the readiness helper.`,
+      ),
+    );
+    return;
+  }
+
+  try {
+    await deps.access(prefix, HOMEBREW_PREFIX_ACCESS_MODE);
+    checks.push(pass('homebrew_prefix_writable', `Homebrew prefix ${prefix} is writable.`));
+  } catch {
+    const remediation = homebrewPrefixAccessRemediation(prefix, await agentboxBrewgroup(deps));
+
+    checks.push(
+      fail(
+        'homebrew_prefix_writable',
+        `Homebrew prefix ${prefix} is not readable, writable, and traversable by the current user.`,
+        remediation,
+      ),
     );
   }
+}
 
-  const issues = [];
-  const tailscaleIps = Array.isArray(status.TailscaleIPs) ? status.TailscaleIPs : [];
-  const tailnetName = status.CurrentTailnet?.Name;
-
-  if (status.BackendState !== 'Running') {
-    issues.push(`BackendState is "${String(status.BackendState ?? 'missing')}"`);
-  }
-
-  if (status.Self?.Online !== true) {
-    issues.push('local node is not online');
-  }
-
-  if (status.Self?.InNetworkMap !== true) {
-    issues.push('local node is not in the network map');
-  }
-
-  if (tailscaleIps.length === 0) {
-    issues.push('no Tailscale IPs are assigned');
-  }
-
-  if (tailnetName !== EXPECTED_TAILNET_NAME) {
-    issues.push(`CurrentTailnet.Name is "${String(tailnetName ?? 'missing')}"`);
-  }
-
-  return issues.length === 0
-    ? pass('tailscale_status', `Tailscale is running on the ${EXPECTED_TAILNET_NAME} tailnet.`)
-    : fail(
-        'tailscale_status',
-        `Tailscale is not ready: ${issues.join('; ')}.`,
-        'Open Tailscale, sign in, connect this machine to the tanaab.dev tailnet, then rerun tailscale status --json.',
-      );
+function getCheck(checks, id) {
+  return checks.find((check) => check.id === id);
 }
 
 async function appendStowedLinkChecks(checks, links, homeDir, deps) {
@@ -378,6 +421,18 @@ async function appendBrewfileChecks(checks, repoRoot, deps) {
   }
 
   checks.push(pass('brewfile_readable', 'Brewfile is readable.'));
+  checks.push(
+    hasUserApplicationsCaskArgs(brewfile)
+      ? pass(
+          'brewfile_cask_appdir_user_applications',
+          'Brewfile installs cask apps into ~/Applications.',
+        )
+      : fail(
+          'brewfile_cask_appdir_user_applications',
+          'Brewfile does not set cask_args appdir: "~/Applications".',
+          'Update the Brewfile so Homebrew casks install apps into ~/Applications for the non-admin EMORI user, then rerun https://emori.boot.tanaab.sh.',
+        ),
+  );
 
   for (const cask of REQUIRED_BREWFILE_CASKS) {
     checks.push(
@@ -518,49 +573,60 @@ async function appendRequiredCommandChecks(checks, deps) {
   }
 }
 
-async function appendAppPresenceChecks(checks, deps) {
-  const codexAppPath = '/Applications/Codex.app';
+async function appPresenceCheck({ appName, id, remediationAction }, homeDir, deps) {
+  const userAppPath = path.join(homeDir, 'Applications', `${appName}.app`);
+  const systemAppPath = path.join('/Applications', `${appName}.app`);
+
+  if (await pathInfo(userAppPath, deps)) {
+    return pass(id, `${appName}.app was found at ~/Applications.`);
+  }
+
+  if (await pathInfo(systemAppPath, deps)) {
+    return pass(id, `${appName}.app was found at /Applications.`);
+  }
+
+  return fail(
+    id,
+    `${appName}.app was not found at ~/Applications or /Applications.`,
+    `Rerun https://emori.boot.tanaab.sh or install ${appName} from the Brewfile into ~/Applications, then ${remediationAction}.`,
+  );
+}
+
+async function appendAppPresenceChecks(checks, homeDir, deps) {
   checks.push(
-    (await pathInfo(codexAppPath, deps))
-      ? pass('codex_app', 'Codex.app was found.')
-      : fail(
-          'codex_app',
-          'Codex.app was not found.',
-          'Rerun https://emori.boot.tanaab.sh or install the Codex desktop app from the Brewfile, then open it and complete any required sign-in.',
-        ),
+    await appPresenceCheck(
+      {
+        appName: 'Codex',
+        id: 'codex_app',
+        remediationAction: 'open it and complete any required sign-in',
+      },
+      homeDir,
+      deps,
+    ),
   );
 
-  const openClawAppPath = '/Applications/OpenClaw.app';
   checks.push(
-    (await pathInfo(openClawAppPath, deps))
-      ? pass('openclaw_app', 'OpenClaw.app was found.')
-      : fail(
-          'openclaw_app',
-          'OpenClaw.app was not found.',
-          'Rerun https://emori.boot.tanaab.sh or install the OpenClaw desktop app from the Brewfile, then open it and complete onboarding.',
-        ),
+    await appPresenceCheck(
+      {
+        appName: 'OpenClaw',
+        id: 'openclaw_app',
+        remediationAction: 'open it and complete onboarding',
+      },
+      homeDir,
+      deps,
+    ),
   );
 
-  const tailscaleAppPath = '/Applications/Tailscale.app';
   checks.push(
-    (await pathInfo(tailscaleAppPath, deps))
-      ? pass('tailscale_app', 'Tailscale.app was found.')
-      : fail(
-          'tailscale_app',
-          'Tailscale.app was not found.',
-          'Rerun https://emori.boot.tanaab.sh or install the Tailscale desktop app, then open it and sign in.',
-        ),
-  );
-
-  const warpAppPath = '/Applications/Warp.app';
-  checks.push(
-    (await pathInfo(warpAppPath, deps))
-      ? pass('warp_app', 'Warp.app was found.')
-      : fail(
-          'warp_app',
-          'Warp.app was not found.',
-          'Rerun https://emori.boot.tanaab.sh or install Warp from the Brewfile so /Applications/Warp.app exists.',
-        ),
+    await appPresenceCheck(
+      {
+        appName: 'Warp',
+        id: 'warp_app',
+        remediationAction: 'open it once',
+      },
+      homeDir,
+      deps,
+    ),
   );
 }
 
@@ -597,38 +663,6 @@ async function appendOnePasswordEnvironmentCliCheck(checks, env, deps) {
   }
 }
 
-async function appendTailscaleStatusCheck(checks, deps) {
-  if (getCheck(checks, 'command_tailscale')?.status === 'fail') {
-    checks.push(
-      fail(
-        'tailscale_status',
-        'Tailscale status could not be checked because tailscale is missing.',
-        'Install the Tailscale desktop app, sign in, connect this machine to the tanaab.dev tailnet, then rerun tailscale status --json.',
-      ),
-    );
-    return;
-  }
-
-  try {
-    const { stdout } = await deps.execFile('tailscale', ['status', '--json']);
-    checks.push(checkTailscaleStatus(JSON.parse(stdout)));
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      checks.push(
-        fail(
-          'tailscale_status',
-          'Tailscale status output was not parseable JSON.',
-          'Open Tailscale, sign in, connect this machine to the tanaab.dev tailnet, then rerun tailscale status --json.',
-        ),
-      );
-      return;
-    }
-
-    const formattedError = formatTailscaleCommandError(error);
-    checks.push(fail('tailscale_status', formattedError.message, formattedError.remediation));
-  }
-}
-
 function appendTokenFallbackCheck(checks, env) {
   const presentTokenKeys = onePasswordTokenEnvKeys(env);
   checks.push(
@@ -653,6 +687,7 @@ function appendTokenFallbackCheck(checks, env) {
  */
 export async function checkMachine(options = {}) {
   const deps = {
+    access: defaultAccess,
     commandExists: defaultCommandExists,
     execFile: defaultExecFile,
     lstat: defaultLstat,
@@ -666,14 +701,14 @@ export async function checkMachine(options = {}) {
   const checks = [];
 
   checks.push(await commandCheck('brew', deps));
+  await appendHomebrewPrefixWritableCheck(checks, deps);
   await appendBrewfileChecks(checks, repoRoot, deps);
   await appendRequiredCommandChecks(checks, deps);
   await appendOnePasswordEnvironmentCliCheck(checks, env, deps);
   await appendNodeRuntimeChecks(checks, deps);
   await appendStowedLinkChecks(checks, DOTFILE_LINKS, homeDir, deps);
   await appendGeneratedConfigCheck(checks, homeDir, deps);
-  await appendAppPresenceChecks(checks, deps);
-  await appendTailscaleStatusCheck(checks, deps);
+  await appendAppPresenceChecks(checks, homeDir, deps);
   appendTokenFallbackCheck(checks, env);
   await appendStowedLinkChecks(checks, CODEX_PLUGIN_LINKS, homeDir, deps);
 
