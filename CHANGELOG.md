@@ -1,5 +1,8 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
+- Fixed hosted bootstrap confirmation to read from `/dev/tty` when `stdin` is piped. [#11](https://github.com/tanaabased/emori/pull/11)
+- Updated README hosted and local `bootemori` usage guidance. [#11](https://github.com/tanaabased/emori/pull/11)
+
 ## v1.0.0-beta.4 - [June 17, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.4)
 
 - Added GitHub SSH `known_hosts` seeding before SSH clones. [#9](https://github.com/tanaabased/emori/pull/9)
