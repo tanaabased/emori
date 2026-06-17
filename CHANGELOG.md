@@ -1,5 +1,9 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
+- Added GitHub SSH `known_hosts` seeding before SSH clones. [#9](https://github.com/tanaabased/emori/pull/9)
+- Added quiet, no-sudo bootbox delegation for EMORI bootstrap. [#9](https://github.com/tanaabased/emori/pull/9)
+- Updated bootbox delegation to use the `BOOTBOX_*` namespace. [#9](https://github.com/tanaabased/emori/pull/9)
+
 ## v1.0.0-beta.3 - [June 17, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.3)
 
 - Added agentbox brewgroup remediation for Homebrew prefix failures. [#8](https://github.com/tanaabased/emori/pull/8)
