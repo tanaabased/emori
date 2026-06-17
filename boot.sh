@@ -1063,6 +1063,47 @@ run_tanaab_fetch() {
     "${TANAAB_SOURCE_KIND}"
 }
 
+github_known_hosts_needed() {
+  [[ "${EMORI_SOURCE_KIND}" == "ssh" || "${TANAAB_SOURCE_KIND}" == "ssh" ]]
+}
+
+ensure_github_known_hosts() {
+  local ssh_dir="${HOME}/.ssh"
+  local known_hosts_path="${ssh_dir}/known_hosts"
+  local known_host_entry
+
+  if ! github_known_hosts_needed; then
+    return 0
+  fi
+
+  if [[ -e "${ssh_dir}" && ! -d "${ssh_dir}" ]]; then
+    abort "${tty_ts}~/.ssh${tty_reset} exists but is not a directory."
+  fi
+
+  execute mkdir -p "${ssh_dir}"
+  execute chmod 700 "${ssh_dir}"
+
+  if [[ -e "${known_hosts_path}" && ! -f "${known_hosts_path}" ]]; then
+    abort "${tty_ts}~/.ssh/known_hosts${tty_reset} exists but is not a file."
+  fi
+
+  if [[ ! -e "${known_hosts_path}" ]]; then
+    execute touch "${known_hosts_path}"
+    execute chmod 600 "${known_hosts_path}"
+  fi
+
+  while IFS= read -r known_host_entry; do
+    if ! grep -qxF "${known_host_entry}" "${known_hosts_path}"; then
+      debug "${tty_tp}adding${tty_reset} GitHub SSH known host entry to ${tty_ts}~/.ssh/known_hosts${tty_reset}"
+      printf "%s\n" "${known_host_entry}" >> "${known_hosts_path}"
+    fi
+  done <<'EOF'
+github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
+github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=
+github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=
+EOF
+}
+
 run_bootbox_for_emori_apply() {
   local dotpkg
   local -a bootbox_args=(--brewfile "${EMORI_APPLY_BREWFILE}")
@@ -1690,6 +1731,7 @@ main() {
 
   ensure_bootbox_core_requirements
   run_bootbox
+  ensure_github_known_hosts
   run_emori_fetch
   if tanaab_enabled; then
     run_tanaab_fetch
