@@ -33,17 +33,15 @@ available.
 ## Quickstart
 
 `boot.sh` requires a 1Password service account token so it can fetch private SSH keys during
-bootstrap. Provide it with `EMORI_OP_TOKEN` or `--op-token`.
+bootstrap.
 
 ```sh
-curl -fsSL https://emori.boot.tanaab.sh/boot.sh | EMORI_OP_TOKEN="$OP_TOKEN" bash
+/bin/bash -c "$(curl -fsSL https://emori.boot.tanaab.sh/boot.sh)" bootemori \
+  --op-token "$OP_TOKEN" \
+  --ssh-key "your-vault/your-ssh-key:id_emori"
 ```
 
-**or**
-
-```sh
-curl -sL https://emori.boot.tanaab.sh/boot.sh | bash -s -- --op-token "$OP_TOKEN"
-```
+`--ssh-key` uses `vault/item[:filename]`. Replace the example value with your own 1Password SSH key item. Note that you can use `--ssh-key` multiple times.
 
 This default flow:
 
@@ -100,76 +98,35 @@ This plugin surface is intentionally small. Broader shared canon skills come fro
 
 ## Usage
 
-The hosted script is the primary install surface. Environment variables are the easiest way to
-customize it without installing a local command first.
-
-- `EMORI_OP_TOKEN` or `--op-token` is required for 1Password-backed SSH-key install.
-- `--emori` / `EMORI_SOURCE` defaults to `ssh` and supports `ssh`, a local git repo path, or a release version.
-- `--tanaab` / `EMORI_TANAAB` defaults to `ssh` and supports `ssh`, a local git repo path, a release version, or a falsey disable value such as `off`.
-- `--openclaw-auth` / `EMORI_OPENCLAW_AUTH` defaults to `openai` and is passed to `openclaw onboard --auth-choice`.
-- `--skip-openclaw` / `EMORI_SKIP_OPENCLAW` skips OpenClaw onboarding. Any non-empty `EMORI_SKIP_OPENCLAW` value skips it.
-- The wrapper installs into fixed checkouts at `~/tanaab/emori` and `~/tanaab/canon`, then applies the `emori` checkout onto the default target of `$HOME`.
-- Set `EMORI_TANAAB=off` or `--tanaab off` if you want to skip the canon checkout.
-- Provider secrets for OpenClaw stay in the provider's environment variables. For example, use
-  `EMORI_OPENCLAW_AUTH=openai-api-key` with `OPENAI_API_KEY` when running non-interactively.
+Use the hosted script's help output for the current option and environment-variable contract.
 
 ```sh
-curl -fsSL https://emori.boot.tanaab.sh | \
-  EMORI_OP_TOKEN="$OP_TOKEN" \
-  EMORI_SOURCE="$HOME/src/emori" \
-  EMORI_TANAAB=off \
-  bash
+/bin/bash -c "$(curl -fsSL https://emori.boot.tanaab.sh/boot.sh)" bootemori --help
 ```
+
+The `bootemori` argument is the `$0` placeholder for `bash -c`; wrapper options start after it.
+`EMORI_OP_TOKEN`, `OP_SERVICE_ACCOUNT_TOKEN`, or `--op-token` can provide the 1Password token.
+Interactive installs show the planned actions and wait for confirmation when a terminal is available.
 
 ## Advanced
 
-If you want a reusable local command, download the script as `emoriboot` first.
+If you want a reusable local command, download the script as `bootemori` first.
 
 ```sh
-curl -fsSL https://emori.boot.tanaab.sh -o emoriboot
-chmod +x emoriboot
-./emoriboot --help
+curl -fsSL https://emori.boot.tanaab.sh -o bootemori
+chmod +x bootemori
+./bootemori --help
 ```
 
-Common wrapper options:
-
-- `--op-token`: 1Password service account token.
-- `--ssh-key`: one or more `vault/item[:filename]` SSH key specs.
-- `--emori`: `ssh`, a local repo path, or a release version for `~/tanaab/emori`.
-- `--tanaab`: `ssh`, a local repo path, a release version, or a falsey disable value for `~/tanaab/canon`.
-- `--openclaw-auth`: OpenClaw onboarding auth choice.
-- `--skip-openclaw`: skip OpenClaw onboarding.
-- `--yes`: accept defaults and disable prompts.
-- `--force`: replace supported existing targets.
-- `--debug`: show wrapper debug output.
-- `--version`: print the wrapper version.
-- `--help`: print the current CLI and envvar contract.
-
-Use `./emoriboot --help` or `bash ./boot.sh --help` as the source of truth for the exact current
-flag and environment-variable surface.
-
-Hosted-script example with envvars:
+To install it as a command, move it into a directory on `PATH`, such as `~/.local/bin`.
 
 ```sh
-curl -fsSL https://emori.boot.tanaab.sh | \
-  EMORI_OP_TOKEN="$OP_TOKEN" \
-  EMORI_SSH_KEY="2mh2ny4tegbi33yt3furutomzu/id_emori" \
-  EMORI_SOURCE=ssh \
-  EMORI_TANAAB=ssh \
-  EMORI_DEBUG=1 \
-  bash
+mkdir -p ~/.local/bin
+mv bootemori ~/.local/bin/bootemori
+bootemori --help
 ```
 
-Local-script example with pinned source values:
-
-```sh
-./emoriboot \
-  --op-token "$OP_TOKEN" \
-  --ssh-key "2mh2ny4tegbi33yt3furutomzu/id_emori" \
-  --emori v1.0.0-beta.1 \
-  --tanaab v0.2.0 \
-  --yes
-```
+If you are not sure which directories are on `PATH`, inspect `echo "$PATH"` and choose one from that list.
 
 ## Development
 
