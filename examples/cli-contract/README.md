@@ -112,6 +112,9 @@ boot.sh --tanaab false --help | grep -F 'false'
 # should not mention the TANAAB_ envvar namespace in help output
 ! boot.sh --help | grep -F 'TANAAB_'
 
+# should not mention the BOOTBOX_ envvar namespace in help output
+! boot.sh --help | grep -F 'BOOTBOX_'
+
 # should print a version string
 test -n "$(boot.sh --version)"
 

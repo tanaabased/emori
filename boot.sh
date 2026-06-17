@@ -1432,6 +1432,13 @@ bootbox_run() {
   local arg
   local mask_next="0"
   local -a unset_env_names=(
+    BOOTBOX_BREWFILE
+    BOOTBOX_BREWFILES
+    BOOTBOX_DOTPKG
+    BOOTBOX_DOTPKGS
+    BOOTBOX_SSH_KEY
+    BOOTBOX_SSH_KEYS
+    BOOTBOX_OP_TOKEN
     TANAAB_BREWFILE
     TANAAB_BREWFILES
     TANAAB_DOTPKG
@@ -1440,9 +1447,16 @@ bootbox_run() {
     TANAAB_SSH_KEYS
     TANAAB_OP_TOKEN
     OP_SERVICE_ACCOUNT_TOKEN
+    BOOTBOX_FORCE
     TANAAB_FORCE
+    BOOTBOX_DEBUG
     TANAAB_DEBUG
+    BOOTBOX_QUIET
+    TANAAB_QUIET
+    BOOTBOX_NO_SUDO
+    BOOTBOX_ARCH
     TANAAB_ARCH
+    BOOTBOX_OS
     TANAAB_OS
     INTERACTIVE
   )
@@ -1451,12 +1465,15 @@ bootbox_run() {
 
   case "${mode}" in
     core)
+      unset_env_names+=("BOOTBOX_TARGET")
       unset_env_names+=("TANAAB_TARGET")
       ;;
     ssh)
+      unset_env_names+=("BOOTBOX_TARGET")
       unset_env_names+=("TANAAB_TARGET")
       ;;
     emori)
+      unset_env_names+=("BOOTBOX_TARGET")
       unset_env_names+=("TANAAB_TARGET")
       ;;
     *)
@@ -1469,21 +1486,27 @@ bootbox_run() {
   done
 
   if [[ -n "${DEBUG-}" ]]; then
-    bootbox_command+=("TANAAB_DEBUG=${DEBUG}")
+    bootbox_command+=("BOOTBOX_DEBUG=${DEBUG}")
     bootbox_display_command+=("EMORI_DEBUG=${DEBUG}")
   fi
 
   if [[ -n "${FORCE-}" ]]; then
-    bootbox_command+=("TANAAB_FORCE=${FORCE}")
+    bootbox_command+=("BOOTBOX_FORCE=${FORCE}")
     bootbox_display_command+=("EMORI_FORCE=${FORCE}")
   fi
+
+  bootbox_command+=("BOOTBOX_QUIET=1")
+  bootbox_display_command+=("BOOTBOX_QUIET=1")
+
+  bootbox_command+=("BOOTBOX_NO_SUDO=1")
+  bootbox_display_command+=("BOOTBOX_NO_SUDO=1")
 
   # The wrapper owns the confirmation gate; delegated bootbox runs should not prompt again.
   bootbox_command+=("NONINTERACTIVE=1")
   bootbox_display_command+=("NONINTERACTIVE=1")
 
   if [[ "${mode}" == "ssh" && -n "${EMORI_TARGET-}" ]]; then
-    bootbox_command+=("TANAAB_TARGET=${EMORI_TARGET}")
+    bootbox_command+=("BOOTBOX_TARGET=${EMORI_TARGET}")
     bootbox_display_command+=("EMORI_TARGET=${EMORI_TARGET}")
   fi
 

@@ -71,7 +71,7 @@ This root `AGENTS.md` is the repo-local override for Codex work in this reposito
 - Keep `BOOTBOX_URL` fixed and not user-configurable unless the task explicitly changes that contract.
 - Preserve token masking in debug output. Do not leak raw 1Password tokens in logs or display commands.
 - Do not reintroduce raw argument logging.
-- Preserve the public wrapper contract under the `EMORI_*` namespace unless the task is explicitly about changing it. Use upstream `TANAAB_*` names only as the internal bridge when delegating to bootbox.
+- Preserve the public wrapper contract under the `EMORI_*` namespace unless the task is explicitly about changing it. Use upstream `BOOTBOX_*` names only as the internal bridge when delegating to bootbox.
 - Preserve the current token, SSH key, `--emori`, and `--tanaab` contract unless the task is explicitly about changing it.
 - Keep `--emori` / `EMORI_SOURCE` aligned with the current source modes: `ssh`, a local git repo path, or a release version, with a fixed target of `~/tanaab/emori` and skip-or-replace behavior controlled by `--force`.
 - Keep `--tanaab` / `EMORI_TANAAB` aligned with the current source modes: `ssh`, a local git repo path, a release version, or falsey disable values, with a fixed target of `~/tanaab/canon`.
