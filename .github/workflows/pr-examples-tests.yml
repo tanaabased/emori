@@ -63,7 +63,11 @@ jobs:
       #     OPTOKEN: ${{ secrets.TANAAB_OP_TESTVAULT }}
       #   run: |
       #     boot.sh \
+      #       --identity 'EMORI <emori@example.test>' \
       #       --op-token "$OPTOKEN" \
+      #       --signing-key 'omfsw2uztmi2xqpid5g3kiv6ba/id_test' \
       #       --ssh-key 'omfsw2uztmi2xqpid5g3kiv6ba/id_test' \
+      #       --authorized-key 'op://omfsw2uztmi2xqpid5g3kiv6ba/id_test' \
       #       --emori "$GITHUB_WORKSPACE" \
+      #       --skip-openclaw \
       #       --debug

@@ -8,12 +8,10 @@ const DIST_URL = new URL('../dist/', import.meta.url);
 const REPO_URL = new URL('../', import.meta.url);
 const REPO_ROOT = fileURLToPath(REPO_URL);
 const PUBLIC_ORIGIN = 'https://emori.boot.tanaab.sh';
-const PUBLIC_BOOT_URL = PUBLIC_ORIGIN;
 const PUBLISHED_SCRIPTS = [
   {
     sourcePath: 'boot.sh',
     destinationPath: 'boot.sh',
-    publicUrl: PUBLIC_BOOT_URL,
     executable: true,
   },
 ];
@@ -24,9 +22,22 @@ const DIST_FILES = [
     destinationPath: 'index.html',
     executable: false,
   },
+  {
+    sourcePath: 'site/llms.txt',
+    destinationPath: 'llms.txt',
+    executable: false,
+  },
 ];
 const ROBOTS_URL = new URL('./robots.txt', DIST_URL);
 const SITEMAP_URL = new URL('./sitemap.xml', DIST_URL);
+const PUBLIC_RESOURCES = [
+  ...PUBLISHED_SCRIPTS.map(({ destinationPath }) => ({
+    destinationPath,
+  })),
+  {
+    destinationPath: 'llms.txt',
+  },
+];
 
 function log(message) {
   process.stdout.write(`${message}\n`);
@@ -98,9 +109,9 @@ async function resolveSitemapLastmod() {
 }
 
 function renderSitemap(lastmod) {
-  const urls = PUBLISHED_SCRIPTS.map(
-    ({ destinationPath, publicUrl }) => `  <url>
-    <loc>${publicUrl ?? `${PUBLIC_ORIGIN}/${destinationPath}`}</loc>
+  const urls = PUBLIC_RESOURCES.map(
+    ({ destinationPath }) => `  <url>
+    <loc>${PUBLIC_ORIGIN}/${destinationPath}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
@@ -115,7 +126,7 @@ ${urls}
 }
 
 function renderRobots() {
-  const allowedPaths = PUBLISHED_SCRIPTS.map(
+  const allowedPaths = PUBLIC_RESOURCES.map(
     ({ destinationPath }) => `Allow: /${destinationPath}`,
   ).join('\n');
 

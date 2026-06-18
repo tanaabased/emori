@@ -37,9 +37,13 @@ bootstrap.
 
 ```sh
 /bin/bash -c "$(curl -fsSL https://emori.boot.tanaab.sh/boot.sh)" bootemori \
+  --identity "Your Name <you@example.com>" \
   --op-token "$OP_TOKEN" \
   --ssh-key "your-vault/your-ssh-key:id_emori"
 ```
+
+`--identity` configures the Git author name and email for commits made from this account. Use the
+identity you want to appear on Git commits.
 
 `--ssh-key` uses `vault/item[:filename]`. Replace the example value with your own 1Password SSH key item. Note that you can use `--ssh-key` multiple times.
 
@@ -113,7 +117,7 @@ Interactive installs show the planned actions and wait for confirmation when a t
 If you want a reusable local command, download the script as `bootemori` first.
 
 ```sh
-curl -fsSL https://emori.boot.tanaab.sh -o bootemori
+curl -fsSL https://emori.boot.tanaab.sh/boot.sh -o bootemori
 chmod +x bootemori
 ./bootemori --help
 ```

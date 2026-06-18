@@ -4,11 +4,10 @@ set -euo pipefail
 #
 # examples:
 #
-#   $ ./boot.sh --op-token "$OP_TOKEN"
-#   $ ./boot.sh --op-token "$OP_TOKEN" --ssh-key 2mh2ny4tegbi33yt3furutomzu/id_emori
-#   $ ./boot.sh --op-token "$OP_TOKEN" --emori v1.0.0-beta.1
-#   $ ./boot.sh --op-token "$OP_TOKEN" --tanaab v0.2.0
-#   $ DEBUG=1 ./boot.sh --op-token "$OP_TOKEN" --yes
+#   $ ./boot.sh --identity "EMORI <emori@example.test>" --op-token "$OP_TOKEN" --ssh-key example-vault/example-item:id_emori
+#   $ ./boot.sh --identity "EMORI <emori@example.test>" --op-token "$OP_TOKEN" --ssh-key example-vault/example-item:id_emori --emori v1.0.0-beta.1
+#   $ ./boot.sh --identity "EMORI <emori@example.test>" --op-token "$OP_TOKEN" --ssh-key example-vault/example-item:id_emori --tanaab v0.2.0
+#   $ DEBUG=1 ./boot.sh --identity "EMORI <emori@example.test>" --op-token "$OP_TOKEN" --ssh-key example-vault/example-item:id_emori --yes
 #
 # option precedence: cli options override environment variables, which override defaults.
 #
@@ -18,7 +17,6 @@ MACOS_OLDEST_SUPPORTED="26.0"
 REQUIRED_CURL_VERSION="7.41.0"
 BOOTBOX_URL="https://bootbox.tanaab.sh/bootbox.sh"
 AGENTBOX_HEALTH_SCRIPT="/opt/tanaab/agentbox/bin/health.sh"
-DEFAULT_SSH_KEY="2mh2ny4tegbi33yt3furutomzu/id_emori"
 DEFAULT_EMORI_SOURCE="ssh"
 DEFAULT_TANAAB_SOURCE="ssh"
 DEFAULT_OPENCLAW_AUTH="openai"
@@ -160,6 +158,54 @@ array_join() {
       printf "%s%s" "${delimiter}" "${item}"
     fi
   done
+}
+
+array_contains_value() {
+  local needle="$1"
+  local item
+  shift
+
+  for item in "$@"; do
+    if [[ "${item}" == "${needle}" ]]; then
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+array_name_contains_value() {
+  local array_name="$1"
+  local needle="$2"
+  local value_count="0"
+  local index
+  local item
+
+  eval "value_count=\${#${array_name}[@]}"
+  if [[ "${value_count}" -eq 0 ]]; then
+    return 1
+  fi
+
+  for ((index = 0; index < value_count; index++)); do
+    eval 'item="${'"${array_name}"'[${index}]}"'
+    if [[ "${item}" == "${needle}" ]]; then
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+array_count() {
+  local array_name="$1"
+  local value_count="0"
+
+  eval "value_count=\${#${array_name}[@]}"
+  printf "%s" "${value_count}"
+}
+
+array_has_values() {
+  [[ "$(array_count "$1")" -gt 0 ]]
 }
 
 chomp() {
@@ -323,7 +369,9 @@ SCRIPT_VERSION="${SCRIPT_VERSION:-$(git describe --tags --always --abbrev=1 2>/d
 DEBUG="${EMORI_DEBUG:-${DEBUG:-${RUNNER_DEBUG:-}}}"
 FORCE="${EMORI_FORCE:-}"
 OP_TOKEN="${EMORI_OP_TOKEN:-${OP_SERVICE_ACCOUNT_TOKEN:-}}"
-SSH_KEYS_CSV="${EMORI_SSH_KEY:-${DEFAULT_SSH_KEY}}"
+SSH_KEYS_CSV="${EMORI_SSH_KEY:-}"
+SIGNING_KEY="${EMORI_SIGNING_KEY:-}"
+IDENTITY="${EMORI_IDENTITY:-}"
 EMORI_SOURCE="${EMORI_SOURCE:-${DEFAULT_EMORI_SOURCE}}"
 TANAAB_SOURCE="${EMORI_TANAAB:-${DEFAULT_TANAAB_SOURCE}}"
 OPENCLAW_AUTH="${EMORI_OPENCLAW_AUTH:-${DEFAULT_OPENCLAW_AUTH}}"
@@ -333,8 +381,13 @@ declare -a SSH_KEYS=()
 declare -a SSH_KEYS_TO_INSTALL=()
 declare -a SSH_KEYS_TO_OVERWRITE=()
 declare -a SSH_KEYS_TO_SKIP=()
+declare -a AUTHORIZED_KEY_SPECS=()
+declare -a AUTHORIZED_KEY_LINES=()
+declare -a AUTHORIZED_KEY_OP_SPECS=()
 declare -a EMORI_APPLY_DOTPKGS=()
 declare -a PLANNED_ACTIONS=()
+SIGNING_KEY_CLI_SET="0"
+AUTHORIZED_KEY_CLI_SEEN="0"
 BOOT_TMPDIR=""
 BOOTBOX_SCRIPT_PATH=""
 CORE_NEEDS_REMEDIATION="0"
@@ -352,13 +405,24 @@ TANAAB_SOURCE_LOCAL_PATH=""
 TANAAB_SOURCE_VERSION_TAG=""
 TANAAB_TARGET_PATH=""
 EMORI_APPLY_BREWFILE=""
+GIT_USER_NAME=""
+GIT_USER_EMAIL=""
 OPENCLAW_CMD=""
+OP_CLI=""
 
 if [[ -n "${EMORI_SSH_KEYS:-}" ]]; then
   SSH_KEYS_CSV="${SSH_KEYS_CSV}${SSH_KEYS_CSV:+,}${EMORI_SSH_KEYS}"
 fi
 
 append_csv_to_array SSH_KEYS "${SSH_KEYS_CSV}"
+
+if [[ -n "${EMORI_AUTHORIZED_KEY:-}" ]]; then
+  append_array_value AUTHORIZED_KEY_SPECS "${EMORI_AUTHORIZED_KEY}"
+fi
+
+if [[ -n "${EMORI_AUTHORIZED_KEYS:-}" ]]; then
+  append_csv_to_array AUTHORIZED_KEY_SPECS "${EMORI_AUTHORIZED_KEYS}"
+fi
 
 if [[ "${#ORIGINAL_ARGS[@]}" -gt 0 ]]; then
   for arg in "${ORIGINAL_ARGS[@]}"; do
@@ -418,10 +482,36 @@ normalize_repo_source_value() {
   fi
 }
 
+parse_identity_value() {
+  local identity="$1"
+  local name_var="$2"
+  local email_var="$3"
+  local identity_pattern='^(.+)[[:space:]]<([^<>[:space:]]+@[^<>[:space:]]+)>$'
+  local identity_name
+  local identity_email
+
+  if [[ ! "${identity}" =~ ${identity_pattern} ]]; then
+    return 1
+  fi
+
+  identity_name="$(trim_whitespace "${BASH_REMATCH[1]}")"
+  identity_email="$(trim_whitespace "${BASH_REMATCH[2]}")"
+
+  if [[ -z "${identity_name}" || -z "${identity_email}" ]]; then
+    return 1
+  fi
+
+  printf -v "${name_var}" "%s" "${identity_name}"
+  printf -v "${email_var}" "%s" "${identity_email}"
+}
+
 usage() {
   local debug_display="off"
   local force_display="off"
   local ssh_keys_display="none"
+  local signing_key_display="none"
+  local authorized_keys_display="none"
+  local identity_display="none"
   local op_token_display="none"
   local emori_display="none"
   local tanaab_display="none"
@@ -437,6 +527,11 @@ usage() {
 
   ssh_keys_display="$(array_join "," SSH_KEYS)"
   ssh_keys_display="${ssh_keys_display:-none}"
+  signing_key_display="${SIGNING_KEY:-none}"
+  if array_has_values AUTHORIZED_KEY_SPECS; then
+    authorized_keys_display="$(array_count AUTHORIZED_KEY_SPECS) provided"
+  fi
+  identity_display="${IDENTITY:-none}"
 
   if [[ -n "${OP_TOKEN:-}" ]]; then
     op_token_display="$(mask_secret_for_display "${OP_TOKEN}")"
@@ -450,11 +545,14 @@ usage() {
   fi
 
   cat <<EOS
-Usage: ${tty_dim}[NONINTERACTIVE=1] [CI=1]${tty_reset} ${tty_bold}${SCRIPT_NAME}${tty_reset} ${tty_dim}[options]${tty_reset}
+Usage: ${tty_dim}[NONINTERACTIVE=1] [CI=1] [EMORI_*...]${tty_reset} ${tty_bold}${SCRIPT_NAME}${tty_reset} ${tty_dim}[options]${tty_reset}
 
 ${tty_tp}Options:${tty_reset}
-  --ssh-key        installs 1password ssh keys as vault/item[:filename] ${tty_dim}[default: ${ssh_keys_display}]${tty_reset}
+  --identity       configures git user identity as "Name <email>" ${tty_dim}[default: ${identity_display}]${tty_reset}
   --op-token       auths with 1password service account token ${tty_dim}[default: ${op_token_display}]${tty_reset}
+  --ssh-key        installs 1password ssh keys as vault/item[:filename] ${tty_dim}[default: ${ssh_keys_display}]${tty_reset}
+  --signing-key    configures git ssh signing with a 1password ssh key as vault/item[:filename] ${tty_dim}[default: ${signing_key_display}]${tty_reset}
+  --authorized-key adds an SSH public key, public-key file path, or op://vault/item[:filename] ${tty_dim}[default: ${authorized_keys_display}]${tty_reset}
   --emori          fetches emori from ssh, a local git repo path, or a release version ${tty_dim}[default: ${emori_display}]${tty_reset}
   --tanaab         fetches tanaab from ssh, a local git repo path, a release version, or a falsey disable value ${tty_dim}[default: ${tanaab_display}]${tty_reset}
   --openclaw-auth  OpenClaw onboarding auth choice ${tty_dim}[default: ${OPENCLAW_AUTH}]${tty_reset}
@@ -466,16 +564,19 @@ ${tty_tp}Options:${tty_reset}
   -y, --yes        runs with all defaults and no prompts, sets NONINTERACTIVE=1
 
 ${tty_tp}Environment Variables:${tty_reset}
-  EMORI_SSH_KEY      comma-separated list of 1password ssh keys as vault/item[:filename]
-  EMORI_OP_TOKEN     1password service account token; falls back to OP_SERVICE_ACCOUNT_TOKEN
-  EMORI_SOURCE       source for ~/tanaab/emori; supports ssh, local repo paths, or release versions
-  EMORI_TANAAB       source for ~/tanaab/canon; supports ssh, local repo paths, release versions, or falsey disable values
-  EMORI_OPENCLAW_AUTH  auth choice passed to OpenClaw onboarding
-  EMORI_SKIP_OPENCLAW  set to any value to skip OpenClaw onboarding
-  EMORI_FORCE        set to a truthy value to force supported operations
-  EMORI_DEBUG        set to a truthy value to show debug messages
-  NONINTERACTIVE      installs without prompting for user input
-  CI                  installs in CI mode (e.g. does not prompt for user input)
+  EMORI_IDENTITY        same as --identity
+  EMORI_OP_TOKEN        same as --op-token; falls back to OP_SERVICE_ACCOUNT_TOKEN
+  EMORI_SSH_KEY         same as --ssh-key
+  EMORI_SIGNING_KEY     same as --signing-key
+  EMORI_AUTHORIZED_KEY  same as --authorized-key
+  EMORI_SOURCE          same as --emori
+  EMORI_TANAAB          same as --tanaab
+  EMORI_OPENCLAW_AUTH   same as --openclaw-auth
+  EMORI_SKIP_OPENCLAW   same as --skip-openclaw
+  EMORI_FORCE           same as --force
+  EMORI_DEBUG           same as --debug
+  NONINTERACTIVE        same as --yes
+  CI                    runs in CI mode and disables prompts
 EOS
   if [[ "${1:-0}" != "noexit" ]]; then
     exit "${1:-0}"
@@ -505,6 +606,13 @@ require_inline_option_value() {
   fi
 }
 
+reset_authorized_key_specs_for_cli() {
+  if [[ "${AUTHORIZED_KEY_CLI_SEEN}" == "0" ]]; then
+    AUTHORIZED_KEY_SPECS=()
+    AUTHORIZED_KEY_CLI_SEEN="1"
+  fi
+}
+
 parse_args() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -526,6 +634,58 @@ parse_args() {
       --ssh-keys=*)
         require_inline_option_value "--ssh-keys" "${1#*=}"
         append_csv_to_array SSH_KEYS "${1#*=}"
+        shift
+        ;;
+      --signing-key)
+        require_next_option_value "--signing-key" "$#"
+        if [[ "${SIGNING_KEY_CLI_SET}" == "1" ]]; then
+          abort_option_usage "option ${tty_bold}--signing-key${tty_reset} can only be provided once."
+        fi
+        SIGNING_KEY="$2"
+        SIGNING_KEY_CLI_SET="1"
+        shift 2
+        ;;
+      --signing-key=*)
+        require_inline_option_value "--signing-key" "${1#*=}"
+        if [[ "${SIGNING_KEY_CLI_SET}" == "1" ]]; then
+          abort_option_usage "option ${tty_bold}--signing-key${tty_reset} can only be provided once."
+        fi
+        SIGNING_KEY="${1#*=}"
+        SIGNING_KEY_CLI_SET="1"
+        shift
+        ;;
+      --authorized-key)
+        require_next_option_value "--authorized-key" "$#"
+        reset_authorized_key_specs_for_cli
+        append_array_value AUTHORIZED_KEY_SPECS "$2"
+        shift 2
+        ;;
+      --authorized-key=*)
+        require_inline_option_value "--authorized-key" "${1#*=}"
+        reset_authorized_key_specs_for_cli
+        append_array_value AUTHORIZED_KEY_SPECS "${1#*=}"
+        shift
+        ;;
+      --authorized-keys)
+        require_next_option_value "--authorized-keys" "$#"
+        reset_authorized_key_specs_for_cli
+        append_csv_to_array AUTHORIZED_KEY_SPECS "$2"
+        shift 2
+        ;;
+      --authorized-keys=*)
+        require_inline_option_value "--authorized-keys" "${1#*=}"
+        reset_authorized_key_specs_for_cli
+        append_csv_to_array AUTHORIZED_KEY_SPECS "${1#*=}"
+        shift
+        ;;
+      --identity)
+        require_next_option_value "--identity" "$#"
+        IDENTITY="$2"
+        shift 2
+        ;;
+      --identity=*)
+        require_inline_option_value "--identity" "${1#*=}"
+        IDENTITY="${1#*=}"
         shift
         ;;
       --op-token)
@@ -674,6 +834,60 @@ display_home_path() {
   fi
 
   printf "%s" "${path}"
+}
+
+ensure_parent_dir() {
+  local path="$1"
+
+  execute mkdir -p "$(dirname "${path}")"
+}
+
+ensure_ssh_dir() {
+  local ssh_dir="${HOME}/.ssh"
+
+  if [[ -e "${ssh_dir}" && ! -d "${ssh_dir}" ]]; then
+    abort "${tty_ts}~/.ssh${tty_reset} exists but is not a directory."
+  fi
+
+  execute mkdir -p "${ssh_dir}"
+  execute chmod 700 "${ssh_dir}"
+}
+
+ensure_regular_file() {
+  local path="$1"
+  local display="$2"
+  local mode="$3"
+
+  if [[ -e "${path}" && ! -f "${path}" ]]; then
+    abort "${tty_ts}${display}${tty_reset} exists but is not a file."
+  fi
+
+  if [[ ! -e "${path}" ]]; then
+    ensure_parent_dir "${path}"
+    execute touch "${path}"
+  fi
+
+  execute chmod "${mode}" "${path}"
+}
+
+append_missing_lines() {
+  local path="$1"
+  local count_var="$2"
+  local line
+  local appended_count="0"
+
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    if [[ -z "${line}" ]]; then
+      continue
+    fi
+
+    if ! grep -qxF -- "${line}" "${path}"; then
+      printf "%s\n" "${line}" >> "${path}"
+      appended_count=$((appended_count + 1))
+    fi
+  done
+
+  printf -v "${count_var}" "%s" "${appended_count}"
 }
 
 find_git_repo_root() {
@@ -1068,40 +1282,24 @@ github_known_hosts_needed() {
 }
 
 ensure_github_known_hosts() {
-  local ssh_dir="${HOME}/.ssh"
-  local known_hosts_path="${ssh_dir}/known_hosts"
-  local known_host_entry
+  local known_hosts_path="${HOME}/.ssh/known_hosts"
+  local added_count="0"
 
   if ! github_known_hosts_needed; then
     return 0
   fi
 
-  if [[ -e "${ssh_dir}" && ! -d "${ssh_dir}" ]]; then
-    abort "${tty_ts}~/.ssh${tty_reset} exists but is not a directory."
-  fi
-
-  execute mkdir -p "${ssh_dir}"
-  execute chmod 700 "${ssh_dir}"
-
-  if [[ -e "${known_hosts_path}" && ! -f "${known_hosts_path}" ]]; then
-    abort "${tty_ts}~/.ssh/known_hosts${tty_reset} exists but is not a file."
-  fi
-
-  if [[ ! -e "${known_hosts_path}" ]]; then
-    execute touch "${known_hosts_path}"
-    execute chmod 600 "${known_hosts_path}"
-  fi
-
-  while IFS= read -r known_host_entry; do
-    if ! grep -qxF "${known_host_entry}" "${known_hosts_path}"; then
-      debug "${tty_tp}adding${tty_reset} GitHub SSH known host entry to ${tty_ts}~/.ssh/known_hosts${tty_reset}"
-      printf "%s\n" "${known_host_entry}" >> "${known_hosts_path}"
-    fi
-  done <<'EOF'
+  ensure_ssh_dir
+  ensure_regular_file "${known_hosts_path}" "$(display_home_path "${known_hosts_path}")" "600"
+  append_missing_lines "${known_hosts_path}" added_count <<'EOF'
 github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
 github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=
 github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=
 EOF
+
+  if [[ "${added_count}" -gt 0 ]]; then
+    debug "${tty_tp}added${tty_reset} ${tty_ts}${added_count}${tty_reset} GitHub SSH known host entries to ${tty_ts}~/.ssh/known_hosts${tty_reset}"
+  fi
 }
 
 run_bootbox_for_emori_apply() {
@@ -1237,6 +1435,20 @@ ssh_key_spec_base() {
   printf "%s" "${1%%:*}"
 }
 
+ssh_key_spec_vault() {
+  local spec_base
+
+  spec_base="$(ssh_key_spec_base "$1")"
+  printf "%s" "${spec_base%%/*}"
+}
+
+ssh_key_spec_item_ref() {
+  local spec_base
+
+  spec_base="$(ssh_key_spec_base "$1")"
+  printf "%s" "${spec_base#*/}"
+}
+
 ssh_key_spec_filename_override() {
   if [[ "$1" == *:* ]]; then
     printf "%s" "${1#*:}"
@@ -1268,6 +1480,359 @@ ssh_key_target_root() {
 
 ssh_key_destination_path() {
   printf "%s/.ssh/%s" "$(ssh_key_target_root)" "$(ssh_key_filename "$1")"
+}
+
+ssh_key_public_path() {
+  printf "%s.pub" "$(ssh_key_destination_path "$1")"
+}
+
+validate_ssh_key_spec() {
+  local ssh_key="$1"
+  local option_name="$2"
+  local base
+  local vault
+  local item
+  local filename_override
+
+  base="$(ssh_key_spec_base "${ssh_key}")"
+  vault="$(ssh_key_spec_vault "${ssh_key}")"
+  item="$(ssh_key_spec_item_ref "${ssh_key}")"
+  filename_override="$(ssh_key_spec_filename_override "${ssh_key}")"
+
+  if [[ -z "${base}" || "${base}" != */* || -z "${vault}" || -z "${item}" || "${item}" == *"/"* ]]; then
+    abort_option_usage "option ${tty_bold}${option_name}${tty_reset} must use ${tty_bold}vault/item[:filename]${tty_reset} format."
+  fi
+
+  if [[ "${ssh_key}" == *:* && -z "${filename_override}" ]]; then
+    abort_option_usage "option ${tty_bold}${option_name}${tty_reset} filename override cannot be empty."
+  fi
+
+  if [[ -n "${filename_override}" && ("${filename_override}" == *"/"* || "${filename_override}" == *":"* || "${filename_override}" == "." || "${filename_override}" == "..") ]]; then
+    abort_option_usage "option ${tty_bold}${option_name}${tty_reset} filename override must be a single filename."
+  fi
+}
+
+validate_signing_key_principal() {
+  local filename
+
+  if [[ -z "${SIGNING_KEY:-}" ]]; then
+    return 0
+  fi
+
+  filename="$(ssh_key_filename "${SIGNING_KEY}")"
+  if [[ "${filename}" == *[[:space:],]* ]]; then
+    abort_option_usage "option ${tty_bold}--signing-key${tty_reset} filename must not contain whitespace or commas."
+  fi
+}
+
+validate_ssh_key_inputs() {
+  local ssh_key
+
+  if [[ "${#SSH_KEYS[@]}" -gt 0 ]]; then
+    for ssh_key in "${SSH_KEYS[@]}"; do
+      validate_ssh_key_spec "${ssh_key}" "--ssh-key"
+    done
+  fi
+
+  if [[ -n "${SIGNING_KEY:-}" ]]; then
+    validate_ssh_key_spec "${SIGNING_KEY}" "--signing-key"
+    validate_signing_key_principal
+  fi
+}
+
+normalize_ssh_keys_for_install() {
+  local ssh_key
+  local destination_path
+  local index
+  local found
+  local -a normalized_keys=()
+  local -a destination_paths=()
+
+  if [[ "${#SSH_KEYS[@]}" -eq 0 && -z "${SIGNING_KEY:-}" ]]; then
+    return 0
+  fi
+
+  if [[ -n "${SIGNING_KEY:-}" ]]; then
+    append_array_value SSH_KEYS "${SIGNING_KEY}"
+  fi
+
+  for ssh_key in "${SSH_KEYS[@]}"; do
+    destination_path="$(ssh_key_destination_path "${ssh_key}")"
+    found="0"
+
+    for index in "${!destination_paths[@]}"; do
+      if [[ "${destination_paths[${index}]}" == "${destination_path}" ]]; then
+        found="1"
+
+        if [[ "${normalized_keys[${index}]}" != "${ssh_key}" ]]; then
+          abort_option_usage "ssh key destination filename is duplicated: ${tty_bold}$(ssh_key_filename "${ssh_key}")${tty_reset}."
+        fi
+      fi
+    done
+
+    if [[ "${found}" == "0" ]]; then
+      normalized_keys+=("${ssh_key}")
+      destination_paths+=("${destination_path}")
+    fi
+  done
+
+  SSH_KEYS=("${normalized_keys[@]}")
+}
+
+generated_dotpkg_file_path() {
+  local dotpkg="$1"
+  local relative_path="$2"
+
+  printf "%s/dotfiles/%s/%s" "${EMORI_TARGET_PATH}" "${dotpkg}" "${relative_path}"
+}
+
+generated_dotpkg_file_display() {
+  local dotpkg="$1"
+  local relative_path="$2"
+
+  display_home_path "$(generated_dotpkg_file_path "${dotpkg}" "${relative_path}")"
+}
+
+require_emori_dotpkg() {
+  local dotpkg="$1"
+  local purpose="$2"
+  local dotpkg_dir="${EMORI_TARGET_PATH}/dotfiles/${dotpkg}"
+
+  if [[ ! -d "${dotpkg_dir}" ]]; then
+    abort "emori checkout at ${tty_ts}$(emori_target_display)${tty_reset} is missing required ${tty_ts}${dotpkg}${tty_reset} dotpkg needed for ${purpose}."
+  fi
+}
+
+expand_user_path() {
+  local path="$1"
+
+  case "${path}" in
+    \~)
+      printf "%s" "${HOME}"
+      ;;
+    \~/*)
+      printf "%s/%s" "${HOME}" "${path#"~/"}"
+      ;;
+    *)
+      printf "%s" "${path}"
+      ;;
+  esac
+}
+
+private_key_material_detected() {
+  [[ "${1}" == *"PRIVATE KEY"* ]]
+}
+
+authorized_key_line_valid() {
+  local line="$1"
+  local key_type
+  local rest
+  local key_body
+
+  if private_key_material_detected "${line}"; then
+    return 1
+  fi
+
+  key_type="${line%%[[:space:]]*}"
+  if [[ "${key_type}" == "${line}" ]]; then
+    return 1
+  fi
+
+  rest="${line#*[[:space:]]}"
+  key_body="${rest%%[[:space:]]*}"
+  if [[ -z "${key_body}" ]]; then
+    return 1
+  fi
+
+  case "${key_type}" in
+    ssh-ed25519 | ssh-ed25519-cert-v01@openssh.com | ssh-rsa | ssh-rsa-cert-v01@openssh.com | \
+      ecdsa-sha2-nistp256 | ecdsa-sha2-nistp256-cert-v01@openssh.com | \
+      ecdsa-sha2-nistp384 | ecdsa-sha2-nistp384-cert-v01@openssh.com | \
+      ecdsa-sha2-nistp521 | ecdsa-sha2-nistp521-cert-v01@openssh.com | \
+      sk-ssh-ed25519@openssh.com | sk-ssh-ed25519-cert-v01@openssh.com | \
+      sk-ecdsa-sha2-nistp256@openssh.com | sk-ecdsa-sha2-nistp256-cert-v01@openssh.com)
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+
+  [[ "${key_body}" =~ ^[A-Za-z0-9+/]+={0,2}$ ]]
+}
+
+append_authorized_key_line() {
+  local line="$1"
+
+  if ! array_name_contains_value AUTHORIZED_KEY_LINES "${line}"; then
+    AUTHORIZED_KEY_LINES+=("${line}")
+  fi
+}
+
+authorized_key_op_spec_value() {
+  printf "%s" "${1#op://}"
+}
+
+validate_authorized_key_op_spec() {
+  local value="$1"
+  local ssh_key_spec
+
+  if [[ "${value}" != op://* ]]; then
+    abort "authorized key 1Password reference must use op://vault/item[:filename] format."
+  fi
+
+  ssh_key_spec="$(authorized_key_op_spec_value "${value}")"
+  validate_ssh_key_spec "${ssh_key_spec}" "--authorized-key"
+}
+
+resolve_authorized_key_file() {
+  local spec="$1"
+  local path="$2"
+  local line
+  local found_count="0"
+
+  if [[ ! -f "${path}" ]]; then
+    abort "authorized key file ${tty_ts}${path}${tty_reset} from ${tty_ts}${spec}${tty_reset} does not exist."
+  fi
+
+  if [[ ! -r "${path}" ]]; then
+    abort "authorized key file ${tty_ts}${path}${tty_reset} from ${tty_ts}${spec}${tty_reset} is not readable."
+  fi
+
+  if grep -q "PRIVATE KEY" "${path}"; then
+    abort "authorized key file ${tty_ts}${path}${tty_reset} appears to contain private key material."
+  fi
+
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    line="$(trim_whitespace "${line}")"
+    if [[ -z "${line}" || "${line}" == \#* ]]; then
+      continue
+    fi
+
+    if ! authorized_key_line_valid "${line}"; then
+      abort "authorized key file ${tty_ts}${path}${tty_reset} contains an invalid public key line."
+    fi
+
+    append_authorized_key_line "${line}"
+    found_count=$((found_count + 1))
+  done < "${path}"
+
+  if [[ "${found_count}" -eq 0 ]]; then
+    abort "authorized key file ${tty_ts}${path}${tty_reset} did not contain any public keys."
+  fi
+}
+
+resolve_authorized_key_spec() {
+  local spec="$1"
+  local value
+  local path
+
+  value="$(trim_whitespace "${spec}")"
+  if [[ -z "${value}" ]]; then
+    abort "authorized key values must not be empty."
+  fi
+
+  if private_key_material_detected "${value}"; then
+    abort "authorized key value appears to contain private key material."
+  fi
+
+  if [[ "${value}" == op://* ]]; then
+    validate_authorized_key_op_spec "${value}"
+    append_array_value AUTHORIZED_KEY_OP_SPECS "${value}"
+    return 0
+  fi
+
+  if [[ "${value}" == op:* ]]; then
+    abort "authorized key 1Password reference must use op://vault/item[:filename] format."
+  fi
+
+  if [[ "${value}" == file:* ]]; then
+    path="$(expand_user_path "${value#file:}")"
+    resolve_authorized_key_file "${value}" "${path}"
+    return 0
+  fi
+
+  path="$(expand_user_path "${value}")"
+  if [[ -f "${path}" ]]; then
+    resolve_authorized_key_file "${value}" "${path}"
+    return 0
+  fi
+
+  if authorized_key_line_valid "${value}"; then
+    append_authorized_key_line "${value}"
+    return 0
+  fi
+
+  if [[ "${value}" == */* || "${value}" == \~/* || "${value}" == *.pub ]]; then
+    abort "authorized key file ${tty_ts}${path}${tty_reset} does not exist."
+  fi
+
+  abort "authorized key value must be a public key line, readable public-key file path, or op://vault/item[:filename]."
+}
+
+resolve_authorized_key_specs() {
+  local spec
+
+  AUTHORIZED_KEY_LINES=()
+  AUTHORIZED_KEY_OP_SPECS=()
+  if ! array_has_values AUTHORIZED_KEY_SPECS; then
+    return 0
+  fi
+
+  for spec in "${AUTHORIZED_KEY_SPECS[@]}"; do
+    resolve_authorized_key_spec "${spec}"
+  done
+}
+
+resolve_authorized_key_op_specs() {
+  local spec
+  local ssh_key_spec
+  local public_key
+
+  if ! array_has_values AUTHORIZED_KEY_OP_SPECS; then
+    return 0
+  fi
+
+  for spec in "${AUTHORIZED_KEY_OP_SPECS[@]}"; do
+    ssh_key_spec="$(authorized_key_op_spec_value "${spec}")"
+    op_read_field_to_var "$(ssh_key_field_secret_ref "${ssh_key_spec}" "public key")" "authorized public key" public_key
+    public_key="$(trim_whitespace "${public_key}")"
+    if ! authorized_key_line_valid "${public_key}"; then
+      abort "1password returned an invalid authorized public key: ${tty_ts}${spec}${tty_reset}."
+    fi
+    append_authorized_key_line "${public_key}"
+  done
+}
+
+install_authorized_keys() {
+  local authorized_keys="${HOME}/.ssh/authorized_keys"
+  local installed_count="0"
+
+  if ! array_has_values AUTHORIZED_KEY_LINES; then
+    return 0
+  fi
+
+  ensure_ssh_dir
+  ensure_regular_file "${authorized_keys}" "$(display_home_path "${authorized_keys}")" "600"
+  append_missing_lines "${authorized_keys}" installed_count < <(printf "%s\n" "${AUTHORIZED_KEY_LINES[@]}")
+
+  log "${tty_tp}installed${tty_reset} ${tty_ts}${installed_count}${tty_reset} new SSH authorized key entries into ${tty_ts}$(display_home_path "${authorized_keys}")${tty_reset}"
+}
+
+ssh_config_identity_file_value() {
+  local path
+  local escaped_path
+
+  path="$(display_home_path "$1")"
+  case "${path}" in
+    *[[:space:]\"\\]*)
+      escaped_path="${path//\\/\\\\}"
+      escaped_path="${escaped_path//\"/\\\"}"
+      printf '"%s"' "${escaped_path}"
+      ;;
+    *)
+      printf "%s" "${path}"
+      ;;
+  esac
 }
 
 describe_ssh_key_specs() {
@@ -1314,6 +1879,183 @@ collect_ssh_key_actions() {
       fi
     done
   fi
+}
+
+write_generated_ssh_identities() {
+  local output_path
+  local ssh_key
+  local destination_path
+  local -a identity_paths=()
+
+  require_emori_dotpkg "ssh" "generated SSH identities"
+  output_path="$(generated_dotpkg_file_path "ssh" ".config/emori/ssh.identities")"
+
+  for ssh_key in "${SSH_KEYS[@]}"; do
+    destination_path="$(ssh_key_destination_path "${ssh_key}")"
+    if ! array_name_contains_value identity_paths "${destination_path}"; then
+      identity_paths+=("${destination_path}")
+    fi
+  done
+
+  ensure_parent_dir "${output_path}"
+
+  {
+    printf "Host *\n"
+    for destination_path in "${identity_paths[@]}"; do
+      printf "    IdentityFile %s\n" "$(ssh_config_identity_file_value "${destination_path}")"
+    done
+  } > "${output_path}"
+
+  debug "${tty_tp}wrote${tty_reset} generated ssh identities to ${tty_ts}$(generated_dotpkg_file_display "ssh" ".config/emori/ssh.identities")${tty_reset}"
+}
+
+resolve_op_cli() {
+  if [[ -n "${OP_CLI:-}" ]]; then
+    return 0
+  fi
+
+  OP_CLI="$(command -v op || true)"
+  if [[ -z "${OP_CLI}" ]]; then
+    abort "1password cli is required for git ssh signing config but could not be found."
+  fi
+}
+
+ssh_key_field_secret_ref() {
+  local ssh_key="$1"
+  local field_name="$2"
+  local vault
+  local item
+
+  vault="$(ssh_key_spec_vault "${ssh_key}")"
+  item="$(ssh_key_spec_item_ref "${ssh_key}")"
+  printf "op://%s/%s/%s" "${vault}" "${item}" "${field_name}"
+}
+
+op_read_field_to_var() {
+  local secret_ref="$1"
+  local display_name="$2"
+  local var_name="$3"
+  local value
+
+  resolve_op_cli
+  debug "${tty_tp}running${tty_reset}" "${OP_CLI}" read "${secret_ref}"
+
+  if ! value="$(/usr/bin/env \
+    -u OP_CONNECT_HOST \
+    -u OP_CONNECT_TOKEN \
+    OP_SERVICE_ACCOUNT_TOKEN="${OP_TOKEN}" \
+    "${OP_CLI}" read "${secret_ref}")"; then
+    abort "failed to read ${display_name} from 1password."
+  fi
+
+  value="$(trim_whitespace "${value}")"
+  if [[ -z "${value}" ]]; then
+    abort "1password returned an empty ${display_name}."
+  fi
+
+  printf -v "${var_name}" "%s" "${value}"
+}
+
+normalize_signing_public_key() {
+  local key_type="$1"
+  local public_key="$2"
+  local key_type_lower
+  local public_first
+  local public_second
+  local ssh_key_type
+  local public_key_blob
+
+  key_type_lower="$(printf "%s" "${key_type}" | tr '[:upper:]' '[:lower:]')"
+  if [[ "${key_type_lower}" == ssh-* ]]; then
+    ssh_key_type="${key_type_lower}"
+  else
+    ssh_key_type="ssh-${key_type_lower}"
+  fi
+
+  read -r public_first public_second _ <<< "${public_key}"
+  if [[ "${public_first}" == ssh-* && -n "${public_second}" ]]; then
+    ssh_key_type="${public_first}"
+    public_key_blob="${public_second}"
+  else
+    public_key_blob="${public_first}"
+  fi
+
+  if [[ -z "${ssh_key_type}" || -z "${public_key_blob}" || "${ssh_key_type}" != ssh-* ]]; then
+    abort "1password returned an invalid public key for signing key ${tty_ts}${SIGNING_KEY}${tty_reset}."
+  fi
+
+  printf "%s %s" "${ssh_key_type}" "${public_key_blob}"
+}
+
+write_signing_public_key_file() {
+  local public_key_line="$1"
+  local public_key_path
+  local public_key_tmpfile
+
+  public_key_path="$(ssh_key_public_path "${SIGNING_KEY}")"
+  public_key_tmpfile="$(mktemp "${BOOT_TMPDIR}/signing-public-key.XXXXXX")"
+
+  ensure_parent_dir "${public_key_path}"
+  printf "%s\n" "${public_key_line}" > "${public_key_tmpfile}"
+  execute chmod 644 "${public_key_tmpfile}"
+  execute mv "${public_key_tmpfile}" "${public_key_path}"
+
+  debug "${tty_tp}wrote${tty_reset} signing public key to ${tty_ts}$(display_home_path "${public_key_path}")${tty_reset}"
+}
+
+write_generated_git_signing_config() {
+  local output_path
+  local allowed_signers_path
+  local signing_key_filename
+  local signing_key_public_path
+  local key_type
+  local public_key
+  local public_key_line
+
+  if [[ -z "${SIGNING_KEY:-}" ]]; then
+    return 0
+  fi
+
+  require_emori_dotpkg "git" "generated Git signing config"
+  output_path="$(generated_dotpkg_file_path "git" ".config/emori/git-signers.inc")"
+  allowed_signers_path="$(generated_dotpkg_file_path "git" ".config/emori/allowed_signers")"
+  signing_key_filename="$(ssh_key_filename "${SIGNING_KEY}")"
+  signing_key_public_path="$(ssh_key_public_path "${SIGNING_KEY}")"
+
+  op_read_field_to_var "$(ssh_key_field_secret_ref "${SIGNING_KEY}" "key type")" "signing key type" key_type
+  op_read_field_to_var "$(ssh_key_field_secret_ref "${SIGNING_KEY}" "public key")" "signing public key" public_key
+  public_key_line="$(normalize_signing_public_key "${key_type}" "${public_key}")"
+
+  write_signing_public_key_file "${public_key_line}"
+
+  ensure_parent_dir "${output_path}"
+  execute rm -f "${output_path}" "${allowed_signers_path}"
+  execute git config --file "${output_path}" user.signingKey "$(display_home_path "${signing_key_public_path}")"
+  execute git config --file "${output_path}" gpg.format ssh
+  execute git config --file "${output_path}" commit.gpgsign true
+  # shellcheck disable=SC2088 # Git expands ~ in config path values.
+  execute git config --file "${output_path}" gpg.ssh.allowedSignersFile "~/.config/emori/allowed_signers"
+
+  {
+    printf "# Generated by boot.sh for %s\n" "${signing_key_filename}"
+    printf "%s %s\n" "${signing_key_filename}" "${public_key_line}"
+  } > "${allowed_signers_path}"
+
+  debug "${tty_tp}wrote${tty_reset} generated git signing config to ${tty_ts}$(generated_dotpkg_file_display "git" ".config/emori/git-signers.inc")${tty_reset}"
+}
+
+write_generated_git_user_config() {
+  local output_path
+
+  require_emori_dotpkg "git" "generated Git identity"
+  output_path="$(generated_dotpkg_file_path "git" ".config/emori/git-user.inc")"
+
+  ensure_parent_dir "${output_path}"
+  execute rm -f "${output_path}"
+  execute git config --file "${output_path}" user.name "${GIT_USER_NAME}"
+  execute git config --file "${output_path}" user.email "${GIT_USER_EMAIL}"
+
+  debug "${tty_tp}wrote${tty_reset} generated git identity to ${tty_ts}$(generated_dotpkg_file_display "git" ".config/emori/git-user.inc")${tty_reset}"
 }
 
 have_planned_actions() {
@@ -1384,6 +2126,18 @@ cleanup() {
 }
 
 validate_inputs() {
+  if [[ -z "${IDENTITY:-}" ]]; then
+    abort_option_usage "option ${tty_bold}--identity${tty_reset} is required."
+  fi
+
+  if ! parse_identity_value "${IDENTITY}" GIT_USER_NAME GIT_USER_EMAIL; then
+    abort_option_usage "option ${tty_bold}--identity${tty_reset} must use the format ${tty_bold}Name <email>${tty_reset}."
+  fi
+
+  validate_ssh_key_inputs
+  normalize_ssh_keys_for_install
+  resolve_authorized_key_specs
+
   if [[ -z "${OP_TOKEN:-}" ]]; then
     abort_multi "$(cat <<EOABORT
 you must provide a 1Password service account token before using this wrapper.
@@ -1393,9 +2147,8 @@ EOABORT
   fi
 
   if [[ "${#SSH_KEYS[@]}" -eq 0 ]]; then
-    abort "at least one ssh key is required. pass --ssh-key or set EMORI_SSH_KEY."
+    abort "at least one SSH key is required; no default SSH key is bundled. pass --ssh-key or set EMORI_SSH_KEY."
   fi
-
 }
 
 validate_platform() {
@@ -1522,15 +2275,7 @@ bootbox_run() {
   local -a bootbox_display_command=()
 
   case "${mode}" in
-    core)
-      unset_env_names+=("BOOTBOX_TARGET")
-      unset_env_names+=("TANAAB_TARGET")
-      ;;
-    ssh)
-      unset_env_names+=("BOOTBOX_TARGET")
-      unset_env_names+=("TANAAB_TARGET")
-      ;;
-    emori)
+    core | ssh | emori)
       unset_env_names+=("BOOTBOX_TARGET")
       unset_env_names+=("TANAAB_TARGET")
       ;;
@@ -1626,7 +2371,17 @@ plan_wrapper_execution() {
     plan_action "${tty_tp}skip${tty_reset} existing ssh keys because ${tty_bold}--force${tty_reset} is not set: $(describe_ssh_key_specs "${SSH_KEYS_TO_SKIP[@]}")"
   fi
 
+  if array_has_values AUTHORIZED_KEY_SPECS; then
+    plan_action "${tty_tp}install${tty_reset} ${tty_ts}$(array_count AUTHORIZED_KEY_SPECS)${tty_reset} authorized key spec(s) into ${tty_ts}~/.ssh/authorized_keys${tty_reset}"
+  fi
+
   plan_emori_fetch
+  plan_action "${tty_tp}write${tty_reset} generated Git identity to ${tty_ts}$(generated_dotpkg_file_display "git" ".config/emori/git-user.inc")${tty_reset}"
+  if [[ -n "${SIGNING_KEY:-}" ]]; then
+    plan_action "${tty_tp}write${tty_reset} generated Git signing config to ${tty_ts}$(generated_dotpkg_file_display "git" ".config/emori/git-signers.inc")${tty_reset}"
+    plan_action "${tty_tp}write${tty_reset} signing public key to ${tty_ts}$(display_home_path "$(ssh_key_public_path "${SIGNING_KEY}")")${tty_reset}"
+  fi
+  plan_action "${tty_tp}write${tty_reset} generated SSH identities to ${tty_ts}$(generated_dotpkg_file_display "ssh" ".config/emori/ssh.identities")${tty_reset}"
   if tanaab_enabled; then
     plan_tanaab_fetch
     plan_tanaab_plugin_link
@@ -1721,6 +2476,11 @@ main() {
   debug raw FORCE="${FORCE:-}"
   debug raw OP_TOKEN="$(mask_secret_for_display "${OP_TOKEN}")"
   debug raw SSH_KEYS="$(array_join "," SSH_KEYS)"
+  debug raw SIGNING_KEY="${SIGNING_KEY:-}"
+  debug raw AUTHORIZED_KEYS="$(array_count AUTHORIZED_KEY_SPECS)"
+  debug raw IDENTITY="${IDENTITY}"
+  debug raw GIT_USER_NAME="${GIT_USER_NAME}"
+  debug raw GIT_USER_EMAIL="${GIT_USER_EMAIL}"
   debug raw EMORI="$(normalize_repo_source_value "${EMORI_SOURCE}")"
   debug raw TANAAB="$(normalize_repo_source_value "${TANAAB_SOURCE}")"
   debug raw OPENCLAW_AUTH="${OPENCLAW_AUTH}"
@@ -1747,9 +2507,14 @@ main() {
   fi
 
   ensure_bootbox_core_requirements
+  resolve_authorized_key_op_specs
+  install_authorized_keys
   run_bootbox
   ensure_github_known_hosts
   run_emori_fetch
+  write_generated_git_user_config
+  write_generated_git_signing_config
+  write_generated_ssh_identities
   if tanaab_enabled; then
     run_tanaab_fetch
   fi

@@ -20,6 +20,9 @@ brew uninstall --formula --force stow || true
 # should prepare the default ssh target directory
 mkdir -p "$HOME/.ssh"
 
+# should prepare a temp directory for signing and authorized-key checks
+mkdir -p .tmp
+
 # should remove an existing emori checkout target
 rm -rf "$HOME/tanaab/emori"
 
@@ -35,16 +38,31 @@ test -d "$GITHUB_WORKSPACE/.git"
 # should have the op token test secret available
 test -n "$OPTOKEN"
 
+# should generate public key fixtures for option authorized-key installation
+rm -f .tmp/id_emori_options_authorized_file .tmp/id_emori_options_authorized_file.pub
+rm -f .tmp/id_emori_options_authorized_raw .tmp/id_emori_options_authorized_raw.pub
+ssh-keygen -t ed25519 -N "" -C "emori-options-authorized-file@example.test" -f .tmp/id_emori_options_authorized_file >/dev/null
+ssh-keygen -t ed25519 -N "" -C "emori-options-authorized-raw@example.test" -f .tmp/id_emori_options_authorized_raw >/dev/null
+
 # should run boot.sh successfully using options while skipping an existing key and continuing
 boot.sh \
+  --identity 'EMORI <emori@example.test>' \
   --op-token "$OPTOKEN" \
   --ssh-key 'omfsw2uztmi2xqpid5g3kiv6ba/id_test' \
+  --authorized-key 'file:.tmp/id_emori_options_authorized_file.pub' \
+  --authorized-key "$(cat .tmp/id_emori_options_authorized_raw.pub)" \
+  --authorized-key 'op://omfsw2uztmi2xqpid5g3kiv6ba/id_test' \
   --emori "$GITHUB_WORKSPACE" \
   --skip-openclaw
 boot.sh \
+  --identity 'EMORI <emori@example.test>' \
   --op-token "$OPTOKEN" \
   --ssh-key 'omfsw2uztmi2xqpid5g3kiv6ba/id_test' \
   --ssh-key 'omfsw2uztmi2xqpid5g3kiv6ba/id_test:id_test_options' \
+  --signing-key 'omfsw2uztmi2xqpid5g3kiv6ba/id_test:id_test_signing' \
+  --authorized-key 'file:.tmp/id_emori_options_authorized_file.pub' \
+  --authorized-key "$(cat .tmp/id_emori_options_authorized_raw.pub)" \
+  --authorized-key 'op://omfsw2uztmi2xqpid5g3kiv6ba/id_test' \
   --debug \
   --emori "$GITHUB_WORKSPACE" \
   --skip-openclaw
@@ -73,10 +91,10 @@ grep -qxF 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKL
 grep -qxF 'github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=' "$HOME/.ssh/known_hosts"
 grep -qxF 'github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=' "$HOME/.ssh/known_hosts"
 
-# should install the default ssh key filename from cli flags
+# should install the primary ssh key filename from cli flags
 test -f "$HOME/.ssh/id_test"
 
-# should protect the default ssh key permissions
+# should protect the primary ssh key permissions
 test "$(stat -f '%Lp' "$HOME/.ssh/id_test")" = "600"
 
 # should install the overridden ssh key filename from cli flags
@@ -85,11 +103,117 @@ test -f "$HOME/.ssh/id_test_options"
 # should protect the overridden ssh key permissions
 test "$(stat -f '%Lp' "$HOME/.ssh/id_test_options")" = "600"
 
-# should install the default ssh key material that matches the expected public key
-test "$(ssh-keygen -y -f "$HOME/.ssh/id_test" | awk '{print $1 \" \" $2}')" = "$(awk '{print $1 \" \" $2}' id_test.pub)"
+# should install the signing ssh key filename from cli flags
+test -f "$HOME/.ssh/id_test_signing"
+
+# should protect the signing ssh key permissions
+test "$(stat -f '%Lp' "$HOME/.ssh/id_test_signing")" = "600"
+
+# should install the primary ssh key material that matches the expected public key
+test "$(ssh-keygen -y -f "$HOME/.ssh/id_test" | awk '{print $1 " " $2}')" = "$(awk '{print $1 " " $2}' id_test.pub)"
 
 # should install the overridden ssh key material that matches the expected public key
-test "$(ssh-keygen -y -f "$HOME/.ssh/id_test_options" | awk '{print $1 \" \" $2}')" = "$(awk '{print $1 \" \" $2}' id_test.pub)"
+test "$(ssh-keygen -y -f "$HOME/.ssh/id_test_options" | awk '{print $1 " " $2}')" = "$(awk '{print $1 " " $2}' id_test.pub)"
+
+# should install the signing ssh key material that matches the expected public key
+test "$(ssh-keygen -y -f "$HOME/.ssh/id_test_signing" | awk '{print $1 " " $2}')" = "$(awk '{print $1 " " $2}' id_test.pub)"
+
+# should write the signing public key next to the private key
+test -f "$HOME/.ssh/id_test_signing.pub"
+test "$(awk '{print $1 " " $2}' "$HOME/.ssh/id_test_signing.pub")" = "$(awk '{print $1 " " $2}' id_test.pub)"
+
+# should install the provided authorized keys
+authorized_file_key="$(cat .tmp/id_emori_options_authorized_file.pub)"
+authorized_raw_key="$(cat .tmp/id_emori_options_authorized_raw.pub)"
+authorized_op_key_prefix="$(awk '{print $1 " " $2}' id_test.pub)"
+test -f "$HOME/.ssh/authorized_keys"
+grep -qxF "$authorized_file_key" "$HOME/.ssh/authorized_keys"
+grep -qxF "$authorized_raw_key" "$HOME/.ssh/authorized_keys"
+grep -F "$authorized_op_key_prefix" "$HOME/.ssh/authorized_keys"
+grep -F 'emori-options-authorized-file@example.test' "$HOME/.ssh/authorized_keys"
+grep -F 'emori-options-authorized-raw@example.test' "$HOME/.ssh/authorized_keys"
+
+# should protect the authorized_keys file
+test "$(stat -f '%Lp' "$HOME/.ssh/authorized_keys")" = "600"
+
+# should not duplicate authorized keys on rerun
+authorized_file_key="$(cat .tmp/id_emori_options_authorized_file.pub)"
+authorized_raw_key="$(cat .tmp/id_emori_options_authorized_raw.pub)"
+authorized_op_key_prefix="$(awk '{print $1 " " $2}' id_test.pub)"
+test "$(grep -cxF "$authorized_file_key" "$HOME/.ssh/authorized_keys")" = "1"
+test "$(grep -cxF "$authorized_raw_key" "$HOME/.ssh/authorized_keys")" = "1"
+test "$(grep -cF "$authorized_op_key_prefix" "$HOME/.ssh/authorized_keys")" = "1"
+
+# should write generated ssh identities in the emori checkout from cli flags
+ssh_identities_source="$HOME/tanaab/emori/dotfiles/ssh/.config/emori/ssh.identities"
+test -f "$ssh_identities_source"
+grep -qxF 'Host *' "$ssh_identities_source"
+grep -qxF '    IdentityFile ~/.ssh/id_test' "$ssh_identities_source"
+grep -qxF '    IdentityFile ~/.ssh/id_test_options' "$ssh_identities_source"
+grep -qxF '    IdentityFile ~/.ssh/id_test_signing' "$ssh_identities_source"
+test "$(grep -c '^    IdentityFile ' "$ssh_identities_source")" = "3"
+! grep -F 'id_emori' "$ssh_identities_source"
+
+# should stow generated ssh identities into the emori config directory
+ssh_identities_source="$HOME/tanaab/emori/dotfiles/ssh/.config/emori/ssh.identities"
+test -e "$HOME/.config/emori/ssh.identities"
+test "$(python3 -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' "$HOME/.config/emori/ssh.identities")" = "$ssh_identities_source"
+cmp -s "$ssh_identities_source" "$HOME/.config/emori/ssh.identities"
+
+# should write generated git identity in the emori checkout from cli flags
+git_user_source="$HOME/tanaab/emori/dotfiles/git/.config/emori/git-user.inc"
+test -f "$git_user_source"
+test "$(git config --file "$git_user_source" --get user.name)" = "EMORI"
+test "$(git config --file "$git_user_source" --get user.email)" = "emori@example.test"
+
+# should stow generated git identity into the emori config directory
+git_user_source="$HOME/tanaab/emori/dotfiles/git/.config/emori/git-user.inc"
+test -e "$HOME/.config/emori/git-user.inc"
+test "$(python3 -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' "$HOME/.config/emori/git-user.inc")" = "$git_user_source"
+cmp -s "$git_user_source" "$HOME/.config/emori/git-user.inc"
+
+# should resolve git identity through the stowed global config
+test "$(GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL="$HOME/.gitconfig" git -C "$HOME" config --get user.name)" = "EMORI"
+test "$(GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL="$HOME/.gitconfig" git -C "$HOME" config --get user.email)" = "emori@example.test"
+
+# should write generated git signing config in the emori checkout from cli flags
+git_signers_source="$HOME/tanaab/emori/dotfiles/git/.config/emori/git-signers.inc"
+allowed_signers_source="$HOME/tanaab/emori/dotfiles/git/.config/emori/allowed_signers"
+expected_signing_public_key="$(awk '{print $1 " " $2}' id_test.pub)"
+test -f "$git_signers_source"
+test -f "$allowed_signers_source"
+test "$(git config --file "$git_signers_source" --get user.signingKey)" = "~/.ssh/id_test_signing.pub"
+test "$(git config --file "$git_signers_source" --get gpg.format)" = "ssh"
+test "$(git config --file "$git_signers_source" --get commit.gpgsign)" = "true"
+test "$(git config --file "$git_signers_source" --get gpg.ssh.allowedSignersFile)" = "~/.config/emori/allowed_signers"
+grep -qxF '# Generated by boot.sh for id_test_signing' "$allowed_signers_source"
+grep -qxF "id_test_signing $expected_signing_public_key" "$allowed_signers_source"
+test "$(grep -cv '^#' "$allowed_signers_source")" = "1"
+
+# should stow generated git signing config into the emori config directory
+git_signers_source="$HOME/tanaab/emori/dotfiles/git/.config/emori/git-signers.inc"
+allowed_signers_source="$HOME/tanaab/emori/dotfiles/git/.config/emori/allowed_signers"
+test -e "$HOME/.config/emori/git-signers.inc"
+test -e "$HOME/.config/emori/allowed_signers"
+test "$(python3 -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' "$HOME/.config/emori/git-signers.inc")" = "$git_signers_source"
+test "$(python3 -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' "$HOME/.config/emori/allowed_signers")" = "$allowed_signers_source"
+cmp -s "$git_signers_source" "$HOME/.config/emori/git-signers.inc"
+cmp -s "$allowed_signers_source" "$HOME/.config/emori/allowed_signers"
+
+# should resolve git signing config through the stowed global config
+GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL="$HOME/.gitconfig" git -C "$HOME" config --get user.signingKey | grep -Fx '~/.ssh/id_test_signing.pub'
+GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL="$HOME/.gitconfig" git -C "$HOME" config --get gpg.format | grep -Fx 'ssh'
+GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL="$HOME/.gitconfig" git -C "$HOME" config --get commit.gpgsign | grep -Fx 'true'
+GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL="$HOME/.gitconfig" git -C "$HOME" config --get gpg.ssh.allowedSignersFile | grep -Fx '~/.config/emori/allowed_signers'
+
+# should create and verify a signed empty commit without ssh-agent
+signed_repo="$HOME/emori-signing-options"
+rm -rf "$signed_repo"
+git init "$signed_repo"
+env -u SSH_AUTH_SOCK GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL="$HOME/.gitconfig" git -C "$signed_repo" commit --allow-empty -m 'signed options test'
+env -u SSH_AUTH_SOCK GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL="$HOME/.gitconfig" git -C "$signed_repo" log -1 --show-signature --format='%G? %GS' > .tmp/signed-options.log 2>&1
+grep -F 'Good "git" signature for id_test_signing' .tmp/signed-options.log
+grep -qxF 'G id_test_signing' .tmp/signed-options.log
 
 # should clone emori from the local workspace path
 test -d "$HOME/tanaab/emori/.git"
@@ -126,8 +250,42 @@ rm -f "$HOME/.zshrc" "$HOME/.zprofile"
 # should remove the stowed tanaab plugin link
 rm -f "$HOME/.codex/plugins/tanaab"
 
+# should remove the stowed generated ssh identities file
+rm -f "$HOME/.config/emori/ssh.identities"
+
+# should remove the stowed generated git identity file
+rm -f "$HOME/.config/emori/git-user.inc"
+
+# should remove the stowed generated git signing files
+rm -f "$HOME/.config/emori/git-signers.inc" "$HOME/.config/emori/allowed_signers"
+
+# should remove only the example-created authorized key lines
+if [[ -f "$HOME/.ssh/authorized_keys" ]]; then
+  authorized_file_key="$(cat .tmp/id_emori_options_authorized_file.pub)"
+  authorized_raw_key="$(cat .tmp/id_emori_options_authorized_raw.pub)"
+  authorized_op_key_prefix="$(awk '{print $1 " " $2}' id_test.pub)"
+  awk \
+    -v file_key="$authorized_file_key" \
+    -v raw_key="$authorized_raw_key" \
+    -v op_prefix="$authorized_op_key_prefix" \
+    '$0 != file_key && $0 != raw_key && index($0, op_prefix) != 1' \
+    "$HOME/.ssh/authorized_keys" > .tmp/authorized_keys.clean || true
+  cp .tmp/authorized_keys.clean "$HOME/.ssh/authorized_keys"
+  chmod 600 "$HOME/.ssh/authorized_keys"
+fi
+
+# should remove the signed commit test repo and generated fixture files
+rm -rf "$HOME/emori-signing-options"
+rm -f \
+  .tmp/id_emori_options_authorized_file \
+  .tmp/id_emori_options_authorized_file.pub \
+  .tmp/id_emori_options_authorized_raw \
+  .tmp/id_emori_options_authorized_raw.pub \
+  .tmp/authorized_keys.clean \
+  .tmp/signed-options.log
+
 # should remove the installed example ssh keys
-rm -f "$HOME/.ssh/id_test" "$HOME/.ssh/id_test_options"
+rm -f "$HOME/.ssh/id_test" "$HOME/.ssh/id_test_options" "$HOME/.ssh/id_test_signing" "$HOME/.ssh/id_test_signing.pub"
 
 # should remove the cloned emori and tanaab canon checkouts
 rm -rf "$HOME/tanaab/emori" "$HOME/tanaab/canon"
