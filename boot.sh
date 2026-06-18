@@ -162,6 +162,20 @@ array_join() {
   done
 }
 
+array_contains_value() {
+  local needle="$1"
+  local item
+  shift
+
+  for item in "$@"; do
+    if [[ "${item}" == "${needle}" ]]; then
+      return 0
+    fi
+  done
+
+  return 1
+}
+
 chomp() {
   printf "%s" "${1/"$'\n'"/}"
 }
@@ -1270,6 +1284,31 @@ ssh_key_destination_path() {
   printf "%s/.ssh/%s" "$(ssh_key_target_root)" "$(ssh_key_filename "$1")"
 }
 
+generated_ssh_identities_path() {
+  printf "%s/dotfiles/ssh/.config/emori/ssh.identities" "${EMORI_TARGET_PATH}"
+}
+
+generated_ssh_identities_display() {
+  display_home_path "$(generated_ssh_identities_path)"
+}
+
+ssh_config_identity_file_value() {
+  local path
+  local escaped_path
+
+  path="$(display_home_path "$1")"
+  case "${path}" in
+    *[[:space:]\"\\]*)
+      escaped_path="${path//\\/\\\\}"
+      escaped_path="${escaped_path//\"/\\\"}"
+      printf '"%s"' "${escaped_path}"
+      ;;
+    *)
+      printf "%s" "${path}"
+      ;;
+  esac
+}
+
 describe_ssh_key_specs() {
   local first="1"
   local ssh_key
@@ -1314,6 +1353,40 @@ collect_ssh_key_actions() {
       fi
     done
   fi
+}
+
+write_generated_ssh_identities() {
+  local output_path
+  local output_dir
+  local ssh_dotpkg_dir="${EMORI_TARGET_PATH}/dotfiles/ssh"
+  local ssh_key
+  local destination_path
+  local -a identity_paths=()
+
+  if [[ ! -d "${ssh_dotpkg_dir}" ]]; then
+    abort "emori checkout at ${tty_ts}$(emori_target_display)${tty_reset} is missing required ${tty_ts}ssh${tty_reset} dotpkg needed for generated SSH identities."
+  fi
+
+  output_path="$(generated_ssh_identities_path)"
+  output_dir="$(dirname "${output_path}")"
+
+  for ssh_key in "${SSH_KEYS[@]}"; do
+    destination_path="$(ssh_key_destination_path "${ssh_key}")"
+    if ! array_contains_value "${destination_path}" "${identity_paths[@]}"; then
+      identity_paths+=("${destination_path}")
+    fi
+  done
+
+  execute mkdir -p "${output_dir}"
+
+  {
+    printf "Host *\n"
+    for destination_path in "${identity_paths[@]}"; do
+      printf "    IdentityFile %s\n" "$(ssh_config_identity_file_value "${destination_path}")"
+    done
+  } > "${output_path}"
+
+  debug "${tty_tp}wrote${tty_reset} generated ssh identities to ${tty_ts}$(generated_ssh_identities_display)${tty_reset}"
 }
 
 have_planned_actions() {
@@ -1627,6 +1700,7 @@ plan_wrapper_execution() {
   fi
 
   plan_emori_fetch
+  plan_action "${tty_tp}write${tty_reset} generated SSH identities to ${tty_ts}$(generated_ssh_identities_display)${tty_reset}"
   if tanaab_enabled; then
     plan_tanaab_fetch
     plan_tanaab_plugin_link
@@ -1750,6 +1824,7 @@ main() {
   run_bootbox
   ensure_github_known_hosts
   run_emori_fetch
+  write_generated_ssh_identities
   if tanaab_enabled; then
     run_tanaab_fetch
   fi

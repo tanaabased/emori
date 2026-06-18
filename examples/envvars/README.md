@@ -88,6 +88,20 @@ test "$(ssh-keygen -y -f "$HOME/.ssh/id_test" | awk '{print $1 \" \" $2}')" = "$
 # should install the overridden ssh key material that matches the expected public key
 test "$(ssh-keygen -y -f "$HOME/.ssh/id_test_envvars" | awk '{print $1 \" \" $2}')" = "$(awk '{print $1 \" \" $2}' id_test.pub)"
 
+# should write generated ssh identities in the emori checkout from envvars
+ssh_identities_source="$HOME/tanaab/emori/dotfiles/ssh/.config/emori/ssh.identities"
+test -f "$ssh_identities_source"
+grep -qxF 'Host *' "$ssh_identities_source"
+grep -qxF '    IdentityFile ~/.ssh/id_test' "$ssh_identities_source"
+grep -qxF '    IdentityFile ~/.ssh/id_test_envvars' "$ssh_identities_source"
+test "$(grep -c '^    IdentityFile ' "$ssh_identities_source")" = "2"
+! grep -F 'id_emori' "$ssh_identities_source"
+
+# should stow generated ssh identities into the emori config directory
+test -e "$HOME/.config/emori/ssh.identities"
+test "$(python3 -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' "$HOME/.config/emori/ssh.identities")" = "$ssh_identities_source"
+cmp -s "$ssh_identities_source" "$HOME/.config/emori/ssh.identities"
+
 # should clone emori from the local workspace path
 test -d "$HOME/tanaab/emori/.git"
 
@@ -122,6 +136,9 @@ rm -f "$HOME/.zshrc" "$HOME/.zprofile"
 
 # should remove the stowed tanaab plugin link
 rm -f "$HOME/.codex/plugins/tanaab"
+
+# should remove the stowed generated ssh identities file
+rm -f "$HOME/.config/emori/ssh.identities"
 
 # should remove the installed example ssh keys
 rm -f "$HOME/.ssh/id_test" "$HOME/.ssh/id_test_envvars"
