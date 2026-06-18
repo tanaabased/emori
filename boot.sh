@@ -816,6 +816,60 @@ display_home_path() {
   printf "%s" "${path}"
 }
 
+ensure_parent_dir() {
+  local path="$1"
+
+  execute mkdir -p "$(dirname "${path}")"
+}
+
+ensure_ssh_dir() {
+  local ssh_dir="${HOME}/.ssh"
+
+  if [[ -e "${ssh_dir}" && ! -d "${ssh_dir}" ]]; then
+    abort "${tty_ts}~/.ssh${tty_reset} exists but is not a directory."
+  fi
+
+  execute mkdir -p "${ssh_dir}"
+  execute chmod 700 "${ssh_dir}"
+}
+
+ensure_regular_file() {
+  local path="$1"
+  local display="$2"
+  local mode="$3"
+
+  if [[ -e "${path}" && ! -f "${path}" ]]; then
+    abort "${tty_ts}${display}${tty_reset} exists but is not a file."
+  fi
+
+  if [[ ! -e "${path}" ]]; then
+    ensure_parent_dir "${path}"
+    execute touch "${path}"
+  fi
+
+  execute chmod "${mode}" "${path}"
+}
+
+append_missing_lines() {
+  local path="$1"
+  local count_var="$2"
+  local line
+  local appended_count="0"
+
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    if [[ -z "${line}" ]]; then
+      continue
+    fi
+
+    if ! grep -qxF -- "${line}" "${path}"; then
+      printf "%s\n" "${line}" >> "${path}"
+      appended_count=$((appended_count + 1))
+    fi
+  done
+
+  printf -v "${count_var}" "%s" "${appended_count}"
+}
+
 find_git_repo_root() {
   local path="$1"
   local parent
@@ -1208,40 +1262,24 @@ github_known_hosts_needed() {
 }
 
 ensure_github_known_hosts() {
-  local ssh_dir="${HOME}/.ssh"
-  local known_hosts_path="${ssh_dir}/known_hosts"
-  local known_host_entry
+  local known_hosts_path="${HOME}/.ssh/known_hosts"
+  local added_count="0"
 
   if ! github_known_hosts_needed; then
     return 0
   fi
 
-  if [[ -e "${ssh_dir}" && ! -d "${ssh_dir}" ]]; then
-    abort "${tty_ts}~/.ssh${tty_reset} exists but is not a directory."
-  fi
-
-  execute mkdir -p "${ssh_dir}"
-  execute chmod 700 "${ssh_dir}"
-
-  if [[ -e "${known_hosts_path}" && ! -f "${known_hosts_path}" ]]; then
-    abort "${tty_ts}~/.ssh/known_hosts${tty_reset} exists but is not a file."
-  fi
-
-  if [[ ! -e "${known_hosts_path}" ]]; then
-    execute touch "${known_hosts_path}"
-    execute chmod 600 "${known_hosts_path}"
-  fi
-
-  while IFS= read -r known_host_entry; do
-    if ! grep -qxF "${known_host_entry}" "${known_hosts_path}"; then
-      debug "${tty_tp}adding${tty_reset} GitHub SSH known host entry to ${tty_ts}~/.ssh/known_hosts${tty_reset}"
-      printf "%s\n" "${known_host_entry}" >> "${known_hosts_path}"
-    fi
-  done <<'EOF'
+  ensure_ssh_dir
+  ensure_regular_file "${known_hosts_path}" "$(display_home_path "${known_hosts_path}")" "600"
+  append_missing_lines "${known_hosts_path}" added_count <<'EOF'
 github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
 github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=
 github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=
 EOF
+
+  if [[ "${added_count}" -gt 0 ]]; then
+    debug "${tty_tp}added${tty_reset} ${tty_ts}${added_count}${tty_reset} GitHub SSH known host entries to ${tty_ts}~/.ssh/known_hosts${tty_reset}"
+  fi
 }
 
 run_bootbox_for_emori_apply() {
@@ -1515,36 +1553,28 @@ normalize_ssh_keys_for_install() {
   SSH_KEYS=("${normalized_keys[@]}")
 }
 
-generated_ssh_identities_path() {
-  printf "%s/dotfiles/ssh/.config/emori/ssh.identities" "${EMORI_TARGET_PATH}"
+generated_dotpkg_file_path() {
+  local dotpkg="$1"
+  local relative_path="$2"
+
+  printf "%s/dotfiles/%s/%s" "${EMORI_TARGET_PATH}" "${dotpkg}" "${relative_path}"
 }
 
-generated_ssh_identities_display() {
-  display_home_path "$(generated_ssh_identities_path)"
+generated_dotpkg_file_display() {
+  local dotpkg="$1"
+  local relative_path="$2"
+
+  display_home_path "$(generated_dotpkg_file_path "${dotpkg}" "${relative_path}")"
 }
 
-generated_git_user_config_path() {
-  printf "%s/dotfiles/git/.config/emori/git-user.inc" "${EMORI_TARGET_PATH}"
-}
+require_emori_dotpkg() {
+  local dotpkg="$1"
+  local purpose="$2"
+  local dotpkg_dir="${EMORI_TARGET_PATH}/dotfiles/${dotpkg}"
 
-generated_git_user_config_display() {
-  display_home_path "$(generated_git_user_config_path)"
-}
-
-generated_git_signers_config_path() {
-  printf "%s/dotfiles/git/.config/emori/git-signers.inc" "${EMORI_TARGET_PATH}"
-}
-
-generated_git_signers_config_display() {
-  display_home_path "$(generated_git_signers_config_path)"
-}
-
-generated_allowed_signers_path() {
-  printf "%s/dotfiles/git/.config/emori/allowed_signers" "${EMORI_TARGET_PATH}"
-}
-
-generated_allowed_signers_display() {
-  display_home_path "$(generated_allowed_signers_path)"
+  if [[ ! -d "${dotpkg_dir}" ]]; then
+    abort "emori checkout at ${tty_ts}$(emori_target_display)${tty_reset} is missing required ${tty_ts}${dotpkg}${tty_reset} dotpkg needed for ${purpose}."
+  fi
 }
 
 expand_user_path() {
@@ -1748,33 +1778,17 @@ resolve_authorized_key_op_specs() {
 }
 
 install_authorized_keys() {
-  local ssh_dir="${HOME}/.ssh"
-  local authorized_keys="${ssh_dir}/authorized_keys"
-  local key
+  local authorized_keys="${HOME}/.ssh/authorized_keys"
   local installed_count="0"
 
   if ! array_has_values AUTHORIZED_KEY_LINES; then
     return 0
   fi
 
-  execute mkdir -p "${ssh_dir}"
-  execute chmod 700 "${ssh_dir}"
-  execute touch "${authorized_keys}"
-  execute chmod 600 "${authorized_keys}"
+  ensure_ssh_dir
+  ensure_regular_file "${authorized_keys}" "$(display_home_path "${authorized_keys}")" "600"
+  append_missing_lines "${authorized_keys}" installed_count < <(printf "%s\n" "${AUTHORIZED_KEY_LINES[@]}")
 
-  while IFS= read -r key || [[ -n "${key}" ]]; do
-    key="$(trim_whitespace "${key}")"
-    if [[ -z "${key}" || "${key}" == \#* ]]; then
-      continue
-    fi
-
-    if ! grep -qxF -- "${key}" "${authorized_keys}"; then
-      printf "%s\n" "${key}" >> "${authorized_keys}"
-      installed_count=$((installed_count + 1))
-    fi
-  done < <(printf "%s\n" "${AUTHORIZED_KEY_LINES[@]}")
-
-  execute chmod 600 "${authorized_keys}"
   log "${tty_tp}installed${tty_reset} ${tty_ts}${installed_count}${tty_reset} new SSH authorized key entries into ${tty_ts}$(display_home_path "${authorized_keys}")${tty_reset}"
 }
 
@@ -1843,18 +1857,12 @@ collect_ssh_key_actions() {
 
 write_generated_ssh_identities() {
   local output_path
-  local output_dir
-  local ssh_dotpkg_dir="${EMORI_TARGET_PATH}/dotfiles/ssh"
   local ssh_key
   local destination_path
   local -a identity_paths=()
 
-  if [[ ! -d "${ssh_dotpkg_dir}" ]]; then
-    abort "emori checkout at ${tty_ts}$(emori_target_display)${tty_reset} is missing required ${tty_ts}ssh${tty_reset} dotpkg needed for generated SSH identities."
-  fi
-
-  output_path="$(generated_ssh_identities_path)"
-  output_dir="$(dirname "${output_path}")"
+  require_emori_dotpkg "ssh" "generated SSH identities"
+  output_path="$(generated_dotpkg_file_path "ssh" ".config/emori/ssh.identities")"
 
   for ssh_key in "${SSH_KEYS[@]}"; do
     destination_path="$(ssh_key_destination_path "${ssh_key}")"
@@ -1863,7 +1871,7 @@ write_generated_ssh_identities() {
     fi
   done
 
-  execute mkdir -p "${output_dir}"
+  ensure_parent_dir "${output_path}"
 
   {
     printf "Host *\n"
@@ -1872,7 +1880,7 @@ write_generated_ssh_identities() {
     done
   } > "${output_path}"
 
-  debug "${tty_tp}wrote${tty_reset} generated ssh identities to ${tty_ts}$(generated_ssh_identities_display)${tty_reset}"
+  debug "${tty_tp}wrote${tty_reset} generated ssh identities to ${tty_ts}$(generated_dotpkg_file_display "ssh" ".config/emori/ssh.identities")${tty_reset}"
 }
 
 resolve_op_cli() {
@@ -1956,14 +1964,12 @@ normalize_signing_public_key() {
 write_signing_public_key_file() {
   local public_key_line="$1"
   local public_key_path
-  local public_key_dir
   local public_key_tmpfile
 
   public_key_path="$(ssh_key_public_path "${SIGNING_KEY}")"
-  public_key_dir="$(dirname "${public_key_path}")"
   public_key_tmpfile="$(mktemp "${BOOT_TMPDIR}/signing-public-key.XXXXXX")"
 
-  execute mkdir -p "${public_key_dir}"
+  ensure_parent_dir "${public_key_path}"
   printf "%s\n" "${public_key_line}" > "${public_key_tmpfile}"
   execute chmod 644 "${public_key_tmpfile}"
   execute mv "${public_key_tmpfile}" "${public_key_path}"
@@ -1973,9 +1979,7 @@ write_signing_public_key_file() {
 
 write_generated_git_signing_config() {
   local output_path
-  local output_dir
   local allowed_signers_path
-  local git_dotpkg_dir="${EMORI_TARGET_PATH}/dotfiles/git"
   local signing_key_filename
   local signing_key_public_path
   local key_type
@@ -1986,13 +1990,9 @@ write_generated_git_signing_config() {
     return 0
   fi
 
-  if [[ ! -d "${git_dotpkg_dir}" ]]; then
-    abort "emori checkout at ${tty_ts}$(emori_target_display)${tty_reset} is missing required ${tty_ts}git${tty_reset} dotpkg needed for generated Git signing config."
-  fi
-
-  output_path="$(generated_git_signers_config_path)"
-  output_dir="$(dirname "${output_path}")"
-  allowed_signers_path="$(generated_allowed_signers_path)"
+  require_emori_dotpkg "git" "generated Git signing config"
+  output_path="$(generated_dotpkg_file_path "git" ".config/emori/git-signers.inc")"
+  allowed_signers_path="$(generated_dotpkg_file_path "git" ".config/emori/allowed_signers")"
   signing_key_filename="$(ssh_key_filename "${SIGNING_KEY}")"
   signing_key_public_path="$(ssh_key_public_path "${SIGNING_KEY}")"
 
@@ -2002,7 +2002,7 @@ write_generated_git_signing_config() {
 
   write_signing_public_key_file "${public_key_line}"
 
-  execute mkdir -p "${output_dir}"
+  ensure_parent_dir "${output_path}"
   execute rm -f "${output_path}" "${allowed_signers_path}"
   execute git config --file "${output_path}" user.signingKey "$(display_home_path "${signing_key_public_path}")"
   execute git config --file "${output_path}" gpg.format ssh
@@ -2015,27 +2015,21 @@ write_generated_git_signing_config() {
     printf "%s %s\n" "${signing_key_filename}" "${public_key_line}"
   } > "${allowed_signers_path}"
 
-  debug "${tty_tp}wrote${tty_reset} generated git signing config to ${tty_ts}$(generated_git_signers_config_display)${tty_reset}"
+  debug "${tty_tp}wrote${tty_reset} generated git signing config to ${tty_ts}$(generated_dotpkg_file_display "git" ".config/emori/git-signers.inc")${tty_reset}"
 }
 
 write_generated_git_user_config() {
   local output_path
-  local output_dir
-  local git_dotpkg_dir="${EMORI_TARGET_PATH}/dotfiles/git"
 
-  if [[ ! -d "${git_dotpkg_dir}" ]]; then
-    abort "emori checkout at ${tty_ts}$(emori_target_display)${tty_reset} is missing required ${tty_ts}git${tty_reset} dotpkg needed for generated Git identity."
-  fi
+  require_emori_dotpkg "git" "generated Git identity"
+  output_path="$(generated_dotpkg_file_path "git" ".config/emori/git-user.inc")"
 
-  output_path="$(generated_git_user_config_path)"
-  output_dir="$(dirname "${output_path}")"
-
-  execute mkdir -p "${output_dir}"
+  ensure_parent_dir "${output_path}"
   execute rm -f "${output_path}"
   execute git config --file "${output_path}" user.name "${GIT_USER_NAME}"
   execute git config --file "${output_path}" user.email "${GIT_USER_EMAIL}"
 
-  debug "${tty_tp}wrote${tty_reset} generated git identity to ${tty_ts}$(generated_git_user_config_display)${tty_reset}"
+  debug "${tty_tp}wrote${tty_reset} generated git identity to ${tty_ts}$(generated_dotpkg_file_display "git" ".config/emori/git-user.inc")${tty_reset}"
 }
 
 have_planned_actions() {
@@ -2255,15 +2249,7 @@ bootbox_run() {
   local -a bootbox_display_command=()
 
   case "${mode}" in
-    core)
-      unset_env_names+=("BOOTBOX_TARGET")
-      unset_env_names+=("TANAAB_TARGET")
-      ;;
-    ssh)
-      unset_env_names+=("BOOTBOX_TARGET")
-      unset_env_names+=("TANAAB_TARGET")
-      ;;
-    emori)
+    core | ssh | emori)
       unset_env_names+=("BOOTBOX_TARGET")
       unset_env_names+=("TANAAB_TARGET")
       ;;
@@ -2364,12 +2350,12 @@ plan_wrapper_execution() {
   fi
 
   plan_emori_fetch
-  plan_action "${tty_tp}write${tty_reset} generated Git identity to ${tty_ts}$(generated_git_user_config_display)${tty_reset}"
+  plan_action "${tty_tp}write${tty_reset} generated Git identity to ${tty_ts}$(generated_dotpkg_file_display "git" ".config/emori/git-user.inc")${tty_reset}"
   if [[ -n "${SIGNING_KEY:-}" ]]; then
-    plan_action "${tty_tp}write${tty_reset} generated Git signing config to ${tty_ts}$(generated_git_signers_config_display)${tty_reset}"
+    plan_action "${tty_tp}write${tty_reset} generated Git signing config to ${tty_ts}$(generated_dotpkg_file_display "git" ".config/emori/git-signers.inc")${tty_reset}"
     plan_action "${tty_tp}write${tty_reset} signing public key to ${tty_ts}$(display_home_path "$(ssh_key_public_path "${SIGNING_KEY}")")${tty_reset}"
   fi
-  plan_action "${tty_tp}write${tty_reset} generated SSH identities to ${tty_ts}$(generated_ssh_identities_display)${tty_reset}"
+  plan_action "${tty_tp}write${tty_reset} generated SSH identities to ${tty_ts}$(generated_dotpkg_file_display "ssh" ".config/emori/ssh.identities")${tty_reset}"
   if tanaab_enabled; then
     plan_tanaab_fetch
     plan_tanaab_plugin_link
