@@ -11,3 +11,9 @@ skills/**/assets/*.svg
 
 # Skill templates contain nested frontmatter that Prettier rewrites into invalid scaffolds.
 skills/skill-author/templates/coding.md
+
+dotfiles/git/.config/emori/allowed_signers
+dotfiles/git/.config/emori/git-user.inc
+dotfiles/git/.config/emori/git-signers.inc
+dotfiles/ssh/.config/emori/ssh.identities
+dotfiles/ssh/.config/emori/*.pub

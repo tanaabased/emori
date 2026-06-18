@@ -16,10 +16,6 @@ fi
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
-if [[ -d "$HOME/.docker/completions" ]]; then
-  fpath=("$HOME/.docker/completions" $fpath)
-fi
-
 autoload -Uz compinit
 compinit
 
