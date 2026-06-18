@@ -117,11 +117,11 @@ test "$(awk '{print $1 " " $2}' "$HOME/.ssh/id_test_signing_envvars.pub")" = "$(
 # should install the provided authorized keys with original comments preserved
 authorized_file_key="$(cat .tmp/id_emori_envvars_authorized_file.pub)"
 authorized_raw_key="$(cat .tmp/id_emori_envvars_authorized_raw.pub)"
-authorized_op_key="$(cat id_test.pub)"
+authorized_op_key_prefix="$(awk '{print $1 " " $2}' id_test.pub)"
 test -f "$HOME/.ssh/authorized_keys"
 grep -qxF "$authorized_file_key" "$HOME/.ssh/authorized_keys"
 grep -qxF "$authorized_raw_key" "$HOME/.ssh/authorized_keys"
-grep -qxF "$authorized_op_key" "$HOME/.ssh/authorized_keys"
+grep -F "$authorized_op_key_prefix" "$HOME/.ssh/authorized_keys"
 grep -F 'emori-envvars-authorized-file@example.test' "$HOME/.ssh/authorized_keys"
 grep -F 'emori-envvars-authorized-raw@example.test' "$HOME/.ssh/authorized_keys"
 grep -F 'tanaabot@tanaab.dev' "$HOME/.ssh/authorized_keys"
@@ -130,9 +130,12 @@ grep -F 'tanaabot@tanaab.dev' "$HOME/.ssh/authorized_keys"
 test "$(stat -f '%Lp' "$HOME/.ssh/authorized_keys")" = "600"
 
 # should not duplicate authorized keys
+authorized_file_key="$(cat .tmp/id_emori_envvars_authorized_file.pub)"
+authorized_raw_key="$(cat .tmp/id_emori_envvars_authorized_raw.pub)"
+authorized_op_key_prefix="$(awk '{print $1 " " $2}' id_test.pub)"
 test "$(grep -cxF "$authorized_file_key" "$HOME/.ssh/authorized_keys")" = "1"
 test "$(grep -cxF "$authorized_raw_key" "$HOME/.ssh/authorized_keys")" = "1"
-test "$(grep -cxF "$authorized_op_key" "$HOME/.ssh/authorized_keys")" = "1"
+test "$(grep -cF "$authorized_op_key_prefix" "$HOME/.ssh/authorized_keys")" = "1"
 
 # should write generated ssh identities in the emori checkout from envvars
 ssh_identities_source="$HOME/tanaab/emori/dotfiles/ssh/.config/emori/ssh.identities"
@@ -145,6 +148,7 @@ test "$(grep -c '^    IdentityFile ' "$ssh_identities_source")" = "3"
 ! grep -F 'id_emori' "$ssh_identities_source"
 
 # should stow generated ssh identities into the emori config directory
+ssh_identities_source="$HOME/tanaab/emori/dotfiles/ssh/.config/emori/ssh.identities"
 test -e "$HOME/.config/emori/ssh.identities"
 test "$(python3 -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' "$HOME/.config/emori/ssh.identities")" = "$ssh_identities_source"
 cmp -s "$ssh_identities_source" "$HOME/.config/emori/ssh.identities"
@@ -156,6 +160,7 @@ test "$(git config --file "$git_user_source" --get user.name)" = "EMORI"
 test "$(git config --file "$git_user_source" --get user.email)" = "emori-env@example.test"
 
 # should stow generated git identity into the emori config directory
+git_user_source="$HOME/tanaab/emori/dotfiles/git/.config/emori/git-user.inc"
 test -e "$HOME/.config/emori/git-user.inc"
 test "$(python3 -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' "$HOME/.config/emori/git-user.inc")" = "$git_user_source"
 cmp -s "$git_user_source" "$HOME/.config/emori/git-user.inc"
@@ -179,6 +184,8 @@ grep -qxF "id_test_signing_envvars $expected_signing_public_key" "$allowed_signe
 test "$(grep -cv '^#' "$allowed_signers_source")" = "1"
 
 # should stow generated git signing config into the emori config directory
+git_signers_source="$HOME/tanaab/emori/dotfiles/git/.config/emori/git-signers.inc"
+allowed_signers_source="$HOME/tanaab/emori/dotfiles/git/.config/emori/allowed_signers"
 test -e "$HOME/.config/emori/git-signers.inc"
 test -e "$HOME/.config/emori/allowed_signers"
 test "$(python3 -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' "$HOME/.config/emori/git-signers.inc")" = "$git_signers_source"
@@ -247,10 +254,14 @@ rm -f "$HOME/.config/emori/git-signers.inc" "$HOME/.config/emori/allowed_signers
 
 # should remove only the example-created authorized key lines
 if [[ -f "$HOME/.ssh/authorized_keys" ]]; then
-  grep -vxF \
-    -e "$(cat .tmp/id_emori_envvars_authorized_file.pub)" \
-    -e "$(cat .tmp/id_emori_envvars_authorized_raw.pub)" \
-    -e "$(cat id_test.pub)" \
+  authorized_file_key="$(cat .tmp/id_emori_envvars_authorized_file.pub)"
+  authorized_raw_key="$(cat .tmp/id_emori_envvars_authorized_raw.pub)"
+  authorized_op_key_prefix="$(awk '{print $1 " " $2}' id_test.pub)"
+  awk \
+    -v file_key="$authorized_file_key" \
+    -v raw_key="$authorized_raw_key" \
+    -v op_prefix="$authorized_op_key_prefix" \
+    '$0 != file_key && $0 != raw_key && index($0, op_prefix) != 1' \
     "$HOME/.ssh/authorized_keys" > .tmp/authorized_keys.clean || true
   cp .tmp/authorized_keys.clean "$HOME/.ssh/authorized_keys"
   chmod 600 "$HOME/.ssh/authorized_keys"
