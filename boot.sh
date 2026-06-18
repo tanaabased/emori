@@ -525,14 +525,14 @@ usage() {
   fi
 
   cat <<EOS
-Usage: ${tty_dim}[NONINTERACTIVE=1] [CI=1]${tty_reset} ${tty_bold}${SCRIPT_NAME}${tty_reset} ${tty_dim}[options]${tty_reset}
+Usage: ${tty_dim}[NONINTERACTIVE=1] [CI=1] [EMORI_*...]${tty_reset} ${tty_bold}${SCRIPT_NAME}${tty_reset} ${tty_dim}[options]${tty_reset}
 
 ${tty_tp}Options:${tty_reset}
+  --identity       configures git user identity as "Name <email>" ${tty_dim}[default: ${identity_display}]${tty_reset}
+  --op-token       auths with 1password service account token ${tty_dim}[default: ${op_token_display}]${tty_reset}
   --ssh-key        installs 1password ssh keys as vault/item[:filename] ${tty_dim}[default: ${ssh_keys_display}]${tty_reset}
   --signing-key    configures git ssh signing with a 1password ssh key as vault/item[:filename] ${tty_dim}[default: ${signing_key_display}]${tty_reset}
   --authorized-key adds an SSH public key, public-key file path, or op://vault/item[:filename] ${tty_dim}[default: ${authorized_keys_display}]${tty_reset}
-  --identity       configures git user identity as "Name <email>" ${tty_dim}[default: ${identity_display}]${tty_reset}
-  --op-token       auths with 1password service account token ${tty_dim}[default: ${op_token_display}]${tty_reset}
   --emori          fetches emori from ssh, a local git repo path, or a release version ${tty_dim}[default: ${emori_display}]${tty_reset}
   --tanaab         fetches tanaab from ssh, a local git repo path, a release version, or a falsey disable value ${tty_dim}[default: ${tanaab_display}]${tty_reset}
   --openclaw-auth  OpenClaw onboarding auth choice ${tty_dim}[default: ${OPENCLAW_AUTH}]${tty_reset}
@@ -544,19 +544,19 @@ ${tty_tp}Options:${tty_reset}
   -y, --yes        runs with all defaults and no prompts, sets NONINTERACTIVE=1
 
 ${tty_tp}Environment Variables:${tty_reset}
-  EMORI_SSH_KEY         comma-separated list of 1password ssh keys as vault/item[:filename]
-  EMORI_SIGNING_KEY     git ssh signing key as vault/item[:filename]
-  EMORI_AUTHORIZED_KEY  SSH public key, public-key file path, or op://vault/item[:filename]
-  EMORI_IDENTITY        git user identity as "Name <email>"
-  EMORI_OP_TOKEN        1password service account token; falls back to OP_SERVICE_ACCOUNT_TOKEN
-  EMORI_SOURCE          source for ~/tanaab/emori; supports ssh, local repo paths, or release versions
-  EMORI_TANAAB          source for ~/tanaab/canon; supports ssh, local repo paths, release versions, or falsey disable values
-  EMORI_OPENCLAW_AUTH   auth choice passed to OpenClaw onboarding
-  EMORI_SKIP_OPENCLAW   set to any value to skip OpenClaw onboarding
-  EMORI_FORCE           set to a truthy value to force supported operations
-  EMORI_DEBUG           set to a truthy value to show debug messages
-  NONINTERACTIVE        installs without prompting for user input
-  CI                    installs in CI mode (e.g. does not prompt for user input)
+  EMORI_IDENTITY        same as --identity
+  EMORI_OP_TOKEN        same as --op-token; falls back to OP_SERVICE_ACCOUNT_TOKEN
+  EMORI_SSH_KEY         same as --ssh-key
+  EMORI_SIGNING_KEY     same as --signing-key
+  EMORI_AUTHORIZED_KEY  same as --authorized-key
+  EMORI_SOURCE          same as --emori
+  EMORI_TANAAB          same as --tanaab
+  EMORI_OPENCLAW_AUTH   same as --openclaw-auth
+  EMORI_SKIP_OPENCLAW   same as --skip-openclaw
+  EMORI_FORCE           same as --force
+  EMORI_DEBUG           same as --debug
+  NONINTERACTIVE        same as --yes
+  CI                    runs in CI mode and disables prompts
 EOS
   if [[ "${1:-0}" != "noexit" ]]; then
     exit "${1:-0}"

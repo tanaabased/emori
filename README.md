@@ -117,7 +117,7 @@ Interactive installs show the planned actions and wait for confirmation when a t
 If you want a reusable local command, download the script as `bootemori` first.
 
 ```sh
-curl -fsSL https://emori.boot.tanaab.sh -o bootemori
+curl -fsSL https://emori.boot.tanaab.sh/boot.sh -o bootemori
 chmod +x bootemori
 ./bootemori --help
 ```

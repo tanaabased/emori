@@ -16,6 +16,9 @@ mkdir -p .tmp
 ## Testing
 
 ```bash
+# should show the compact EMORI envvar placeholder in usage
+boot.sh --help | grep -F '[EMORI_*...]'
+
 # should show the required op token flag in help output
 boot.sh --help | grep -- '--op-token'
 
@@ -50,37 +53,37 @@ boot.sh --help | grep -F '2mh2ny4tegbi33yt3furutomzu/id_emori'
 boot.sh --help | grep -F '[default: ssh]'
 
 # should show the EMORI_OP_TOKEN envvar in help output
-boot.sh --help | grep -F 'EMORI_OP_TOKEN'
+boot.sh --help | grep -F 'EMORI_OP_TOKEN        same as --op-token; falls back to OP_SERVICE_ACCOUNT_TOKEN'
 
 # should show the EMORI_SSH_KEY envvar in help output
-boot.sh --help | grep -F 'EMORI_SSH_KEY'
+boot.sh --help | grep -F 'EMORI_SSH_KEY         same as --ssh-key'
 
 # should show the EMORI_SIGNING_KEY envvar in help output
-boot.sh --help | grep -F 'EMORI_SIGNING_KEY'
+boot.sh --help | grep -F 'EMORI_SIGNING_KEY     same as --signing-key'
 
 # should show the EMORI_AUTHORIZED_KEY envvar in help output
-boot.sh --help | grep -F 'EMORI_AUTHORIZED_KEY'
+boot.sh --help | grep -F 'EMORI_AUTHORIZED_KEY  same as --authorized-key'
 
 # should show the EMORI_IDENTITY envvar in help output
-boot.sh --help | grep -F 'EMORI_IDENTITY'
+boot.sh --help | grep -F 'EMORI_IDENTITY        same as --identity'
 
 # should show the EMORI_SOURCE envvar in help output
-boot.sh --help | grep -F 'EMORI_SOURCE'
+boot.sh --help | grep -F 'EMORI_SOURCE          same as --emori'
 
 # should show the EMORI_TANAAB envvar in help output
-boot.sh --help | grep -F 'EMORI_TANAAB'
+boot.sh --help | grep -F 'EMORI_TANAAB          same as --tanaab'
 
 # should show the EMORI_OPENCLAW_AUTH envvar in help output
-boot.sh --help | grep -F 'EMORI_OPENCLAW_AUTH'
+boot.sh --help | grep -F 'EMORI_OPENCLAW_AUTH   same as --openclaw-auth'
 
 # should show the EMORI_SKIP_OPENCLAW envvar in help output
-boot.sh --help | grep -F 'EMORI_SKIP_OPENCLAW'
+boot.sh --help | grep -F 'EMORI_SKIP_OPENCLAW   same as --skip-openclaw'
 
 # should show the EMORI_FORCE envvar in help output
-boot.sh --help | grep -F 'EMORI_FORCE'
+boot.sh --help | grep -F 'EMORI_FORCE           same as --force'
 
 # should show the EMORI_DEBUG envvar in help output
-boot.sh --help | grep -F 'EMORI_DEBUG'
+boot.sh --help | grep -F 'EMORI_DEBUG           same as --debug'
 
 # should let EMORI_SSH_KEY override the displayed ssh key default
 EMORI_SSH_KEY='example-vault/example-item:id_example' boot.sh --help | grep -F 'example-vault/example-item:id_example'
