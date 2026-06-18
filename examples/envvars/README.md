@@ -20,7 +20,7 @@ brew uninstall --formula --force stow || true
 # should prepare the default ssh target directory
 mkdir -p "$HOME/.ssh"
 
-# should prepare a temp directory for signing checks
+# should prepare a temp directory for signing and authorized-key checks
 mkdir -p .tmp
 
 # should remove an existing emori checkout target
@@ -38,6 +38,12 @@ test -d "$GITHUB_WORKSPACE/.git"
 # should have the op token test secret available
 test -n "$OPTOKEN"
 
+# should generate public key fixtures for envvar authorized-key installation
+rm -f .tmp/id_emori_envvars_authorized_file .tmp/id_emori_envvars_authorized_file.pub
+rm -f .tmp/id_emori_envvars_authorized_raw .tmp/id_emori_envvars_authorized_raw.pub
+ssh-keygen -t ed25519 -N "" -C "emori-envvars-authorized-file@example.test" -f .tmp/id_emori_envvars_authorized_file >/dev/null
+ssh-keygen -t ed25519 -N "" -C "emori-envvars-authorized-raw@example.test" -f .tmp/id_emori_envvars_authorized_raw >/dev/null
+
 # should run boot.sh successfully using envvars and force-overwrite a conflicting key
 printf '%s\n' 'not-a-private-key' > "$HOME/.ssh/id_test_envvars"
 chmod 600 "$HOME/.ssh/id_test_envvars"
@@ -47,6 +53,8 @@ EMORI_FORCE=1 \
 EMORI_SSH_KEY='omfsw2uztmi2xqpid5g3kiv6ba/id_test' \
 EMORI_SSH_KEYS='omfsw2uztmi2xqpid5g3kiv6ba/id_test:id_test_envvars' \
 EMORI_SIGNING_KEY='omfsw2uztmi2xqpid5g3kiv6ba/id_test:id_test_signing_envvars' \
+EMORI_AUTHORIZED_KEY='file:.tmp/id_emori_envvars_authorized_file.pub' \
+EMORI_AUTHORIZED_KEYS="$(cat .tmp/id_emori_envvars_authorized_raw.pub),op://omfsw2uztmi2xqpid5g3kiv6ba/id_test" \
 EMORI_SOURCE="$GITHUB_WORKSPACE" \
 EMORI_SKIP_OPENCLAW=1 \
 boot.sh
@@ -105,6 +113,26 @@ test "$(ssh-keygen -y -f "$HOME/.ssh/id_test_signing_envvars" | awk '{print $1 \
 # should write the signing public key next to the private key
 test -f "$HOME/.ssh/id_test_signing_envvars.pub"
 test "$(awk '{print $1 \" \" $2}' "$HOME/.ssh/id_test_signing_envvars.pub")" = "$(awk '{print $1 \" \" $2}' id_test.pub)"
+
+# should install the provided authorized keys with original comments preserved
+authorized_file_key="$(cat .tmp/id_emori_envvars_authorized_file.pub)"
+authorized_raw_key="$(cat .tmp/id_emori_envvars_authorized_raw.pub)"
+authorized_op_key="$(cat id_test.pub)"
+test -f "$HOME/.ssh/authorized_keys"
+grep -qxF "$authorized_file_key" "$HOME/.ssh/authorized_keys"
+grep -qxF "$authorized_raw_key" "$HOME/.ssh/authorized_keys"
+grep -qxF "$authorized_op_key" "$HOME/.ssh/authorized_keys"
+grep -F 'emori-envvars-authorized-file@example.test' "$HOME/.ssh/authorized_keys"
+grep -F 'emori-envvars-authorized-raw@example.test' "$HOME/.ssh/authorized_keys"
+grep -F 'tanaabot@tanaab.dev' "$HOME/.ssh/authorized_keys"
+
+# should protect the authorized_keys file
+test "$(stat -f '%Lp' "$HOME/.ssh/authorized_keys")" = "600"
+
+# should not duplicate authorized keys
+test "$(grep -cxF "$authorized_file_key" "$HOME/.ssh/authorized_keys")" = "1"
+test "$(grep -cxF "$authorized_raw_key" "$HOME/.ssh/authorized_keys")" = "1"
+test "$(grep -cxF "$authorized_op_key" "$HOME/.ssh/authorized_keys")" = "1"
 
 # should write generated ssh identities in the emori checkout from envvars
 ssh_identities_source="$HOME/tanaab/emori/dotfiles/ssh/.config/emori/ssh.identities"
@@ -216,6 +244,17 @@ rm -f "$HOME/.config/emori/git-user.inc"
 
 # should remove the stowed generated git signing files
 rm -f "$HOME/.config/emori/git-signers.inc" "$HOME/.config/emori/allowed_signers"
+
+# should remove only the example-created authorized key lines
+if [[ -f "$HOME/.ssh/authorized_keys" ]]; then
+  grep -vxF \
+    -e "$(cat .tmp/id_emori_envvars_authorized_file.pub)" \
+    -e "$(cat .tmp/id_emori_envvars_authorized_raw.pub)" \
+    -e "$(cat id_test.pub)" \
+    "$HOME/.ssh/authorized_keys" > .tmp/authorized_keys.clean || true
+  cp .tmp/authorized_keys.clean "$HOME/.ssh/authorized_keys"
+  chmod 600 "$HOME/.ssh/authorized_keys"
+fi
 
 # should remove the signed commit test repo and log
 rm -rf "$HOME/emori-signing-envvars" .tmp

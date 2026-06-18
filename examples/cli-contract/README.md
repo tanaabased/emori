@@ -25,6 +25,9 @@ boot.sh --help | grep -- '--ssh-key'
 # should show the signing key flag in help output
 boot.sh --help | grep -- '--signing-key'
 
+# should show the authorized key flag in help output
+boot.sh --help | grep -- '--authorized-key'
+
 # should show the identity flag in help output
 boot.sh --help | grep -- '--identity'
 
@@ -54,6 +57,9 @@ boot.sh --help | grep -F 'EMORI_SSH_KEY'
 
 # should show the EMORI_SIGNING_KEY envvar in help output
 boot.sh --help | grep -F 'EMORI_SIGNING_KEY'
+
+# should show the EMORI_AUTHORIZED_KEY envvar in help output
+boot.sh --help | grep -F 'EMORI_AUTHORIZED_KEY'
 
 # should show the EMORI_IDENTITY envvar in help output
 boot.sh --help | grep -F 'EMORI_IDENTITY'
@@ -88,11 +94,24 @@ EMORI_SSH_KEY='example-vault/example-item:id_primary' EMORI_SSH_KEYS='example-va
 # should keep EMORI_SSH_KEYS hidden from help output
 ! boot.sh --help | grep -F 'EMORI_SSH_KEYS'
 
+# should keep hidden plural authorized-key inputs out of help
+! boot.sh --help | grep -F -- '--authorized-keys'
+! boot.sh --help | grep -F 'EMORI_AUTHORIZED_KEYS'
+
 # should let EMORI_SIGNING_KEY override the displayed signing key default
 EMORI_SIGNING_KEY='example-vault/example-signing:id_signing_env' boot.sh --help | grep -F 'example-vault/example-signing:id_signing_env'
 
 # should let --signing-key override EMORI_SIGNING_KEY
 EMORI_SIGNING_KEY='example-vault/example-signing:id_signing_env' boot.sh --signing-key 'example-vault/example-signing:id_signing_cli' --help | grep -F 'example-vault/example-signing:id_signing_cli'
+
+# should display an env-provided authorized key count
+EMORI_AUTHORIZED_KEY='ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAuthorizedEnvKeyExample0000000000000000000000000000 env@example.test' boot.sh --help | grep -F '[default: 1 provided]'
+
+# should let the first CLI authorized-key option replace env-provided authorized keys
+EMORI_AUTHORIZED_KEYS='env-one,env-two' boot.sh --authorized-key 'cli-one' --help | grep -F '[default: 1 provided]'
+
+# should append later CLI authorized-key options after the first CLI override
+EMORI_AUTHORIZED_KEYS='env-one,env-two' boot.sh --authorized-key 'cli-one' --authorized-key 'cli-two' --help | grep -F '[default: 2 provided]'
 
 # should let EMORI_IDENTITY override the displayed identity default
 EMORI_IDENTITY='Env User <env@example.test>' boot.sh --help | grep -F 'Env User <env@example.test>'
@@ -177,6 +196,37 @@ grep -F 'can only be provided once' .tmp/repeated-signing-key.log
 
 # should explain the invalid signing key principal failure
 grep -F 'filename must not contain whitespace or commas' .tmp/invalid-signing-principal.log
+
+# should fail before bootstrap work when a raw authorized key is invalid
+! boot.sh --identity 'Test User <test@example.test>' --authorized-key 'not-a-public-key' > .tmp/invalid-authorized-key.log 2>&1
+
+# should explain the invalid raw authorized key failure
+grep -F 'must be a public key line' .tmp/invalid-authorized-key.log
+
+# should fail before bootstrap work when an authorized key value looks like private-key material
+! boot.sh --identity 'Test User <test@example.test>' --authorized-key '-----BEGIN OPENSSH PRIVATE KEY-----' > .tmp/private-authorized-key.log 2>&1
+
+# should explain the private-key-like authorized key failure
+grep -F 'appears to contain private key material' .tmp/private-authorized-key.log
+
+# should fail before bootstrap work when an authorized key file is missing
+! boot.sh --identity 'Test User <test@example.test>' --authorized-key 'file:.tmp/missing-authorized-key.pub' > .tmp/missing-authorized-key.log 2>&1
+
+# should explain the missing authorized key file failure
+grep -F 'does not exist' .tmp/missing-authorized-key.log
+
+# should fail before bootstrap work when an authorized key file contains invalid public-key lines
+printf '%s\n' 'not-a-public-key' > .tmp/invalid-authorized-key.pub
+! boot.sh --identity 'Test User <test@example.test>' --authorized-key 'file:.tmp/invalid-authorized-key.pub' > .tmp/invalid-authorized-key-file.log 2>&1
+
+# should explain the invalid authorized key file failure
+grep -F 'contains an invalid public key line' .tmp/invalid-authorized-key-file.log
+
+# should fail before bootstrap work when an op authorized key reference is malformed
+! boot.sh --identity 'Test User <test@example.test>' --authorized-key 'op:/bad' > .tmp/malformed-authorized-key-op.log 2>&1
+
+# should explain the malformed op authorized key failure
+grep -F 'op://vault/item[:filename]' .tmp/malformed-authorized-key-op.log
 ```
 
 ## Destroy tests
