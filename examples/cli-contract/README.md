@@ -46,8 +46,11 @@ boot.sh --help | grep -- '--openclaw-auth'
 # should show the OpenClaw skip flag in help output
 boot.sh --help | grep -- '--skip-openclaw'
 
-# should show the default ssh key in help output
-boot.sh --help | grep -F '2mh2ny4tegbi33yt3furutomzu/id_emori'
+# should show no ssh key default in help output
+boot.sh --help | grep -F -- '--ssh-key        installs 1password ssh keys as vault/item[:filename] [default: none]'
+
+# should not expose the old bundled ssh key in help output
+! boot.sh --help | grep -F '2mh2ny4tegbi33yt3furutomzu/id_emori'
 
 # should show the default emori source in help output
 boot.sh --help | grep -F '[default: ssh]'
@@ -88,8 +91,8 @@ boot.sh --help | grep -F 'EMORI_DEBUG           same as --debug'
 # should let EMORI_SSH_KEY override the displayed ssh key default
 EMORI_SSH_KEY='example-vault/example-item:id_example' boot.sh --help | grep -F 'example-vault/example-item:id_example'
 
-# should append EMORI_SSH_KEYS to the displayed ssh key default
-EMORI_SSH_KEYS='example-vault/example-item:id_extra' boot.sh --help | grep -F '2mh2ny4tegbi33yt3furutomzu/id_emori,example-vault/example-item:id_extra'
+# should show EMORI_SSH_KEYS as the displayed ssh key default when no primary envvar is set
+EMORI_SSH_KEYS='example-vault/example-item:id_extra' boot.sh --help | grep -F 'example-vault/example-item:id_extra'
 
 # should append EMORI_SSH_KEYS after EMORI_SSH_KEY when both are set
 EMORI_SSH_KEY='example-vault/example-item:id_primary' EMORI_SSH_KEYS='example-vault/example-item:id_secondary' boot.sh --help | grep -F 'example-vault/example-item:id_primary,example-vault/example-item:id_secondary'
@@ -181,6 +184,12 @@ grep -F 'option --identity is required' .tmp/missing-identity.log
 
 # should explain the malformed identity failure
 grep -F 'must use the format' .tmp/invalid-identity.log
+
+# should fail before bootstrap work when an ssh key is missing
+! boot.sh --identity 'Test User <test@example.test>' --op-token 'test-token' > .tmp/missing-ssh-key.log 2>&1
+
+# should explain the missing ssh key failure
+grep -F 'no default SSH key is bundled' .tmp/missing-ssh-key.log
 
 # should fail before bootstrap work when signing key is malformed
 ! boot.sh --identity 'Test User <test@example.test>' --signing-key 'Invalid Signing Key' > .tmp/invalid-signing-key.log 2>&1

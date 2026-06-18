@@ -4,11 +4,10 @@ set -euo pipefail
 #
 # examples:
 #
-#   $ ./boot.sh --op-token "$OP_TOKEN"
-#   $ ./boot.sh --op-token "$OP_TOKEN" --ssh-key 2mh2ny4tegbi33yt3furutomzu/id_emori
-#   $ ./boot.sh --op-token "$OP_TOKEN" --emori v1.0.0-beta.1
-#   $ ./boot.sh --op-token "$OP_TOKEN" --tanaab v0.2.0
-#   $ DEBUG=1 ./boot.sh --op-token "$OP_TOKEN" --yes
+#   $ ./boot.sh --identity "EMORI <emori@example.test>" --op-token "$OP_TOKEN" --ssh-key example-vault/example-item:id_emori
+#   $ ./boot.sh --identity "EMORI <emori@example.test>" --op-token "$OP_TOKEN" --ssh-key example-vault/example-item:id_emori --emori v1.0.0-beta.1
+#   $ ./boot.sh --identity "EMORI <emori@example.test>" --op-token "$OP_TOKEN" --ssh-key example-vault/example-item:id_emori --tanaab v0.2.0
+#   $ DEBUG=1 ./boot.sh --identity "EMORI <emori@example.test>" --op-token "$OP_TOKEN" --ssh-key example-vault/example-item:id_emori --yes
 #
 # option precedence: cli options override environment variables, which override defaults.
 #
@@ -18,7 +17,6 @@ MACOS_OLDEST_SUPPORTED="26.0"
 REQUIRED_CURL_VERSION="7.41.0"
 BOOTBOX_URL="https://bootbox.tanaab.sh/bootbox.sh"
 AGENTBOX_HEALTH_SCRIPT="/opt/tanaab/agentbox/bin/health.sh"
-DEFAULT_SSH_KEY="2mh2ny4tegbi33yt3furutomzu/id_emori"
 DEFAULT_EMORI_SOURCE="ssh"
 DEFAULT_TANAAB_SOURCE="ssh"
 DEFAULT_OPENCLAW_AUTH="openai"
@@ -349,7 +347,7 @@ SCRIPT_VERSION="${SCRIPT_VERSION:-$(git describe --tags --always --abbrev=1 2>/d
 DEBUG="${EMORI_DEBUG:-${DEBUG:-${RUNNER_DEBUG:-}}}"
 FORCE="${EMORI_FORCE:-}"
 OP_TOKEN="${EMORI_OP_TOKEN:-${OP_SERVICE_ACCOUNT_TOKEN:-}}"
-SSH_KEYS_CSV="${EMORI_SSH_KEY:-${DEFAULT_SSH_KEY}}"
+SSH_KEYS_CSV="${EMORI_SSH_KEY:-}"
 SIGNING_KEY="${EMORI_SIGNING_KEY:-}"
 IDENTITY="${EMORI_IDENTITY:-}"
 EMORI_SOURCE="${EMORI_SOURCE:-${DEFAULT_EMORI_SOURCE}}"
@@ -1508,9 +1506,11 @@ validate_signing_key_principal() {
 validate_ssh_key_inputs() {
   local ssh_key
 
-  for ssh_key in "${SSH_KEYS[@]}"; do
-    validate_ssh_key_spec "${ssh_key}" "--ssh-key"
-  done
+  if [[ "${#SSH_KEYS[@]}" -gt 0 ]]; then
+    for ssh_key in "${SSH_KEYS[@]}"; do
+      validate_ssh_key_spec "${ssh_key}" "--ssh-key"
+    done
+  fi
 
   if [[ -n "${SIGNING_KEY:-}" ]]; then
     validate_ssh_key_spec "${SIGNING_KEY}" "--signing-key"
@@ -1525,6 +1525,10 @@ normalize_ssh_keys_for_install() {
   local found
   local -a normalized_keys=()
   local -a destination_paths=()
+
+  if [[ "${#SSH_KEYS[@]}" -eq 0 && -z "${SIGNING_KEY:-}" ]]; then
+    return 0
+  fi
 
   if [[ -n "${SIGNING_KEY:-}" ]]; then
     append_array_value SSH_KEYS "${SIGNING_KEY}"
@@ -2121,7 +2125,7 @@ EOABORT
   fi
 
   if [[ "${#SSH_KEYS[@]}" -eq 0 ]]; then
-    abort "at least one ssh key is required. pass --ssh-key or set EMORI_SSH_KEY."
+    abort "at least one SSH key is required; no default SSH key is bundled. pass --ssh-key or set EMORI_SSH_KEY."
   fi
 }
 
