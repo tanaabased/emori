@@ -37,11 +37,13 @@ test -n "$OPTOKEN"
 
 # should run boot.sh successfully using options while skipping an existing key and continuing
 boot.sh \
+  --identity 'EMORI <emori@example.test>' \
   --op-token "$OPTOKEN" \
   --ssh-key 'omfsw2uztmi2xqpid5g3kiv6ba/id_test' \
   --emori "$GITHUB_WORKSPACE" \
   --skip-openclaw
 boot.sh \
+  --identity 'EMORI <emori@example.test>' \
   --op-token "$OPTOKEN" \
   --ssh-key 'omfsw2uztmi2xqpid5g3kiv6ba/id_test' \
   --ssh-key 'omfsw2uztmi2xqpid5g3kiv6ba/id_test:id_test_options' \
@@ -105,6 +107,21 @@ test -e "$HOME/.config/emori/ssh.identities"
 test "$(python3 -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' "$HOME/.config/emori/ssh.identities")" = "$ssh_identities_source"
 cmp -s "$ssh_identities_source" "$HOME/.config/emori/ssh.identities"
 
+# should write generated git identity in the emori checkout from cli flags
+git_user_source="$HOME/tanaab/emori/dotfiles/git/.config/emori/git-user.inc"
+test -f "$git_user_source"
+test "$(git config --file "$git_user_source" --get user.name)" = "EMORI"
+test "$(git config --file "$git_user_source" --get user.email)" = "emori@example.test"
+
+# should stow generated git identity into the emori config directory
+test -e "$HOME/.config/emori/git-user.inc"
+test "$(python3 -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' "$HOME/.config/emori/git-user.inc")" = "$git_user_source"
+cmp -s "$git_user_source" "$HOME/.config/emori/git-user.inc"
+
+# should resolve git identity through the stowed global config
+test "$(GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL="$HOME/.gitconfig" git -C "$HOME" config --get user.name)" = "EMORI"
+test "$(GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL="$HOME/.gitconfig" git -C "$HOME" config --get user.email)" = "emori@example.test"
+
 # should clone emori from the local workspace path
 test -d "$HOME/tanaab/emori/.git"
 
@@ -142,6 +159,9 @@ rm -f "$HOME/.codex/plugins/tanaab"
 
 # should remove the stowed generated ssh identities file
 rm -f "$HOME/.config/emori/ssh.identities"
+
+# should remove the stowed generated git identity file
+rm -f "$HOME/.config/emori/git-user.inc"
 
 # should remove the installed example ssh keys
 rm -f "$HOME/.ssh/id_test" "$HOME/.ssh/id_test_options"

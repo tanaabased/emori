@@ -39,6 +39,7 @@ test -n "$OPTOKEN"
 printf '%s\n' 'not-a-private-key' > "$HOME/.ssh/id_test_envvars"
 chmod 600 "$HOME/.ssh/id_test_envvars"
 EMORI_OP_TOKEN="$OPTOKEN" \
+EMORI_IDENTITY='EMORI <emori-env@example.test>' \
 EMORI_FORCE=1 \
 EMORI_SSH_KEY='omfsw2uztmi2xqpid5g3kiv6ba/id_test' \
 EMORI_SSH_KEYS='omfsw2uztmi2xqpid5g3kiv6ba/id_test:id_test_envvars' \
@@ -102,6 +103,21 @@ test -e "$HOME/.config/emori/ssh.identities"
 test "$(python3 -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' "$HOME/.config/emori/ssh.identities")" = "$ssh_identities_source"
 cmp -s "$ssh_identities_source" "$HOME/.config/emori/ssh.identities"
 
+# should write generated git identity in the emori checkout from envvars
+git_user_source="$HOME/tanaab/emori/dotfiles/git/.config/emori/git-user.inc"
+test -f "$git_user_source"
+test "$(git config --file "$git_user_source" --get user.name)" = "EMORI"
+test "$(git config --file "$git_user_source" --get user.email)" = "emori-env@example.test"
+
+# should stow generated git identity into the emori config directory
+test -e "$HOME/.config/emori/git-user.inc"
+test "$(python3 -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' "$HOME/.config/emori/git-user.inc")" = "$git_user_source"
+cmp -s "$git_user_source" "$HOME/.config/emori/git-user.inc"
+
+# should resolve git identity through the stowed global config
+test "$(GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL="$HOME/.gitconfig" git -C "$HOME" config --get user.name)" = "EMORI"
+test "$(GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL="$HOME/.gitconfig" git -C "$HOME" config --get user.email)" = "emori-env@example.test"
+
 # should clone emori from the local workspace path
 test -d "$HOME/tanaab/emori/.git"
 
@@ -139,6 +155,9 @@ rm -f "$HOME/.codex/plugins/tanaab"
 
 # should remove the stowed generated ssh identities file
 rm -f "$HOME/.config/emori/ssh.identities"
+
+# should remove the stowed generated git identity file
+rm -f "$HOME/.config/emori/git-user.inc"
 
 # should remove the installed example ssh keys
 rm -f "$HOME/.ssh/id_test" "$HOME/.ssh/id_test_envvars"

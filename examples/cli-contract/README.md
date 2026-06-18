@@ -22,6 +22,9 @@ boot.sh --help | grep -- '--op-token'
 # should show the ssh key flag in help output
 boot.sh --help | grep -- '--ssh-key'
 
+# should show the identity flag in help output
+boot.sh --help | grep -- '--identity'
+
 # should show the emori flag in help output
 boot.sh --help | grep -- '--emori'
 
@@ -45,6 +48,9 @@ boot.sh --help | grep -F 'EMORI_OP_TOKEN'
 
 # should show the EMORI_SSH_KEY envvar in help output
 boot.sh --help | grep -F 'EMORI_SSH_KEY'
+
+# should show the EMORI_IDENTITY envvar in help output
+boot.sh --help | grep -F 'EMORI_IDENTITY'
 
 # should show the EMORI_SOURCE envvar in help output
 boot.sh --help | grep -F 'EMORI_SOURCE'
@@ -75,6 +81,12 @@ EMORI_SSH_KEY='example-vault/example-item:id_primary' EMORI_SSH_KEYS='example-va
 
 # should keep EMORI_SSH_KEYS hidden from help output
 ! boot.sh --help | grep -F 'EMORI_SSH_KEYS'
+
+# should let EMORI_IDENTITY override the displayed identity default
+EMORI_IDENTITY='Env User <env@example.test>' boot.sh --help | grep -F 'Env User <env@example.test>'
+
+# should let --identity override EMORI_IDENTITY
+EMORI_IDENTITY='Env User <env@example.test>' boot.sh --identity 'CLI User <cli@example.test>' --help | grep -F 'CLI User <cli@example.test>'
 
 # should let EMORI_SOURCE override the displayed emori default
 EMORI_SOURCE='/tmp/example-emori-source' boot.sh --help | grep -F '/tmp/example-emori-source'
@@ -123,6 +135,18 @@ test -n "$(boot.sh --version)"
 
 # should explain the unknown option failure
 grep -F 'unrecognized option' .tmp/invalid.log
+
+# should fail before bootstrap work when identity is missing
+! boot.sh > .tmp/missing-identity.log 2>&1
+
+# should explain the missing identity failure
+grep -F 'option --identity is required' .tmp/missing-identity.log
+
+# should fail before bootstrap work when identity is malformed
+! boot.sh --identity 'Invalid Identity' > .tmp/invalid-identity.log 2>&1
+
+# should explain the malformed identity failure
+grep -F 'must use the format' .tmp/invalid-identity.log
 ```
 
 ## Destroy tests

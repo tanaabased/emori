@@ -338,6 +338,7 @@ DEBUG="${EMORI_DEBUG:-${DEBUG:-${RUNNER_DEBUG:-}}}"
 FORCE="${EMORI_FORCE:-}"
 OP_TOKEN="${EMORI_OP_TOKEN:-${OP_SERVICE_ACCOUNT_TOKEN:-}}"
 SSH_KEYS_CSV="${EMORI_SSH_KEY:-${DEFAULT_SSH_KEY}}"
+IDENTITY="${EMORI_IDENTITY:-}"
 EMORI_SOURCE="${EMORI_SOURCE:-${DEFAULT_EMORI_SOURCE}}"
 TANAAB_SOURCE="${EMORI_TANAAB:-${DEFAULT_TANAAB_SOURCE}}"
 OPENCLAW_AUTH="${EMORI_OPENCLAW_AUTH:-${DEFAULT_OPENCLAW_AUTH}}"
@@ -366,6 +367,8 @@ TANAAB_SOURCE_LOCAL_PATH=""
 TANAAB_SOURCE_VERSION_TAG=""
 TANAAB_TARGET_PATH=""
 EMORI_APPLY_BREWFILE=""
+GIT_USER_NAME=""
+GIT_USER_EMAIL=""
 OPENCLAW_CMD=""
 
 if [[ -n "${EMORI_SSH_KEYS:-}" ]]; then
@@ -432,10 +435,34 @@ normalize_repo_source_value() {
   fi
 }
 
+parse_identity_value() {
+  local identity="$1"
+  local name_var="$2"
+  local email_var="$3"
+  local identity_pattern='^(.+)[[:space:]]<([^<>[:space:]]+@[^<>[:space:]]+)>$'
+  local identity_name
+  local identity_email
+
+  if [[ ! "${identity}" =~ ${identity_pattern} ]]; then
+    return 1
+  fi
+
+  identity_name="$(trim_whitespace "${BASH_REMATCH[1]}")"
+  identity_email="$(trim_whitespace "${BASH_REMATCH[2]}")"
+
+  if [[ -z "${identity_name}" || -z "${identity_email}" ]]; then
+    return 1
+  fi
+
+  printf -v "${name_var}" "%s" "${identity_name}"
+  printf -v "${email_var}" "%s" "${identity_email}"
+}
+
 usage() {
   local debug_display="off"
   local force_display="off"
   local ssh_keys_display="none"
+  local identity_display="none"
   local op_token_display="none"
   local emori_display="none"
   local tanaab_display="none"
@@ -451,6 +478,7 @@ usage() {
 
   ssh_keys_display="$(array_join "," SSH_KEYS)"
   ssh_keys_display="${ssh_keys_display:-none}"
+  identity_display="${IDENTITY:-none}"
 
   if [[ -n "${OP_TOKEN:-}" ]]; then
     op_token_display="$(mask_secret_for_display "${OP_TOKEN}")"
@@ -468,6 +496,7 @@ Usage: ${tty_dim}[NONINTERACTIVE=1] [CI=1]${tty_reset} ${tty_bold}${SCRIPT_NAME}
 
 ${tty_tp}Options:${tty_reset}
   --ssh-key        installs 1password ssh keys as vault/item[:filename] ${tty_dim}[default: ${ssh_keys_display}]${tty_reset}
+  --identity       configures git user identity as "Name <email>" ${tty_dim}[default: ${identity_display}]${tty_reset}
   --op-token       auths with 1password service account token ${tty_dim}[default: ${op_token_display}]${tty_reset}
   --emori          fetches emori from ssh, a local git repo path, or a release version ${tty_dim}[default: ${emori_display}]${tty_reset}
   --tanaab         fetches tanaab from ssh, a local git repo path, a release version, or a falsey disable value ${tty_dim}[default: ${tanaab_display}]${tty_reset}
@@ -481,6 +510,7 @@ ${tty_tp}Options:${tty_reset}
 
 ${tty_tp}Environment Variables:${tty_reset}
   EMORI_SSH_KEY      comma-separated list of 1password ssh keys as vault/item[:filename]
+  EMORI_IDENTITY     git user identity as "Name <email>"
   EMORI_OP_TOKEN     1password service account token; falls back to OP_SERVICE_ACCOUNT_TOKEN
   EMORI_SOURCE       source for ~/tanaab/emori; supports ssh, local repo paths, or release versions
   EMORI_TANAAB       source for ~/tanaab/canon; supports ssh, local repo paths, release versions, or falsey disable values
@@ -540,6 +570,16 @@ parse_args() {
       --ssh-keys=*)
         require_inline_option_value "--ssh-keys" "${1#*=}"
         append_csv_to_array SSH_KEYS "${1#*=}"
+        shift
+        ;;
+      --identity)
+        require_next_option_value "--identity" "$#"
+        IDENTITY="$2"
+        shift 2
+        ;;
+      --identity=*)
+        require_inline_option_value "--identity" "${1#*=}"
+        IDENTITY="${1#*=}"
         shift
         ;;
       --op-token)
@@ -1292,6 +1332,14 @@ generated_ssh_identities_display() {
   display_home_path "$(generated_ssh_identities_path)"
 }
 
+generated_git_user_config_path() {
+  printf "%s/dotfiles/git/.config/emori/git-user.inc" "${EMORI_TARGET_PATH}"
+}
+
+generated_git_user_config_display() {
+  display_home_path "$(generated_git_user_config_path)"
+}
+
 ssh_config_identity_file_value() {
   local path
   local escaped_path
@@ -1389,6 +1437,26 @@ write_generated_ssh_identities() {
   debug "${tty_tp}wrote${tty_reset} generated ssh identities to ${tty_ts}$(generated_ssh_identities_display)${tty_reset}"
 }
 
+write_generated_git_user_config() {
+  local output_path
+  local output_dir
+  local git_dotpkg_dir="${EMORI_TARGET_PATH}/dotfiles/git"
+
+  if [[ ! -d "${git_dotpkg_dir}" ]]; then
+    abort "emori checkout at ${tty_ts}$(emori_target_display)${tty_reset} is missing required ${tty_ts}git${tty_reset} dotpkg needed for generated Git identity."
+  fi
+
+  output_path="$(generated_git_user_config_path)"
+  output_dir="$(dirname "${output_path}")"
+
+  execute mkdir -p "${output_dir}"
+  execute rm -f "${output_path}"
+  execute git config --file "${output_path}" user.name "${GIT_USER_NAME}"
+  execute git config --file "${output_path}" user.email "${GIT_USER_EMAIL}"
+
+  debug "${tty_tp}wrote${tty_reset} generated git identity to ${tty_ts}$(generated_git_user_config_display)${tty_reset}"
+}
+
 have_planned_actions() {
   [[ "${#PLANNED_ACTIONS[@]}" -gt 0 ]]
 }
@@ -1457,6 +1525,14 @@ cleanup() {
 }
 
 validate_inputs() {
+  if [[ -z "${IDENTITY:-}" ]]; then
+    abort_option_usage "option ${tty_bold}--identity${tty_reset} is required."
+  fi
+
+  if ! parse_identity_value "${IDENTITY}" GIT_USER_NAME GIT_USER_EMAIL; then
+    abort_option_usage "option ${tty_bold}--identity${tty_reset} must use the format ${tty_bold}Name <email>${tty_reset}."
+  fi
+
   if [[ -z "${OP_TOKEN:-}" ]]; then
     abort_multi "$(cat <<EOABORT
 you must provide a 1Password service account token before using this wrapper.
@@ -1468,7 +1544,6 @@ EOABORT
   if [[ "${#SSH_KEYS[@]}" -eq 0 ]]; then
     abort "at least one ssh key is required. pass --ssh-key or set EMORI_SSH_KEY."
   fi
-
 }
 
 validate_platform() {
@@ -1700,6 +1775,7 @@ plan_wrapper_execution() {
   fi
 
   plan_emori_fetch
+  plan_action "${tty_tp}write${tty_reset} generated Git identity to ${tty_ts}$(generated_git_user_config_display)${tty_reset}"
   plan_action "${tty_tp}write${tty_reset} generated SSH identities to ${tty_ts}$(generated_ssh_identities_display)${tty_reset}"
   if tanaab_enabled; then
     plan_tanaab_fetch
@@ -1795,6 +1871,9 @@ main() {
   debug raw FORCE="${FORCE:-}"
   debug raw OP_TOKEN="$(mask_secret_for_display "${OP_TOKEN}")"
   debug raw SSH_KEYS="$(array_join "," SSH_KEYS)"
+  debug raw IDENTITY="${IDENTITY}"
+  debug raw GIT_USER_NAME="${GIT_USER_NAME}"
+  debug raw GIT_USER_EMAIL="${GIT_USER_EMAIL}"
   debug raw EMORI="$(normalize_repo_source_value "${EMORI_SOURCE}")"
   debug raw TANAAB="$(normalize_repo_source_value "${TANAAB_SOURCE}")"
   debug raw OPENCLAW_AUTH="${OPENCLAW_AUTH}"
@@ -1824,6 +1903,7 @@ main() {
   run_bootbox
   ensure_github_known_hosts
   run_emori_fetch
+  write_generated_git_user_config
   write_generated_ssh_identities
   if tanaab_enabled; then
     run_tanaab_fetch
