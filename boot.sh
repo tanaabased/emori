@@ -174,6 +174,28 @@ array_contains_value() {
   return 1
 }
 
+array_name_contains_value() {
+  local array_name="$1"
+  local needle="$2"
+  local value_count="0"
+  local index
+  local item
+
+  eval "value_count=\${#${array_name}[@]}"
+  if [[ "${value_count}" -eq 0 ]]; then
+    return 1
+  fi
+
+  for ((index = 0; index < value_count; index++)); do
+    eval 'item="${'"${array_name}"'[${index}]}"'
+    if [[ "${item}" == "${needle}" ]]; then
+      return 0
+    fi
+  done
+
+  return 1
+}
+
 array_count() {
   local array_name="$1"
   local value_count="0"
@@ -1641,7 +1663,7 @@ authorized_key_line_valid() {
 append_authorized_key_line() {
   local line="$1"
 
-  if ! array_contains_value "${line}" "${AUTHORIZED_KEY_LINES[@]}"; then
+  if ! array_name_contains_value AUTHORIZED_KEY_LINES "${line}"; then
     AUTHORIZED_KEY_LINES+=("${line}")
   fi
 }
@@ -1870,7 +1892,7 @@ write_generated_ssh_identities() {
 
   for ssh_key in "${SSH_KEYS[@]}"; do
     destination_path="$(ssh_key_destination_path "${ssh_key}")"
-    if ! array_contains_value "${destination_path}" "${identity_paths[@]}"; then
+    if ! array_name_contains_value identity_paths "${destination_path}"; then
       identity_paths+=("${destination_path}")
     fi
   done
