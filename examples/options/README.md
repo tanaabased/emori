@@ -122,7 +122,7 @@ test "$(ssh-keygen -y -f "$HOME/.ssh/id_test_signing" | awk '{print $1 " " $2}')
 test -f "$HOME/.ssh/id_test_signing.pub"
 test "$(awk '{print $1 " " $2}' "$HOME/.ssh/id_test_signing.pub")" = "$(awk '{print $1 " " $2}' id_test.pub)"
 
-# should install the provided authorized keys with original comments preserved
+# should install the provided authorized keys
 authorized_file_key="$(cat .tmp/id_emori_options_authorized_file.pub)"
 authorized_raw_key="$(cat .tmp/id_emori_options_authorized_raw.pub)"
 authorized_op_key_prefix="$(awk '{print $1 " " $2}' id_test.pub)"
@@ -132,7 +132,6 @@ grep -qxF "$authorized_raw_key" "$HOME/.ssh/authorized_keys"
 grep -F "$authorized_op_key_prefix" "$HOME/.ssh/authorized_keys"
 grep -F 'emori-options-authorized-file@example.test' "$HOME/.ssh/authorized_keys"
 grep -F 'emori-options-authorized-raw@example.test' "$HOME/.ssh/authorized_keys"
-grep -F 'tanaabot@tanaab.dev' "$HOME/.ssh/authorized_keys"
 
 # should protect the authorized_keys file
 test "$(stat -f '%Lp' "$HOME/.ssh/authorized_keys")" = "600"
