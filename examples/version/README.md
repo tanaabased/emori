@@ -24,6 +24,7 @@ brew trust oven-sh/bun
 
 # should run boot.sh successfully using the default ssh emori and tanaab sources
 boot.sh \
+  --identity 'EMORI <emori-version@example.test>' \
   --op-token "$OPTOKEN" \
   --ssh-key 'omfsw2uztmi2xqpid5g3kiv6ba/id_test' \
   --emori ssh \
@@ -35,6 +36,7 @@ git -C "$HOME/tanaab/canon" remote get-url origin > "$TMPDIR/tanaab.ssh.origin"
 
 # should run boot.sh successfully using released emori and tanaab sources and replace the existing checkouts
 boot.sh \
+  --identity 'EMORI <emori-version@example.test>' \
   --op-token "$OPTOKEN" \
   --ssh-key 'omfsw2uztmi2xqpid5g3kiv6ba/id_test' \
   --emori v1.0.0-beta.1 \

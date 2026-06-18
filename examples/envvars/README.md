@@ -102,17 +102,17 @@ test -f "$HOME/.ssh/id_test_signing_envvars"
 test "$(stat -f '%Lp' "$HOME/.ssh/id_test_signing_envvars")" = "600"
 
 # should install the primary ssh key material that matches the expected public key
-test "$(ssh-keygen -y -f "$HOME/.ssh/id_test" | awk '{print $1 \" \" $2}')" = "$(awk '{print $1 \" \" $2}' id_test.pub)"
+test "$(ssh-keygen -y -f "$HOME/.ssh/id_test" | awk '{print $1 " " $2}')" = "$(awk '{print $1 " " $2}' id_test.pub)"
 
 # should install the overridden ssh key material that matches the expected public key
-test "$(ssh-keygen -y -f "$HOME/.ssh/id_test_envvars" | awk '{print $1 \" \" $2}')" = "$(awk '{print $1 \" \" $2}' id_test.pub)"
+test "$(ssh-keygen -y -f "$HOME/.ssh/id_test_envvars" | awk '{print $1 " " $2}')" = "$(awk '{print $1 " " $2}' id_test.pub)"
 
 # should install the signing ssh key material that matches the expected public key
-test "$(ssh-keygen -y -f "$HOME/.ssh/id_test_signing_envvars" | awk '{print $1 \" \" $2}')" = "$(awk '{print $1 \" \" $2}' id_test.pub)"
+test "$(ssh-keygen -y -f "$HOME/.ssh/id_test_signing_envvars" | awk '{print $1 " " $2}')" = "$(awk '{print $1 " " $2}' id_test.pub)"
 
 # should write the signing public key next to the private key
 test -f "$HOME/.ssh/id_test_signing_envvars.pub"
-test "$(awk '{print $1 \" \" $2}' "$HOME/.ssh/id_test_signing_envvars.pub")" = "$(awk '{print $1 \" \" $2}' id_test.pub)"
+test "$(awk '{print $1 " " $2}' "$HOME/.ssh/id_test_signing_envvars.pub")" = "$(awk '{print $1 " " $2}' id_test.pub)"
 
 # should install the provided authorized keys with original comments preserved
 authorized_file_key="$(cat .tmp/id_emori_envvars_authorized_file.pub)"
@@ -167,7 +167,7 @@ test "$(GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL="$HOME/.gitconfig" git -C "$HOME
 # should write generated git signing config in the emori checkout from envvars
 git_signers_source="$HOME/tanaab/emori/dotfiles/git/.config/emori/git-signers.inc"
 allowed_signers_source="$HOME/tanaab/emori/dotfiles/git/.config/emori/allowed_signers"
-expected_signing_public_key="$(awk '{print $1 \" \" $2}' id_test.pub)"
+expected_signing_public_key="$(awk '{print $1 " " $2}' id_test.pub)"
 test -f "$git_signers_source"
 test -f "$allowed_signers_source"
 test "$(git config --file "$git_signers_source" --get user.signingKey)" = "~/.ssh/id_test_signing_envvars.pub"
@@ -256,8 +256,15 @@ if [[ -f "$HOME/.ssh/authorized_keys" ]]; then
   chmod 600 "$HOME/.ssh/authorized_keys"
 fi
 
-# should remove the signed commit test repo and log
-rm -rf "$HOME/emori-signing-envvars" .tmp
+# should remove the signed commit test repo and generated fixture files
+rm -rf "$HOME/emori-signing-envvars"
+rm -f \
+  .tmp/id_emori_envvars_authorized_file \
+  .tmp/id_emori_envvars_authorized_file.pub \
+  .tmp/id_emori_envvars_authorized_raw \
+  .tmp/id_emori_envvars_authorized_raw.pub \
+  .tmp/authorized_keys.clean \
+  .tmp/signed-envvars.log
 
 # should remove the installed example ssh keys
 rm -f "$HOME/.ssh/id_test" "$HOME/.ssh/id_test_envvars" "$HOME/.ssh/id_test_signing_envvars" "$HOME/.ssh/id_test_signing_envvars.pub"

@@ -39,6 +39,7 @@ test -n "$OPENAI_API_KEY"
 
 # should run boot.sh and let CI drive OpenClaw setup
 EMORI_OP_TOKEN="$OPTOKEN" \
+EMORI_IDENTITY='EMORI <emori-openclaw@example.test>' \
 EMORI_SSH_KEY='omfsw2uztmi2xqpid5g3kiv6ba/id_test' \
 EMORI_SOURCE="$GITHUB_WORKSPACE" \
 EMORI_TANAAB=off \
