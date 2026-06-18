@@ -22,6 +22,9 @@ boot.sh --help | grep -- '--op-token'
 # should show the ssh key flag in help output
 boot.sh --help | grep -- '--ssh-key'
 
+# should show the signing key flag in help output
+boot.sh --help | grep -- '--signing-key'
+
 # should show the identity flag in help output
 boot.sh --help | grep -- '--identity'
 
@@ -48,6 +51,9 @@ boot.sh --help | grep -F 'EMORI_OP_TOKEN'
 
 # should show the EMORI_SSH_KEY envvar in help output
 boot.sh --help | grep -F 'EMORI_SSH_KEY'
+
+# should show the EMORI_SIGNING_KEY envvar in help output
+boot.sh --help | grep -F 'EMORI_SIGNING_KEY'
 
 # should show the EMORI_IDENTITY envvar in help output
 boot.sh --help | grep -F 'EMORI_IDENTITY'
@@ -81,6 +87,12 @@ EMORI_SSH_KEY='example-vault/example-item:id_primary' EMORI_SSH_KEYS='example-va
 
 # should keep EMORI_SSH_KEYS hidden from help output
 ! boot.sh --help | grep -F 'EMORI_SSH_KEYS'
+
+# should let EMORI_SIGNING_KEY override the displayed signing key default
+EMORI_SIGNING_KEY='example-vault/example-signing:id_signing_env' boot.sh --help | grep -F 'example-vault/example-signing:id_signing_env'
+
+# should let --signing-key override EMORI_SIGNING_KEY
+EMORI_SIGNING_KEY='example-vault/example-signing:id_signing_env' boot.sh --signing-key 'example-vault/example-signing:id_signing_cli' --help | grep -F 'example-vault/example-signing:id_signing_cli'
 
 # should let EMORI_IDENTITY override the displayed identity default
 EMORI_IDENTITY='Env User <env@example.test>' boot.sh --help | grep -F 'Env User <env@example.test>'
@@ -147,6 +159,24 @@ grep -F 'option --identity is required' .tmp/missing-identity.log
 
 # should explain the malformed identity failure
 grep -F 'must use the format' .tmp/invalid-identity.log
+
+# should fail before bootstrap work when signing key is malformed
+! boot.sh --identity 'Test User <test@example.test>' --signing-key 'Invalid Signing Key' > .tmp/invalid-signing-key.log 2>&1
+
+# should explain the malformed signing key failure
+grep -F 'must use vault/item[:filename] format' .tmp/invalid-signing-key.log
+
+# should fail before bootstrap work when signing key is repeated
+! boot.sh --identity 'Test User <test@example.test>' --signing-key 'example-vault/example-signing:id_one' --signing-key 'example-vault/example-signing:id_two' > .tmp/repeated-signing-key.log 2>&1
+
+# should explain the repeated signing key failure
+grep -F 'can only be provided once' .tmp/repeated-signing-key.log
+
+# should fail before bootstrap work when signing key filename is not a valid principal
+! boot.sh --identity 'Test User <test@example.test>' --signing-key 'example-vault/example-signing:bad,principal' > .tmp/invalid-signing-principal.log 2>&1
+
+# should explain the invalid signing key principal failure
+grep -F 'filename must not contain whitespace or commas' .tmp/invalid-signing-principal.log
 ```
 
 ## Destroy tests
