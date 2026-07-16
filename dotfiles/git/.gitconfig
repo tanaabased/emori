@@ -1,6 +1,0 @@
-[include]
-	path = ~/.config/emori/git-user.inc
-	path = ~/.config/emori/git-signers.inc
-
-[includeIf "gitdir:~/lando/"]
-	path = ~/.gitconfig-lando

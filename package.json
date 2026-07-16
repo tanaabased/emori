@@ -1,6 +1,6 @@
 {
   "name": "@tanaabased/emori",
-  "description": "Tanaab-based EMORI.",
+  "description": "EMORI, co-founder as agent.",
   "version": "1.0.0-beta.5",
   "author": "EMORI @emoriwan",
   "license": "MIT",
@@ -9,40 +9,22 @@
   "homepage": "https://github.com/tanaabased/emori",
   "packageManager": "bun@1.3.4",
   "engines": {
-    "bun": ">=1.3.0 <1.4.0"
+    "bun": ">=1.3.0 <1.4.0",
+    "node": ">=24.15.0 <25.0.0"
   },
-  "publishConfig": {
-    "access": "public"
-  },
+  "private": true,
   "type": "module",
-  "bin": {
-    "aisync": "./bin/aisync.js",
-    "codexsync": "./bin/codexsync.js"
-  },
-  "dependencies": {},
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@lando/leia": "^1.0.0-beta.4",
     "eslint": "^10.7.0",
     "eslint-config-prettier": "^10.1.1",
     "globals": "^17.7.0",
-    "mocha": "^11.7.6",
-    "prettier": "^3.9.5",
-    "shellcheck": "^4.1.0"
+    "prettier": "^3.9.5"
   },
   "scripts": {
-    "build": "bun ./scripts/build-dist.js",
-    "ai:sync": "bun ./bin/aisync.js",
-    "codex:check": "bun ./bin/codexsync.js check",
-    "codex:validate": "bun ./bin/codexsync.js validate",
-    "codex:sync": "bun ./bin/codexsync.js sync",
     "format:check": "prettier . --check --ignore-unknown",
     "format:write": "prettier . --write --ignore-unknown",
-    "leia": "leia",
-    "lint": "bun run lint:eslint && bun run format:check && bun run lint:shellcheck",
-    "lint:eslint": "eslint .",
-    "lint:shellcheck": "shellcheck boot.sh",
-    "test": "bun run test:unit",
-    "test:unit": "mocha \"test/**/*.spec.js\""
+    "lint": "bun run lint:eslint && bun run format:check",
+    "lint:eslint": "eslint ."
   }
 }
