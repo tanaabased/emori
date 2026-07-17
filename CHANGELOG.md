@@ -1,5 +1,8 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
+- Removed legacy macOS bootstrap, dotfile, Codex plugin, hosted release, and readiness surfaces.
+- Repurposed `emori` as EMORI's committed public OpenClaw workspace.
+
 ## v1.0.0-beta.5 - [June 17, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.5)
 
 - Fixed hosted bootstrap confirmation to read from `/dev/tty` when `stdin` is piped. [#11](https://github.com/tanaabased/emori/pull/11)
