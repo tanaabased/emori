@@ -7,7 +7,7 @@ permissions:
   contents: read
 
 jobs:
-  bash-lint:
+  lint:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
