@@ -12,6 +12,9 @@ This format is transitional while the shared GitHub workflow is being built.
 Until then, it may contain immediate next steps; once milestones can carry that
 work, retain only objectives, priorities, status, and safe milestone links here.
 
+Tanaab is building a digital agency for the AI age around hybrid human-agent
+teams and continuously improving operational systems.
+
 ## Current Objective
 
 Build a unified human-agent work system that turns goals into organized,
@@ -53,9 +56,10 @@ GitHub-based process.
 - Outcome: Each agent has workspace-level configuration for identity, trusted
   principals, permissions, credential references, runtime needs, maintenance,
   and Covenant protection.
-- Success evidence: The plugin can configure EMORI without storing secrets in
-  her workspace, enforce authority boundaries, and be adopted independently of
-  EMORI.
+- Success evidence: The plugin can configure EMORI without storing workspace
+  secrets, enforce authority boundaries, require GitHub operations as
+  `@emoriwan`, route heartbeat alerts to a private Michael-visible destination,
+  and be adopted independently of EMORI.
 - Constraints: Prefer portable OpenClaw mechanisms where sufficient; keep
   secrets external.
 
