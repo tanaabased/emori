@@ -1,0 +1,17 @@
+[user]
+	name = EMORI
+	email = emori@tanaab.dev
+	signingKey = ~/.ssh/id_emori
+	useConfigOnly = true
+
+[gpg]
+	format = ssh
+
+[gpg "ssh"]
+	allowedSignersFile = ~/.config/git/allowed_signers
+
+[commit]
+	gpgSign = true
+
+[tag]
+	gpgSign = true

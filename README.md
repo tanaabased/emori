@@ -41,6 +41,19 @@ bun install --frozen-lockfile
 bun run lint
 ```
 
+### User configuration
+
+The `dotfiles` GNU Stow package configures EMORI's Git identity, SSH signing,
+allowed signer, and GitHub SSH identity. The private key remains machine-local
+at `~/.ssh/id_emori` and is never stored in this repository.
+
+From the repository root, install or refresh the package in EMORI's home
+directory:
+
+```sh
+stow --restow --no-folding --target="$HOME" dotfiles
+```
+
 ## Issues, Questions and Support
 
 Use the [GitHub issue queue](https://github.com/tanaabased/emori/issues/new/choose) for bugs, questions, or feature requests.

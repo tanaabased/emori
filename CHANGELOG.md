@@ -1,5 +1,7 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
+- Added a Stow package for EMORI's user-scoped Git identity, SSH signing, and
+  GitHub SSH configuration.
 - Removed legacy macOS bootstrap, dotfile, Codex plugin, hosted release, and readiness surfaces.
 - Repurposed `emori` as EMORI's committed public OpenClaw workspace.
 
