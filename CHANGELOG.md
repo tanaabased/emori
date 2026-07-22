@@ -1,9 +1,8 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
-- Added a Stow package for EMORI's user-scoped Git identity, SSH signing, and
-  GitHub SSH configuration.
-- Removed legacy macOS bootstrap, dotfile, Codex plugin, hosted release, and readiness surfaces.
-- Repurposed `emori` as EMORI's committed public OpenClaw workspace.
+- Added `imsg` setup and a temporary Stow package for EMORI's Git identity, SSH signing, and GitHub access.
+- Reconstituted `emori` as EMORI's public OpenClaw workspace with tracked identity, goals, operating guidance, and heartbeat. [#17](https://github.com/tanaabased/emori/pull/17)
+- Removed the legacy macOS bootstrap, hosted installer, readiness checks, Codex plugin, and broad dotfile suite. [#17](https://github.com/tanaabased/emori/pull/17)
 
 ## v1.0.0-beta.5 - [June 17, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.5)
 
