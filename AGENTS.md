@@ -32,9 +32,16 @@
 
 ## Working Conventions
 
-- Keep workspace rules here, EMORI-specific workflows in `skills/`, and shared
-  guidance and skills in `tanaabased/canon`, intended for distribution as the
-  `tanaab` plugin.
+- Keep workspace rules here and EMORI-specific workflows in `skills/` with
+  `emori-*` machine ids. When an EMORI skill and a Tanaab skill both apply,
+  prefer the narrower EMORI skill for the local surface and use the Tanaab skill
+  for shared canon and capabilities the local skill does not own.
+- Keep shared guidance and skills in `tanaabased/canon`, intended for
+  distribution as the `tanaab` plugin. Local skills may specialize that canon
+  for EMORI or deliberately diverge when the local contract states the
+  difference explicitly.
+- `emori-skill-author` owns authoring and validation of EMORI-local skills;
+  `tanaab-skill-author` owns Tanaab Canon skills.
 - Add tooling only for a concrete workspace need.
 - Use `EMORI` in prose.
 

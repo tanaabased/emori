@@ -1,116 +1,119 @@
-# Skill Standard
+# EMORI Skill Standard
+
+This repository owns the contract for EMORI-local skills. It was seeded from
+the shared Tanaab skill contract, but it may deliberately diverge as EMORI's
+needs and operating model evolve. Tanaab skills remain the shared layer outside
+surfaces owned by an applicable EMORI skill.
+
+`emori-skill-author` maintains an independent local scaffolder and validator.
+Treat differences from Tanaab as durable EMORI decisions when this standard
+states them explicitly, not as temporary compatibility gaps.
+
+## Layering
+
+- EMORI-local skills use `emori-*` machine ids and own workflows specific to
+  this workspace, identity, or operating model.
+- Shared skills use `tanaab-*` machine ids and own reusable Tanaab capabilities
+  and canon.
+- When both layers apply, prefer the narrower EMORI skill for its local surface
+  and use the Tanaab skill for everything outside that boundary.
+- A local skill may specialize or depart from shared canon, but it must state
+  the local boundary or difference explicitly.
+- `emori-skill-author` creates and validates EMORI-local skills only.
+  `tanaab-skill-author` remains the owner for Tanaab Canon skills.
 
 ## Validation Contract
 
-Use this file as the source of truth for canon skill validation.
+- `[error]` means the local skill fails validation.
+- `[warn]` means the shape needs review but may be intentional.
+- `[manual]` means judgment is required because the rule is not fully
+  machine-checkable.
+- Shared Tanaab checks apply only where this standard adopts them or leaves the
+  concern to the shared layer.
 
-- `[error]` means the skill should fail validation.
-- `[warn]` means the skill is probably shaped poorly and should be reviewed.
-- `[manual]` means a human should judge the rule because it is not fully machine-checkable.
+## Identity and Placement
 
-## Identity and Naming
+- `[error]` Frontmatter `name` must use lowercase letters, digits, and hyphens
+  and start with `emori-`.
+- `[error]` Frontmatter `metadata.owner` must equal `emoriwan`.
+- `[error]` Frontmatter `description` must start with `EMORI-based` and say what
+  the skill does and when to use it.
+- `[error]` Frontmatter `license` must equal `MIT`.
+- `[error]` `metadata.type` must match one of the local full-template type ids.
+- `[error]` `metadata.tags` must include `emoriwan`, the selected type, and at
+  least one additional kebab-case category tag.
+- `[error]` Strip an accidental duplicate `emori-` prefix.
+- Inside this repository's `skills/` directory, a folder may omit the `emori-`
+  prefix while frontmatter and prompts retain the full machine id. A standalone
+  skill outside an agent workspace or plugin must use the full machine id as its
+  folder name.
 
-- `[error]` Canonical type-specific authoring and validation behavior comes from the full templates owned by `emori-skill-author`.
-- `[error]` Frontmatter `metadata.owner` must exist and must equal `emoriwan`.
-- `[error]` Frontmatter `metadata.type` must be one of the type ids defined by those canonical templates.
-- `[error]` Frontmatter `metadata.type` must equal the selected or asserted type id when one is provided.
-- `[error]` The generated machine id must use lowercase letters, digits, and hyphens only.
-- `[error]` Frontmatter `name` must equal the generated machine id exactly.
-- `[error]` Frontmatter `name` must start with `emori-`.
-- `[error]` Outside a larger Codex plugin, the skill folder name must equal the generated machine id.
-- `[error]` Inside a larger Codex plugin, the skill folder name must equal either the generated machine id or the generated machine id with the leading `emori-` machine prefix removed.
-- `[error]` Strip an accidental duplicate `emori-` prefix before writing the final machine id.
-
-## Required Files
+## Required Files and Metadata
 
 ```text
 skill-folder/
 ├── SKILL.md
 ├── agents/
 │   └── openai.yaml
-├── templates/     # optional, only when unique to this skill
-├── assets/        # optional, only when unique to this skill
-├── references/    # optional, only when unique to this skill
-└── scripts/       # optional, only when unique to this skill
+├── bin/           # optional public commands
+├── lib/           # optional orchestration
+├── scripts/       # optional internal commands
+├── utils/         # optional independently testable units
+├── test/          # optional flat tests and support
+├── templates/     # optional skill-owned templates
+├── assets/        # optional skill-owned assets
+└── references/    # optional skill-owned references
 ```
 
-- In plugin-contained skill trees, `skill-folder/` may be the full machine id or the unprefixed surface id while frontmatter `name` remains the full `emori-` machine id.
-
-- `[error]` `SKILL.md` must exist.
-- `[error]` `agents/openai.yaml` must exist.
-- `[warn]` Create optional resource directories only when the skill actually needs them.
-- `[warn]` Do not add auxiliary repo-style docs inside a skill such as `README.md`, `CHANGELOG.md`, or installation guides unless a runtime requires them.
-
-## Required SKILL.md Shape
-
-- `[error]` `SKILL.md` must start with YAML frontmatter.
-- `[error]` Frontmatter must contain `name`, `description`, `license`, and `metadata`.
-- `[error]` Frontmatter `license` must equal `MIT`.
-- `[error]` Frontmatter `metadata` must contain `type`, `owner`, and `tags`.
-- `[error]` Do not use top-level `type`, `owner`, or `tags`; Codex warns on unsupported top-level skill attributes.
-- `[error]` Frontmatter `description` must start with `EMORI-based`.
-- `[error]` `metadata.tags` must be a list of strings.
-- `[error]` `metadata.tags` must include the selected `owner` and `type`.
-- `[error]` `metadata.tags` must include at least one additional kebab-case category tag beyond `owner` and `type`.
-- `[error]` Section order must match the selected type's canonical template order.
-- `[error]` Optional top-level sections declared by the canonical template may be omitted, but if present they must appear in the template's declared order.
-- `[error]` `coding` skills must include the canonical `Documentation`, `Testing`, and `GitHub Actions Workflow` lifecycle sections in template order.
+- `[error]` `SKILL.md` must start with YAML frontmatter containing `name`,
+  `description`, `license`, and `metadata`.
+- `[error]` `metadata` must contain `type`, `owner`, `tags`, and `openclaw`.
+- `[error]` `metadata.openclaw` must contain a skill-specific nonempty `emoji`
+  and an HTTPS `homepage`.
 - `[error]` Relative links in `SKILL.md` must resolve.
-- `[manual]` `description` should say both what the skill does and when to use it.
-- `[manual]` `When to Use` and `When Not to Use` should describe a narrow, concrete owned surface.
-- `[warn]` Keep `metadata.tags` short. Prefer one category tag by default instead of a long keyword list.
+- `[error]` Section order must match the selected local full template; optional
+  sections must appear in their declared positions.
+- `[error]` `agents/openai.yaml` must contain `display_name`,
+  `short_description`, `default_prompt`, `brand_color`, `icon_small`, and
+  `icon_large` beneath `interface`.
+- `[error]` `interface.short_description` must start with `EMORI-based`, the
+  prompt must mention `$<machine-id>`, and the brand color must be `#00c88a`.
+- `[error]` Interface icon paths must be relative and resolve within the skill.
 
-## Required OpenAI Metadata
+## Resources and Code
 
-- `[error]` `agents/openai.yaml` must contain `interface.display_name`, `interface.short_description`, `interface.default_prompt`, and `interface.brand_color`.
-- `[error]` `agents/openai.yaml` must contain `interface.icon_small` and `interface.icon_large`.
-- `[error]` `interface.short_description` must start with `EMORI-based`.
-- `[error]` `interface.icon_small` and `interface.icon_large` must point to existing relative skill asset paths.
-- `[error]` `interface.default_prompt` should explicitly mention the skill by `$<machine-id>`.
-- `[error]` `interface.brand_color` must equal `#00c88a`.
-- `[error]` Optional `policy.allow_implicit_invocation` must be a boolean when present.
-- `[error]` Optional `dependencies.tools` entries must declare at least `type` and `value` when present.
-- `[warn]` `display_name` should be unprefixed by default unless the user explicitly wants `EMORI` in the human-facing title.
-- `[manual]` After the `EMORI-based` prefix, `short_description` should describe the skill outcome.
-- `[manual]` Use `policy.allow_implicit_invocation: false` only when a skill should require explicit `$<machine-id>` invocation.
-- `[manual]` Use `dependencies.tools` only for real tool dependencies that improve execution, such as an MCP server the skill directly needs.
+- Keep support material with the nearest skill owner unless it is reused across
+  live skills, defines a true repository-wide contract, or has standalone human
+  value.
+- Keep public commands in `bin/`, internal commands in `scripts/`, orchestration
+  in `lib/`, independently testable functions in `utils/`, and flat tests in
+  `test/`.
+- Treat the local scaffolder and validator as an EMORI-owned implementation, not
+  a second global canon. Evolve it when concrete EMORI skill needs justify the
+  change.
+- Prefer kebab-case for repository-authored resource filenames unless an
+  external tool requires a fixed name.
+- Shebang-bearing entrypoints should be executable; ordinary source files
+  should not be executable.
 
-## Resource Placement Rules
+## Templates and Optimization
 
-- `[error]` Start every skill from the canonical full type template owned by `emori-skill-author`.
-- `[error]` Type-specific authoring and validation behavior must come from those canonical templates rather than ad hoc parallel registries.
-- `[error]` Use the shared EMORI owner contract from this standard and the validator. Do not load owner behavior from a separate owner-data folder.
-- `[error]` Use kebab-case for repo-authored helper filenames in `scripts/`, `assets/`, `references/`, `prompts/`, and `templates/` unless a tool requires a fixed conventional filename.
-- `[error]` `scripts/` is code-only. Do not store static registry data there as JS object literals.
-- `[error]` Repo-level script filenames must end in `-cli.js`, `-task.js`, or `-lib.js`.
-- `[warn]` Keep support material local to the owning skill by default.
-- `[warn]` Hoist support material to repo root only on proven reuse across live surfaces, repo-wide contract or tooling status, or standalone human value.
-- `[warn]` Machine-readable data should live with the smallest justified owner. Hoist it into repo-root `references/` only when multiple live consumers or independent human value justify it.
-- `[error]` Bundleable repo scripts must import shared templates, assets, and machine-readable canon explicitly so `bun build` can follow the dependency graph.
-- `[warn]` Keep the default scaffold minimal.
-- `[warn]` Keep skill-bundled helpers in the skill's own `scripts/` directory. Do not treat them as repo-level package `bin/` entrypoints.
-- `[warn]` Shebang-bearing skill-local scripts and executable starter templates should be committed executable.
-- `[warn]` Do not mark repo-authored files executable unless they actually start with a shebang.
-- `[warn]` If a skill bundles `references/repo-agents-lines.md`, keep it to durable ambient repo rules rather than conditional workflow steps.
-- `[warn]` `generic` is the fallback type. Prefer a narrower type when one clearly fits.
-- `[warn]` Additional skill types should add a new canonical full template under `emori-skill-author` instead of inventing an unrelated structure without a strong reason.
-- `[manual]` Check whether each new or retained hoisted file still passes the hoist test instead of merely reflecting historical placement.
+- Start EMORI-local skills from the matching local full template so the EMORI
+  standard, OpenClaw metadata, and section order are deterministic.
+- Supply a skill-specific OpenClaw emoji. Use the repository skill URL as the
+  default homepage unless the skill has a different canonical source.
+- Retain and tailor `## Optimization` when the skill owns persistent alignment.
+  Remove it for incident-specific, event-specific, or execution-only skills.
+- Apply keep, reconcile, deduplicate, consolidate or merge, split, extract,
+  move, tighten, and remove only where repository evidence supports them.
 
-## Scope and Size Rules
+## Validation
 
-- `[warn]` A skill should own one concrete task surface.
-- `[warn]` Prefer a repo template over a live skill when the reusable artifact is a whole starter repository with committed structure, scripts, examples, and docs that users should adopt wholesale.
-- `[warn]` For `coding` skills, broad discovery language is acceptable only when it still funnels into one dominant implementation pattern.
-- `[warn]` For `coding` skills, multiple materially different documentation, direct-test, or GitHub Actions workflow mechanisms are a split signal unless they are minor flavor variations of one pattern.
-- `[warn]` If a skill needs a routing matrix, broad arbitration rules, or heavy relationship language to stay understandable, split it.
-- `[warn]` Do not add `## Relationship to Other Skills` by default. If a skill needs that section to make sense, challenge the scope first.
-- `[warn]` Keep `SKILL.md` lean. Assume the agent is already capable and add only task-specific context that materially improves performance.
-- `[warn]` Prefer references for detailed facts, schemas, and long examples instead of stuffing them into `SKILL.md`.
-- `[warn]` Prefer scripts when deterministic reliability matters or the same code keeps being rewritten.
-- `[warn]` Keep bundled references one hop from `SKILL.md`; link to them directly instead of hiding them behind deeper navigation.
-- `[manual]` For `coding` skills, `Documentation`, `Testing`, and `GitHub Actions Workflow` should each describe one canonical mechanism and one minimal example when an example materially shapes the skill.
-- `[manual]` Check whether the skill mostly restates one repo template's structure, scripts, examples, and docs; if so, prefer the template as source of truth and keep only a thin discovery or adaptation skill if needed.
-- `[manual]` Check shebang and executable-bit alignment for skill-local `scripts/`, starter templates, and any `bin/` surfaces.
-- `[manual]` Optional `references/repo-agents-lines.md` should stay short, copyable, and scoped to always-on repo policy that should influence many tasks.
-- `[manual]` Hoisting decisions should be reviewed as placement choices, not assumed to be improvements.
-- `[manual]` Bulk standardization should preserve the skill's core purpose and workflow unless the task explicitly asks for a behavioral rewrite.
+- Run `skills/skill-author/scripts/validate-skill.js` for every created or
+  standardized EMORI-local skill.
+- Fix every `[error]`; review `[warn]` and `[manual]` results explicitly.
+- Confirm an EMORI-local skill owns one narrow local surface and does not absorb
+  a shared Tanaab capability merely to override precedence.
+- Search for stale ids, prompts, links, and folder names after identity changes.
+- Use `tanaab-skill-author` instead when the artifact being changed belongs to
+  Tanaab Canon.
