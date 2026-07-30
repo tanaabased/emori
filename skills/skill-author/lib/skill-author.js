@@ -8,6 +8,15 @@ import metaTemplateText from '../templates/meta.md' with { type: 'text' };
 import workflowTemplateText from '../templates/workflow.md' with { type: 'text' };
 import bundledLargeIconImport from '../assets/icon-large.png';
 import bundledSmallIconImport from '../assets/icon-small.svg';
+import extractTopLevelSkillHeadings, {
+  normalizeTopLevelSkillHeading,
+} from '../utils/extract-top-level-skill-headings.js';
+import hasOrderedSkillSections from '../utils/has-ordered-skill-sections.js';
+import { SKILL_DESCRIPTION_PREFIX } from '../utils/normalize-skill-description.js';
+import parseOpenAiSkillMetadata from '../utils/parse-openai-skill-metadata.js';
+import parseSkillFrontmatter, {
+  splitLeadingSkillFrontmatter,
+} from '../utils/parse-skill-frontmatter.js';
 
 const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
 const AUXILIARY_DOCS = [
@@ -63,28 +72,12 @@ const TEMPLATE_TEXT_IMPORTS = [
   workflowTemplateText,
   metaTemplateText,
 ];
-const CATEGORY_INFERENCE_RULES = [
-  ['validation', /\b(validat|verify|lint|check)\w*/],
-  ['testing', /\b(test|coverage|assert|spec)\w*/],
-  ['skills', /\b(skill|template|scaffold|creator|author|initializer|standardiz)\w*/],
-  ['frontend', /\b(frontend|vue|react|component|css|scss|tailwind|vitepress)\w*/],
-  ['design', /\b(design|brand|visual|ui|ux)\w*/],
-  ['docs', /\b(doc|docs|documentation|readme|markdown|mdx|copy)\w*/],
-  ['release', /\b(release|version|changelog|publish)\w*/],
-  ['shell', /\b(shell|bash|zsh|cli|terminal|command[- ]line)\w*/],
-  ['integration', /\b(github|gitlab|openai|api|mcp|webhook|integration)\w*/],
-  ['coding', /\b(code|coding|typescript|javascript|bun|node|function|library)\w*/],
-  ['research', /\b(research|investigat|audit|analysis)\w*/],
-  ['automation', /\b(automate|automation|cron|scheduled|job|workflow)\w*/],
-  ['meta', /\b(meta|canon|convention|prompt|template|packag|refin|standard)\w*/],
-];
-
 export const CANON_SKILL_OWNER = 'emoriwan';
 export const CANON_SKILL_MACHINE_PREFIX = 'emori';
 export const CANON_SKILL_MACHINE_PREFIX_WITH_HYPHEN = `${CANON_SKILL_MACHINE_PREFIX}-`;
 export const CANON_SKILL_LICENSE = 'MIT';
 export const CANON_SKILL_BRAND_COLOR = '#00c88a';
-export const CANON_DESCRIPTION_PREFIX = 'EMORI-based ';
+export const CANON_DESCRIPTION_PREFIX = SKILL_DESCRIPTION_PREFIX;
 export const SKILLS_ROOT_DIR = path.resolve(MODULE_DIR, '..', '..');
 const ANSI_ESCAPE_PREFIX = '\u001B[';
 
@@ -153,273 +146,13 @@ export function renderCliHelp({ usage, summary, options, environmentVariables = 
   return lines.join('\n');
 }
 
-function unquoteYaml(value) {
-  const trimmed = String(value ?? '').trim();
-  if (
-    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
-    (trimmed.startsWith("'") && trimmed.endsWith("'"))
-  ) {
-    return trimmed.slice(1, -1);
-  }
-
-  return trimmed;
-}
-
-function parseYamlBlock(rawBlock) {
-  const lines = String(rawBlock ?? '').split('\n');
-  const indentOf = (line) => line.match(/^ */)?.[0].length ?? 0;
-  const listPattern = (indent) => new RegExp(`^\\s{${indent}}-\\s+(.+)$`);
-  const keyPattern = (indent) => new RegExp(`^\\s{${indent}}([a-z][a-z0-9_-]*):(.*)$`);
-
-  function parseList(startIndex, indent) {
-    const items = [];
-    let index = startIndex;
-
-    while (index < lines.length) {
-      const line = lines[index];
-      if (!line.trim()) {
-        index += 1;
-        continue;
-      }
-
-      if (indentOf(line) < indent) {
-        break;
-      }
-
-      const matchList = line.match(listPattern(indent));
-      if (!matchList) {
-        break;
-      }
-
-      items.push(unquoteYaml(matchList[1]));
-      index += 1;
-    }
-
-    return { value: items, nextIndex: index };
-  }
-
-  function parseMap(startIndex, indent) {
-    const entries = {};
-    let index = startIndex;
-
-    while (index < lines.length) {
-      const line = lines[index];
-      if (!line.trim()) {
-        index += 1;
-        continue;
-      }
-
-      if (indentOf(line) < indent) {
-        break;
-      }
-
-      const matchEntry = line.match(keyPattern(indent));
-      if (!matchEntry) {
-        break;
-      }
-
-      const [, key, rawValue] = matchEntry;
-      const value = rawValue.trim();
-
-      if (value) {
-        if (value.startsWith('[') && value.endsWith(']')) {
-          entries[key] = value
-            .slice(1, -1)
-            .split(',')
-            .map((item) => unquoteYaml(item))
-            .filter(Boolean);
-        } else {
-          entries[key] = unquoteYaml(value);
-        }
-        index += 1;
-        continue;
-      }
-
-      const nextLine = lines[index + 1];
-      if (!nextLine || !nextLine.trim() || indentOf(nextLine) <= indent) {
-        entries[key] = '';
-        index += 1;
-        continue;
-      }
-
-      if (nextLine.match(listPattern(indent + 2))) {
-        const parsedList = parseList(index + 1, indent + 2);
-        entries[key] = parsedList.value;
-        index = parsedList.nextIndex;
-        continue;
-      }
-
-      if (nextLine.match(keyPattern(indent + 2))) {
-        const parsedMap = parseMap(index + 1, indent + 2);
-        entries[key] = parsedMap.value;
-        index = parsedMap.nextIndex;
-        continue;
-      }
-
-      entries[key] = '';
-      index += 1;
-    }
-
-    return { value: entries, nextIndex: index };
-  }
-
-  return parseMap(0, 0).value;
-}
-
-export function parseFrontmatter(content) {
-  const match = String(content ?? '').match(/^---\n([\s\S]*?)\n---/);
-  if (!match) {
-    return null;
-  }
-
-  return parseYamlBlock(match[1]);
-}
-
-function splitLeadingFrontmatter(content) {
-  const match = String(content ?? '').match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
-  if (!match) {
-    throw new Error('Template is missing leading template frontmatter.');
-  }
-
-  return {
-    body: match[2],
-    frontmatter: parseYamlBlock(match[1]),
-  };
-}
-
-function parseIndentedKeyValues(content, sectionName) {
-  const lines = String(content ?? '').split('\n');
-  const values = {};
-  let inSection = false;
-
-  for (const line of lines) {
-    if (!inSection) {
-      if (line.trim() === `${sectionName}:`) {
-        inSection = true;
-      }
-      continue;
-    }
-
-    if (!line.trim()) {
-      continue;
-    }
-
-    if (!line.startsWith('  ')) {
-      break;
-    }
-
-    const match = line.match(/^\s{2}([a-z_]+):\s*(.+)$/);
-    if (!match) {
-      continue;
-    }
-
-    values[match[1]] = unquoteYaml(match[2]);
-  }
-
-  return values;
-}
-
-function parseInterfaceYaml(content) {
-  return parseIndentedKeyValues(content, 'interface');
-}
-
-function parsePolicyYaml(content) {
-  return parseIndentedKeyValues(content, 'policy');
-}
-
-function parseDependencyTools(content) {
-  const lines = String(content ?? '').split('\n');
-  const tools = [];
-  let inDependencies = false;
-  let inTools = false;
-  let currentTool = null;
-
-  for (const line of lines) {
-    if (!inDependencies) {
-      if (line.trim() === 'dependencies:') {
-        inDependencies = true;
-      }
-      continue;
-    }
-
-    if (!line.trim()) {
-      continue;
-    }
-
-    if (!line.startsWith('  ')) {
-      break;
-    }
-
-    if (!inTools) {
-      if (line.trim() === 'tools:') {
-        inTools = true;
-      }
-      continue;
-    }
-
-    if (!line.startsWith('    ')) {
-      break;
-    }
-
-    const firstEntryMatch = line.match(/^ {4}-\s+([a-z_]+):\s*(.+)$/);
-    if (firstEntryMatch) {
-      currentTool = {
-        [firstEntryMatch[1]]: unquoteYaml(firstEntryMatch[2]),
-      };
-      tools.push(currentTool);
-      continue;
-    }
-
-    const entryMatch = line.match(/^ {6}([a-z_]+):\s*(.+)$/);
-    if (entryMatch && currentTool) {
-      currentTool[entryMatch[1]] = unquoteYaml(entryMatch[2]);
-    }
-  }
-
-  return tools;
-}
-
-function hasDependenciesToolsSection(content) {
-  return /^\s{2}tools:\s*$/m.test(String(content ?? ''));
-}
-
-function normalizeSectionHeading(heading) {
-  if (/^#\s/.test(heading)) {
-    return '# ';
-  }
-
-  return heading;
-}
-
-function extractTopLevelHeadings(content) {
-  const headings = [];
-  let inFence = false;
-
-  for (const line of String(content ?? '').split('\n')) {
-    if (/^```/.test(line.trim())) {
-      inFence = !inFence;
-      continue;
-    }
-
-    if (inFence) {
-      continue;
-    }
-
-    if (/^#{1,2}\s/.test(line)) {
-      headings.push(normalizeSectionHeading(line.trim()));
-    }
-  }
-
-  return headings;
-}
-
 function buildTemplateDefinition(templateContent) {
-  const { body, frontmatter } = splitLeadingFrontmatter(templateContent);
+  const { body, frontmatter } = splitLeadingSkillFrontmatter(templateContent);
   const templateType = normalizeLowercaseString(frontmatter?.template_type);
   const defaultCategoryTag = normalizeLowercaseString(frontmatter?.default_category_tag);
   const optionalTopLevelHeadings = Array.isArray(frontmatter?.optional_top_level_headings)
     ? frontmatter.optional_top_level_headings.map((heading) =>
-        normalizeSectionHeading(String(heading).trim()),
+        normalizeTopLevelSkillHeading(String(heading).trim()),
       )
     : [];
 
@@ -431,7 +164,7 @@ function buildTemplateDefinition(templateContent) {
     defaultCategoryTag,
     id: templateType,
     optionalTopLevelHeadings,
-    sectionOrder: extractTopLevelHeadings(body),
+    sectionOrder: extractTopLevelSkillHeadings(body),
     templateBody: body,
   };
 }
@@ -485,36 +218,6 @@ export function getBundledLargeIconPath() {
   return resolveImportedAssetPath(bundledLargeIconImport);
 }
 
-export function normalizeSkillDescription(value) {
-  const trimmed = String(value ?? '').trim();
-  if (!trimmed) {
-    return '';
-  }
-
-  const withoutPrefix = trimmed.replace(/^emori(?:[- ]?based)\s+/i, '');
-  return `${CANON_DESCRIPTION_PREFIX}${withoutPrefix}`;
-}
-
-export function makeShortDescription(description) {
-  const cleaned = normalizeSkillDescription(description).replace(/\.$/, '');
-  if (cleaned.length <= 64) {
-    return cleaned;
-  }
-
-  const remainder = cleaned.slice(CANON_DESCRIPTION_PREFIX.length);
-  const maxRemainderLength = 64 - CANON_DESCRIPTION_PREFIX.length - 3;
-  return `${CANON_DESCRIPTION_PREFIX}${remainder.slice(0, maxRemainderLength).trimEnd()}...`;
-}
-
-export function makeDefaultPrompt(skillId, description) {
-  const cleaned = String(description ?? '')
-    .trim()
-    .replace(/^emori(?:[- ]?based)\s+/i, '')
-    .replace(/\.$/, '');
-  const normalized = cleaned ? `${cleaned[0].toLowerCase()}${cleaned.slice(1)}` : cleaned;
-  return `Use $${skillId} when you need to ${normalized}.`;
-}
-
 export function stripSkillPrefix(value) {
   const normalized = String(value ?? '').trim();
   if (normalized.startsWith(CANON_SKILL_MACHINE_PREFIX_WITH_HYPHEN)) {
@@ -524,31 +227,8 @@ export function stripSkillPrefix(value) {
   return normalized;
 }
 
-export function renderTemplate(template, replacements) {
-  return String(template ?? '').replaceAll(
-    /\{\{([a-z_]+)\}\}/g,
-    (match, key) => replacements[key] ?? match,
-  );
-}
-
 export function renderMetadataTagsYaml(tags) {
   return tags.map((tag) => `    - ${tag}`).join('\n');
-}
-
-export function inferCategoryTag({ description = '', displayName = '', slug = '', type = '' }) {
-  const haystack = `${displayName} ${description} ${slug}`.toLowerCase();
-
-  for (const [tag, pattern] of CATEGORY_INFERENCE_RULES) {
-    if (
-      pattern.test(haystack) &&
-      tag !== CANON_SKILL_OWNER &&
-      tag !== String(type).trim().toLowerCase()
-    ) {
-      return tag;
-    }
-  }
-
-  return null;
 }
 
 async function pathExists(targetPath) {
@@ -558,41 +238,6 @@ async function pathExists(targetPath) {
   } catch {
     return false;
   }
-}
-
-function hasOrderedSections(content, orderedHeadings, optionalHeadings = []) {
-  const headings = extractTopLevelHeadings(content);
-  const optionalSet = new Set(optionalHeadings);
-
-  let actualIndex = 0;
-  let expectedIndex = 0;
-
-  while (expectedIndex < orderedHeadings.length && actualIndex < headings.length) {
-    const expectedHeading = orderedHeadings[expectedIndex];
-    const actualHeading = headings[actualIndex];
-
-    if (expectedHeading === actualHeading) {
-      expectedIndex += 1;
-      actualIndex += 1;
-      continue;
-    }
-
-    if (optionalSet.has(expectedHeading)) {
-      expectedIndex += 1;
-      continue;
-    }
-
-    return false;
-  }
-
-  while (
-    expectedIndex < orderedHeadings.length &&
-    optionalSet.has(orderedHeadings[expectedIndex])
-  ) {
-    expectedIndex += 1;
-  }
-
-  return expectedIndex === orderedHeadings.length && actualIndex === headings.length;
 }
 
 function hasEmoriBasedPrefix(value) {
@@ -818,7 +463,7 @@ async function validateSkillMarkdown({ actualType, errors, skillContent, skillPa
   const typeDefinition = getSkillType(actualType);
   if (
     typeDefinition &&
-    !hasOrderedSections(
+    !hasOrderedSkillSections(
       skillContent,
       typeDefinition.sectionOrder,
       typeDefinition.optionalTopLevelHeadings,
@@ -924,8 +569,8 @@ async function validateOpenAiMetadata({
   skillPath,
   warnings,
 }) {
-  const interfaceValues = parseInterfaceYaml(openAiContent);
-  const policyValues = parsePolicyYaml(openAiContent);
+  const { dependencyTools, hasDependencyToolsSection, interfaceValues, policyValues } =
+    parseOpenAiSkillMetadata(openAiContent);
 
   for (const key of REQUIRED_OPENAI_INTERFACE_KEYS) {
     if (!interfaceValues[key]) {
@@ -985,8 +630,7 @@ async function validateOpenAiMetadata({
     errors.push('policy.allow_implicit_invocation must be `true` or `false` when present.');
   }
 
-  if (hasDependenciesToolsSection(openAiContent)) {
-    const dependencyTools = parseDependencyTools(openAiContent);
+  if (hasDependencyToolsSection) {
     if (dependencyTools.length === 0) {
       errors.push('dependencies.tools must contain at least one tool entry when present.');
     }
@@ -1115,7 +759,7 @@ export async function validateSkillDir(skillDir, options = {}) {
       errors.push('SKILL.md must start with YAML frontmatter.');
     }
 
-    frontmatter = parseFrontmatter(skillContent);
+    frontmatter = parseSkillFrontmatter(skillContent);
     if (!frontmatter) {
       errors.push('SKILL.md frontmatter is missing or malformed.');
     } else {

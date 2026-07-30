@@ -16,17 +16,18 @@ import {
   getBundledLargeIconPath,
   getBundledSmallIconPath,
   getSkillType,
-  inferCategoryTag,
   isKebabCaseId,
-  makeDefaultPrompt,
-  makeShortDescription,
-  normalizeSkillDescription,
   renderCliHelp,
   renderMetadataTagsYaml,
-  renderTemplate,
   stripSkillPrefix,
   validateSkillDir,
 } from '../lib/skill-author.js';
+import inferSkillCategoryTag from '../utils/infer-skill-category-tag.js';
+import normalizeSkillDescription, {
+  makeDefaultPrompt,
+  makeShortDescription,
+} from '../utils/normalize-skill-description.js';
+import renderSkillTemplate from '../utils/render-skill-template.js';
 
 function usage(code = 0) {
   console.log(
@@ -182,9 +183,10 @@ async function main() {
   const normalizedDescription = normalizeSkillDescription(description);
   const slug = stripDuplicateOwnerPrefix(rawSlug);
   const skillId = `${CANON_SKILL_MACHINE_PREFIX_WITH_HYPHEN}${slug}`;
-  const inferredCategoryTag = inferCategoryTag({
+  const inferredCategoryTag = inferSkillCategoryTag({
     description: normalizedDescription,
     displayName,
+    owner: CANON_SKILL_OWNER,
     slug: skillId,
     type,
   });
@@ -226,7 +228,7 @@ async function main() {
   await mkdir(agentsDir, { recursive: true });
   await mkdir(assetsDir, { recursive: true });
 
-  const skillContent = renderTemplate(typeDefinition.templateBody, {
+  const skillContent = renderSkillTemplate(typeDefinition.templateBody, {
     description: normalizedDescription,
     display_name: displayName,
     license: CANON_SKILL_LICENSE,
