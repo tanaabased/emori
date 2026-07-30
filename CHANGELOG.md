@@ -1,8 +1,8 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
-- Added EMORI-first layering and local validation for repository-local `emori-*` skills.
-- Added `Mocha` contract tests and pull-request coverage for EMORI's local skill author.
-- Updated the private npm package identity from `@tanaabased/emori` to `@tanaab/emori`.
+- Added credential-free `Leia` coverage that registers EMORI as an OpenClaw workspace and imports `IDENTITY.md`. [#22](https://github.com/tanaabased/emori/pull/22)
+- Added EMORI-first layering and local validation for repository-local `emori-*` skills. [#22](https://github.com/tanaabased/emori/pull/22)
+- Added `Mocha` contract tests for EMORI's local skill scaffolding and validation. [#22](https://github.com/tanaabased/emori/pull/22)
 
 ## v1.0.0-beta.6 - [July 22, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.6)
 
