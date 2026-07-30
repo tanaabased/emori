@@ -1,19 +1,21 @@
 ---
 template_type: meta
 default_category_tag: skills
+optional_top_level_headings:
+  - '## Optimization'
 ---
-
 ---
-
 name: {{skill_id}}
 description: {{description}}
 license: {{license}}
 metadata:
-type: {{type}}
-owner: {{owner}}
-tags:
+  type: {{type}}
+  owner: {{owner}}
+  tags:
 {{metadata_tags_yaml}}
-
+  openclaw:
+    emoji: {{openclaw_emoji}}
+    homepage: {{openclaw_homepage}}
 ---
 
 # {{display_name}}
@@ -55,6 +57,22 @@ tags:
 3. Create, standardize, or validate using the narrowest reliable approach.
 4. Re-run validation before finishing and surface any manual review points.
 
+## Optimization
+
+- **Inspect:** Inventory the local artifact family, discovery metadata, bundled
+  resources, and validation evidence owned by the skill.
+- **Compare:** Reconcile the local surface with the EMORI standard and relevant
+  shared Tanaab contract, distinguishing intentional divergence from
+  contradictions, duplicated doctrine, overloaded owners, and obsolete
+  identities.
+- **Recommend:** Preserve clear local ownership; adopt or reject shared doctrine
+  deliberately; and tighten, move, or remove only where evidence supports the
+  operation.
+- **Apply:** After authorization, make the smallest contract-aligned change and
+  update every affected local consumer.
+- **Verify:** Run the local validator, review manual checks, and confirm the
+  artifact still owns one EMORI-specific surface.
+
 ## Bundled Resources
 
 - List only the canon-facing files, scripts, templates, or assets this skill actually needs.
@@ -63,4 +81,4 @@ tags:
 ## Validation
 
 - Confirm the artifact still owns one narrow canon-facing surface.
-- Validate that structure, naming, and local-vs-hoisted placement match the shared contract.
+- Validate that structure, naming, and local-vs-hoisted placement match the EMORI contract.

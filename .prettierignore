@@ -10,4 +10,4 @@ bun.lock
 skills/**/assets/*.svg
 
 # Skill templates contain nested frontmatter that Prettier rewrites into invalid scaffolds.
-skills/skill-author/templates/coding.md
+skills/skill-author/templates/*.md

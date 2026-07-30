@@ -14,7 +14,7 @@ function usage(code = 0) {
     renderCliHelp({
       usage: `Usage: ${bold('validate-skill.js')} ${dim('--skill-dir <path> [options]')}`,
       summary:
-        'Validate a canon skill directory against references/skill-standard.md and the canonical local full templates owned by emori-skill-author.',
+        'Validate an EMORI-local skill against the workspace standard and local full templates.',
       options: [
         '  --skill-dir <path>      skill directory to validate',
         '  --type <type>           expected type override',

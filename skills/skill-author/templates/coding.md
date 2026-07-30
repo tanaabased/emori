@@ -1,6 +1,8 @@
 ---
 template_type: coding
 default_category_tag: implementation
+optional_top_level_headings:
+  - '## Optimization'
 ---
 ---
 name: {{skill_id}}
@@ -11,6 +13,9 @@ metadata:
   owner: {{owner}}
   tags:
 {{metadata_tags_yaml}}
+  openclaw:
+    emoji: {{openclaw_emoji}}
+    homepage: {{openclaw_homepage}}
 ---
 
 # {{display_name}}
@@ -63,11 +68,25 @@ metadata:
 - Include one canonical mechanism and one minimal example only when that test pattern materially shapes the skill.
 - Keep specialized or surface-coupled test patterns in narrower companion skills.
 
-## GitHub Actions Workflow
+## GitHub Actions
 
 - Describe the default GitHub Actions validation path for the owned code surface when GHA is the standard CI mechanism.
 - Include one canonical mechanism and one minimal example only when it materially shapes the skill.
 - Do not widen this section into full workflow-topology ownership.
+
+## Optimization
+
+- **Inspect:** Inventory the implementation, owning scopes, behavior,
+  documentation, tests, and CI for the local code surface.
+- **Compare:** Reconcile the observed surface with repository patterns and
+  shared coding canon, including contradictions, duplication, overloaded
+  modules, misplaced code, and dead paths.
+- **Recommend:** Preserve aligned behavior and prioritize only justified
+  reconciliation, deduplication, extraction, movement, tightening, or removal.
+- **Apply:** After authorization, make the smallest coherent code change without
+  unrelated refactoring or language migration.
+- **Verify:** Run the narrowest relevant tests, lint, type-check, build, or smoke
+  checks and re-inspect the changed boundary.
 
 ## Bundled Resources
 

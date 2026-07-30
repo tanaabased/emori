@@ -31,15 +31,16 @@ import {
 function usage(code = 0) {
   console.log(
     renderCliHelp({
-      usage: `Usage: ${bold('init-skill.js')} ${dim('--type <type> --slug <slug> --display-name <name> --description <text> [options]')}`,
-      summary:
-        'Initialize an EMORI-based skill from the canonical local full templates owned by emori-skill-author.',
+      usage: `Usage: ${bold('init-skill.js')} ${dim('--type <type> --slug <slug> --display-name <name> --description <text> --emoji <emoji> [options]')}`,
+      summary: 'Initialize an EMORI-local skill from the templates owned by this workspace.',
       options: [
         `  --type <type>           skill type such as ${dim(formatSkillTypeIds())}`,
         '  --category-tag <tag>    category tag override; must add one tag beyond owner and type',
         `  --slug <slug>           skill slug without the ${CANON_SKILL_MACHINE_PREFIX_WITH_HYPHEN} prefix`,
         '  --display-name <name>   human-readable skill display name',
         '  --description <text>    skill description text',
+        '  --emoji <emoji>         skill-specific OpenClaw emoji',
+        '  --homepage <url>        canonical HTTPS source URL; defaults to this repository skill path',
         '  --prompt <text>         default prompt for agents/openai.yaml',
         `  --output-dir <path>     parent directory for generated skills ${dim(`[default: ${SKILLS_ROOT_DIR}]`)}`,
         '  --force                 overwrite an existing generated skill directory',
@@ -142,6 +143,7 @@ async function main() {
     .toLowerCase();
   const displayName = String(options.displayName ?? '').trim();
   const description = String(options.description ?? '').trim();
+  const openclawEmoji = String(options.emoji ?? '').trim();
 
   if (!type) {
     throw new Error('Type is required.');
@@ -153,6 +155,10 @@ async function main() {
 
   if (!description) {
     throw new Error('Description is required.');
+  }
+
+  if (!openclawEmoji) {
+    throw new Error('A skill-specific OpenClaw emoji is required.');
   }
 
   const typeDefinition = getSkillType(type);
@@ -195,10 +201,19 @@ async function main() {
   const tags = [CANON_SKILL_OWNER, type, categoryTag];
   const validationTargetDir = path.resolve(options.outputDir ?? SKILLS_ROOT_DIR);
   const pluginRootPath = path.resolve(validationTargetDir, '..', '.codex-plugin', 'plugin.json');
-  const folderName = (await exists(pluginRootPath)) ? stripSkillPrefix(skillId) : skillId;
+  const usesUnprefixedFolder =
+    validationTargetDir === SKILLS_ROOT_DIR || (await exists(pluginRootPath));
+  const folderName = usesUnprefixedFolder ? stripSkillPrefix(skillId) : skillId;
   const skillDir = path.resolve(validationTargetDir, folderName);
   const agentsDir = path.join(skillDir, 'agents');
   const assetsDir = path.join(skillDir, 'assets');
+  const openclawHomepage = String(
+    options.homepage ?? `https://github.com/tanaabased/emori/tree/main/skills/${folderName}`,
+  ).trim();
+
+  if (!/^https:\/\//i.test(openclawHomepage)) {
+    throw new Error(`OpenClaw homepage must be an HTTPS URL: ${openclawHomepage}`);
+  }
 
   if ((await exists(skillDir)) && !options.force) {
     throw new Error(`Skill directory already exists: ${skillDir}`);
@@ -216,6 +231,8 @@ async function main() {
     display_name: displayName,
     license: CANON_SKILL_LICENSE,
     metadata_tags_yaml: renderMetadataTagsYaml(tags),
+    openclaw_emoji: quoteYaml(openclawEmoji),
+    openclaw_homepage: quoteYaml(openclawHomepage),
     owner: CANON_SKILL_OWNER,
     skill_id: skillId,
     type,

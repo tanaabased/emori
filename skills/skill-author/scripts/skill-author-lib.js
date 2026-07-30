@@ -37,6 +37,7 @@ const REQUIRED_METADATA_FIELDS = [
   { key: 'type', message: "SKILL.md frontmatter metadata must contain 'type'." },
   { key: 'owner', message: "SKILL.md frontmatter metadata must contain 'owner'." },
   { key: 'tags', message: "SKILL.md frontmatter metadata must contain 'tags'." },
+  { key: 'openclaw', message: "SKILL.md frontmatter metadata must contain 'openclaw'." },
 ];
 const REQUIRED_OPENAI_INTERFACE_KEYS = [
   'display_name',
@@ -706,6 +707,38 @@ function validateNormalizedTags({ normalizedTags, actualOwner, actualType, error
   }
 }
 
+function validateOpenclawMetadata(metadata, errors) {
+  const openclaw = metadata?.openclaw;
+  if (!openclaw || typeof openclaw !== 'object' || Array.isArray(openclaw)) {
+    if (openclaw) {
+      errors.push('SKILL.md frontmatter metadata.openclaw must be a mapping.');
+    }
+    return;
+  }
+
+  if (typeof openclaw.emoji !== 'string' || !openclaw.emoji.trim()) {
+    errors.push('SKILL.md frontmatter metadata.openclaw.emoji must be a nonempty string.');
+  }
+
+  if (typeof openclaw.homepage !== 'string' || !/^https:\/\//i.test(openclaw.homepage.trim())) {
+    errors.push('SKILL.md frontmatter metadata.openclaw.homepage must be an HTTPS URL.');
+  }
+
+  const requires = openclaw.requires;
+  if (requires !== undefined && (typeof requires !== 'object' || Array.isArray(requires))) {
+    errors.push('SKILL.md frontmatter metadata.openclaw.requires must be a mapping when present.');
+    return;
+  }
+
+  for (const [key, values] of Object.entries(requires ?? {})) {
+    if (!Array.isArray(values) || values.some((value) => !String(value).trim())) {
+      errors.push(
+        `SKILL.md frontmatter metadata.openclaw.requires.${key} must be a list of nonempty strings.`,
+      );
+    }
+  }
+}
+
 function validateFrontmatter({ frontmatter, requestedType, errors, warnings }) {
   pushMissingFieldErrors(frontmatter, REQUIRED_FRONTMATTER_FIELDS, errors);
   pushForbiddenFieldErrors(frontmatter, FORBIDDEN_TOP_LEVEL_FIELDS, errors);
@@ -767,6 +800,7 @@ function validateFrontmatter({ frontmatter, requestedType, errors, warnings }) {
     normalizedTags: normalizeTagList(declaredTags),
     warnings,
   });
+  validateOpenclawMetadata(metadata, errors);
 
   return { actualOwner, actualType };
 }
@@ -782,7 +816,7 @@ async function validateSkillMarkdown({ actualType, errors, skillContent, skillPa
     )
   ) {
     errors.push(
-      `\`${actualType}\` skills must use the section order defined by the canonical ${actualType} template owned by emori-skill-author.`,
+      `\`${actualType}\` skills must use the section order defined by the local ${actualType} template owned by emori-skill-author.`,
     );
   }
 
@@ -817,10 +851,29 @@ async function findContainingPluginRoot(startPath) {
   return null;
 }
 
-async function validateFolderName({ folderName, frontmatterName, skillPath, errors }) {
-  const pluginRoot = await findContainingPluginRoot(skillPath);
+async function findContainingAgentWorkspaceRoot(skillPath) {
+  const skillsPath = path.dirname(path.resolve(skillPath));
+  if (path.basename(skillsPath) !== 'skills') {
+    return null;
+  }
 
-  if (!pluginRoot && !folderName.startsWith(CANON_SKILL_MACHINE_PREFIX_WITH_HYPHEN)) {
+  const workspaceRoot = path.dirname(skillsPath);
+  const [agentsExists, identityExists] = await Promise.all([
+    pathExists(path.join(workspaceRoot, 'AGENTS.md')),
+    pathExists(path.join(workspaceRoot, 'IDENTITY.md')),
+  ]);
+
+  return agentsExists && identityExists ? workspaceRoot : null;
+}
+
+async function validateFolderName({ folderName, frontmatterName, skillPath, errors }) {
+  const [pluginRoot, workspaceRoot] = await Promise.all([
+    findContainingPluginRoot(skillPath),
+    findContainingAgentWorkspaceRoot(skillPath),
+  ]);
+  const allowsUnprefixedFolder = Boolean(pluginRoot || workspaceRoot);
+
+  if (!allowsUnprefixedFolder && !folderName.startsWith(CANON_SKILL_MACHINE_PREFIX_WITH_HYPHEN)) {
     errors.push(
       `Skill folder must use the machine prefix \`${CANON_SKILL_MACHINE_PREFIX_WITH_HYPHEN}\`.`,
     );
@@ -843,7 +896,7 @@ async function validateFolderName({ folderName, frontmatterName, skillPath, erro
   }
 
   if (frontmatterName) {
-    const expectedFolderNames = pluginRoot
+    const expectedFolderNames = allowsUnprefixedFolder
       ? [frontmatterName, stripSkillPrefix(frontmatterName)]
       : [frontmatterName];
     if (!expectedFolderNames.includes(folderName)) {
@@ -976,8 +1029,11 @@ function buildManualChecks({ expectedType }) {
   const checks = [
     'Check that the description clearly says what the skill does and when to use it.',
     'Check that the skill owns one narrow, concrete surface.',
-    'Check that bundled resources stay local unless they clearly pass the hoist test for repo-root canon.',
+    'Check that the skill owns an EMORI-local specialization rather than duplicating a shared Tanaab capability.',
+    'Check that bundled resources stay local unless they clearly pass the hoist test for a repository-wide contract.',
     'Check that any repo-root resources referenced by the skill still earn hoisted status through proven reuse, repo-wide contract status, or standalone human value.',
+    'Check that the OpenClaw emoji and homepage are specific and truthful.',
+    'Check whether the persistent surface should retain and tailor `Optimization` or omit it deliberately.',
     'Check that bulk standardization preserved the skill purpose unless a behavioral rewrite was requested.',
   ];
 
@@ -990,7 +1046,7 @@ function buildManualChecks({ expectedType }) {
       'Check that broad discovery language, if present, still funnels toward one dominant implementation pattern.',
       'Check that `Documentation` describes the canonical docs surface for the owned code path.',
       'Check that `Testing` describes one canonical direct-test mechanism with one minimal example.',
-      'Check that `GitHub Actions Workflow` describes one canonical GHA validation mechanism with one minimal example.',
+      'Check that `GitHub Actions` describes one canonical GHA validation mechanism with one minimal example.',
       'Check whether multiple materially different documentation, testing, or GitHub Actions mechanisms mean the skill should split.',
     );
   }
