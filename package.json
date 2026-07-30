@@ -19,12 +19,15 @@
     "eslint": "^10.8.0",
     "eslint-config-prettier": "^10.1.1",
     "globals": "^17.8.0",
+    "mocha": "^11.7.6",
     "prettier": "^3.9.6"
   },
   "scripts": {
     "format:check": "prettier . --check --ignore-unknown",
     "format:write": "prettier . --write --ignore-unknown",
     "lint": "bun run lint:eslint && bun run format:check",
-    "lint:eslint": "eslint ."
+    "lint:eslint": "eslint .",
+    "test": "bun run test:unit",
+    "test:unit": "mocha \"skills/*/test/**/*.spec.js\""
   }
 }
