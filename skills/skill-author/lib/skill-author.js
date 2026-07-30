@@ -17,7 +17,16 @@ const AUXILIARY_DOCS = [
   'INSTALLATION_GUIDE.md',
   'QUICK_REFERENCE.md',
 ];
-const OPTIONAL_RESOURCE_NAMES = ['templates', 'assets', 'references', 'scripts'];
+const OPTIONAL_RESOURCE_NAMES = [
+  'bin',
+  'lib',
+  'scripts',
+  'utils',
+  'test',
+  'templates',
+  'assets',
+  'references',
+];
 const KEBAB_CASE_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const KEBAB_CASE_HELPER_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*(\.[a-z0-9]+)?$/;
 const RELATIONSHIP_SECTION_HEADING = '## Relationship to Other Skills';

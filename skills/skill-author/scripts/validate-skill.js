@@ -7,7 +7,7 @@ import {
   formatValidationReport,
   renderCliHelp,
   validateSkillDir,
-} from './skill-author-lib.js';
+} from '../lib/skill-author.js';
 
 function usage(code = 0) {
   console.log(
