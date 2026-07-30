@@ -37,7 +37,8 @@ metadata:
 
 ## Evaluation Criteria
 
-- Check structure, naming, and consistency against shared canon.
+- Check structure, naming, and consistency against the EMORI standard and any
+  relevant shared Tanaab contract.
 - Prefer small, composable outputs over broad surfaces.
 
 ## Anti-Patterns
@@ -53,7 +54,8 @@ metadata:
 ## Workflow
 
 1. Confirm the request matches this skill's canon-facing surface.
-2. Load only the shared standard and local resources required for the task.
+2. Load only the EMORI standard, relevant shared Tanaab guidance, and local
+   resources required for the task.
 3. Create, standardize, or validate using the narrowest reliable approach.
 4. Re-run validation before finishing and surface any manual review points.
 

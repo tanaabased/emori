@@ -88,6 +88,15 @@ describe('skills/skill-author', function () {
         assert.ok(skillContent.includes(heading), `missing heading: ${heading}`);
       }
 
+      if (type === 'meta') {
+        assert.match(
+          skillContent,
+          /against the EMORI standard and any\s+relevant shared Tanaab contract/,
+        );
+        assert.match(skillContent, /Load only the EMORI standard, relevant shared Tanaab guidance/);
+        assert.doesNotMatch(skillContent, /against shared canon|Load only the shared standard/);
+      }
+
       const validated = runBun(VALIDATE_SCRIPT, ['--skill-dir', skillDir, '--type', type]);
       assert.equal(validated.status, 0, commandOutput(validated));
       assert.match(validated.stdout, /^status: ok$/m);

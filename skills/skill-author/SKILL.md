@@ -125,8 +125,12 @@ ownership of Tanaab Canon.
   skill scaffolder
 - [./scripts/validate-skill.js](./scripts/validate-skill.js): EMORI-local skill
   validation entrypoint
-- [./lib/skill-author.js](./lib/skill-author.js): local EMORI skill-author
-  implementation
+- [./lib/skill-author.js](./lib/skill-author.js): local skill definitions and
+  command presentation
+- [./lib/skill-scaffolder.js](./lib/skill-scaffolder.js): EMORI-local scaffold
+  orchestration
+- [./lib/skill-validator.js](./lib/skill-validator.js): EMORI-local validation
+  orchestration and reporting
 
 ## Validation
 

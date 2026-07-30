@@ -1,27 +1,27 @@
-import { copyFile, mkdir, rm, stat, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import {
-  CANON_SKILL_BRAND_COLOR,
-  CANON_SKILL_LICENSE,
-  CANON_SKILL_MACHINE_PREFIX_WITH_HYPHEN,
-  CANON_SKILL_OWNER,
+  EMORI_SKILL_BRAND_COLOR,
+  EMORI_SKILL_LICENSE,
+  EMORI_SKILL_MACHINE_PREFIX_WITH_HYPHEN,
+  EMORI_SKILL_OWNER,
   SKILLS_ROOT_DIR,
   formatSkillTypeIds,
-  formatValidationReport,
   getBundledLargeIconPath,
   getBundledSmallIconPath,
   getSkillType,
   isKebabCaseId,
   renderMetadataTagsYaml,
   stripSkillPrefix,
-  validateSkillDir,
 } from './skill-author.js';
+import { formatValidationReport, validateSkillDir } from './skill-validator.js';
 import inferSkillCategoryTag from '../utils/infer-skill-category-tag.js';
 import normalizeSkillDescription, {
   makeDefaultPrompt,
   makeShortDescription,
 } from '../utils/normalize-skill-description.js';
+import pathExists from '../utils/path-exists.js';
 import renderSkillTemplate from '../utils/render-skill-template.js';
 
 function normalizeSlug(value) {
@@ -38,25 +38,8 @@ function normalizeSlug(value) {
   return slug;
 }
 
-function stripDuplicateOwnerPrefix(slug) {
-  if (slug.startsWith(CANON_SKILL_MACHINE_PREFIX_WITH_HYPHEN)) {
-    return slug.slice(CANON_SKILL_MACHINE_PREFIX_WITH_HYPHEN.length);
-  }
-
-  return slug;
-}
-
 function quoteYaml(value) {
   return `"${String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
-}
-
-async function exists(targetPath) {
-  try {
-    await stat(targetPath);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 function makeOpenAiYaml({ displayName, shortDescription, defaultPrompt }) {
@@ -65,7 +48,7 @@ function makeOpenAiYaml({ displayName, shortDescription, defaultPrompt }) {
   short_description: ${quoteYaml(shortDescription)}
   icon_small: "./assets/icon-small.svg"
   icon_large: "./assets/icon-large.png"
-  brand_color: ${quoteYaml(CANON_SKILL_BRAND_COLOR)}
+  brand_color: ${quoteYaml(EMORI_SKILL_BRAND_COLOR)}
   default_prompt: ${quoteYaml(defaultPrompt)}
 `;
 }
@@ -120,18 +103,18 @@ export async function initializeSkill(options) {
 
   if (
     categoryTagOverride &&
-    (categoryTagOverride === CANON_SKILL_OWNER || categoryTagOverride === type)
+    (categoryTagOverride === EMORI_SKILL_OWNER || categoryTagOverride === type)
   ) {
     throw new Error('Category tag override must add one tag beyond owner and type.');
   }
 
   const normalizedDescription = normalizeSkillDescription(description);
-  const slug = stripDuplicateOwnerPrefix(rawSlug);
-  const skillId = `${CANON_SKILL_MACHINE_PREFIX_WITH_HYPHEN}${slug}`;
+  const slug = stripSkillPrefix(rawSlug);
+  const skillId = `${EMORI_SKILL_MACHINE_PREFIX_WITH_HYPHEN}${slug}`;
   const inferredCategoryTag = inferSkillCategoryTag({
     description: normalizedDescription,
     displayName,
-    owner: CANON_SKILL_OWNER,
+    owner: EMORI_SKILL_OWNER,
     slug: skillId,
     type,
   });
@@ -141,15 +124,15 @@ export async function initializeSkill(options) {
   if (!categoryTag || !isKebabCaseId(categoryTag)) {
     throw new Error(`Category tag must be a kebab-case id: ${categoryTag || '<empty>'}`);
   }
-  if (categoryTag === CANON_SKILL_OWNER || categoryTag === type) {
+  if (categoryTag === EMORI_SKILL_OWNER || categoryTag === type) {
     throw new Error('Category tag must add one tag beyond owner and type.');
   }
 
-  const tags = [CANON_SKILL_OWNER, type, categoryTag];
+  const tags = [EMORI_SKILL_OWNER, type, categoryTag];
   const validationTargetDir = path.resolve(options.outputDir ?? SKILLS_ROOT_DIR);
   const pluginRootPath = path.resolve(validationTargetDir, '..', '.codex-plugin', 'plugin.json');
   const usesUnprefixedFolder =
-    validationTargetDir === SKILLS_ROOT_DIR || (await exists(pluginRootPath));
+    validationTargetDir === SKILLS_ROOT_DIR || (await pathExists(pluginRootPath));
   const folderName = usesUnprefixedFolder ? stripSkillPrefix(skillId) : skillId;
   const skillDir = path.resolve(validationTargetDir, folderName);
   const agentsDir = path.join(skillDir, 'agents');
@@ -162,7 +145,7 @@ export async function initializeSkill(options) {
     throw new Error(`OpenClaw homepage must be an HTTPS URL: ${openclawHomepage}`);
   }
 
-  if ((await exists(skillDir)) && !options.force) {
+  if ((await pathExists(skillDir)) && !options.force) {
     throw new Error(`Skill directory already exists: ${skillDir}`);
   }
 
@@ -176,11 +159,11 @@ export async function initializeSkill(options) {
   const skillContent = renderSkillTemplate(typeDefinition.templateBody, {
     description: normalizedDescription,
     display_name: displayName,
-    license: CANON_SKILL_LICENSE,
+    license: EMORI_SKILL_LICENSE,
     metadata_tags_yaml: renderMetadataTagsYaml(tags),
     openclaw_emoji: quoteYaml(openclawEmoji),
     openclaw_homepage: quoteYaml(openclawHomepage),
-    owner: CANON_SKILL_OWNER,
+    owner: EMORI_SKILL_OWNER,
     skill_id: skillId,
     type,
   });

@@ -2,15 +2,15 @@
 /* eslint-disable no-console */
 
 import {
-  CANON_SKILL_MACHINE_PREFIX_WITH_HYPHEN,
+  EMORI_SKILL_MACHINE_PREFIX_WITH_HYPHEN,
   SKILLS_ROOT_DIR,
   bold,
   dim,
   formatSkillTypeIds,
-  formatValidationReport,
   renderCliHelp,
 } from '../lib/skill-author.js';
 import { initializeSkill } from '../lib/skill-scaffolder.js';
+import { formatValidationReport } from '../lib/skill-validator.js';
 import parseInitSkillArgs from '../utils/parse-init-skill-args.js';
 
 function usage(code = 0) {
@@ -21,7 +21,7 @@ function usage(code = 0) {
       options: [
         `  --type <type>           skill type such as ${dim(formatSkillTypeIds())}`,
         '  --category-tag <tag>    category tag override; must add one tag beyond owner and type',
-        `  --slug <slug>           skill slug without the ${CANON_SKILL_MACHINE_PREFIX_WITH_HYPHEN} prefix`,
+        `  --slug <slug>           skill slug without the ${EMORI_SKILL_MACHINE_PREFIX_WITH_HYPHEN} prefix`,
         '  --display-name <name>   human-readable skill display name',
         '  --description <text>    skill description text',
         '  --emoji <emoji>         skill-specific OpenClaw emoji',

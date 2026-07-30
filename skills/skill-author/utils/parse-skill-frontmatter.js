@@ -1,14 +1,4 @@
-function unquoteYaml(value) {
-  const trimmed = String(value ?? '').trim();
-  if (
-    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
-    (trimmed.startsWith("'") && trimmed.endsWith("'"))
-  ) {
-    return trimmed.slice(1, -1);
-  }
-
-  return trimmed;
-}
+import unquoteYamlScalar from './unquote-yaml-scalar.js';
 
 function parseYamlBlock(rawBlock) {
   const lines = String(rawBlock ?? '').split('\n');
@@ -36,7 +26,7 @@ function parseYamlBlock(rawBlock) {
         break;
       }
 
-      items.push(unquoteYaml(matchList[1]));
+      items.push(unquoteYamlScalar(matchList[1]));
       index += 1;
     }
 
@@ -71,10 +61,10 @@ function parseYamlBlock(rawBlock) {
           entries[key] = value
             .slice(1, -1)
             .split(',')
-            .map((item) => unquoteYaml(item))
+            .map((item) => unquoteYamlScalar(item))
             .filter(Boolean);
         } else {
-          entries[key] = unquoteYaml(value);
+          entries[key] = unquoteYamlScalar(value);
         }
         index += 1;
         continue;

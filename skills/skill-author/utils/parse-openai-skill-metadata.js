@@ -1,14 +1,4 @@
-function unquoteYaml(value) {
-  const trimmed = String(value ?? '').trim();
-  if (
-    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
-    (trimmed.startsWith("'") && trimmed.endsWith("'"))
-  ) {
-    return trimmed.slice(1, -1);
-  }
-
-  return trimmed;
-}
+import unquoteYamlScalar from './unquote-yaml-scalar.js';
 
 function parseIndentedKeyValues(content, sectionName) {
   const lines = String(content ?? '').split('\n');
@@ -36,7 +26,7 @@ function parseIndentedKeyValues(content, sectionName) {
       continue;
     }
 
-    values[match[1]] = unquoteYaml(match[2]);
+    values[match[1]] = unquoteYamlScalar(match[2]);
   }
 
   return values;
@@ -79,7 +69,7 @@ function parseDependencyTools(content) {
     const firstEntryMatch = line.match(/^ {4}-\s+([a-z_]+):\s*(.+)$/);
     if (firstEntryMatch) {
       currentTool = {
-        [firstEntryMatch[1]]: unquoteYaml(firstEntryMatch[2]),
+        [firstEntryMatch[1]]: unquoteYamlScalar(firstEntryMatch[2]),
       };
       tools.push(currentTool);
       continue;
@@ -87,7 +77,7 @@ function parseDependencyTools(content) {
 
     const entryMatch = line.match(/^ {6}([a-z_]+):\s*(.+)$/);
     if (entryMatch && currentTool) {
-      currentTool[entryMatch[1]] = unquoteYaml(entryMatch[2]);
+      currentTool[entryMatch[1]] = unquoteYamlScalar(entryMatch[2]);
     }
   }
 

@@ -26,11 +26,15 @@ describe('skills/skill-author/utils/parse-init-skill-args', () => {
     });
   });
 
-  it('should reject missing option values and positional arguments', () => {
+  it('should reject unknown options, missing values, and positional arguments', () => {
     assert.throws(() => parseInitSkillArgs(['--slug'], '/default/skills'), /Missing value/);
     assert.throws(
       () => parseInitSkillArgs(['example'], '/default/skills'),
       /Positional arguments are not supported/,
+    );
+    assert.throws(
+      () => parseInitSkillArgs(['--unknown-option', 'value'], '/default/skills'),
+      /Unknown option: --unknown-option/,
     );
   });
 });

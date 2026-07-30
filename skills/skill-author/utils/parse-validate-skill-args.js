@@ -1,39 +1,20 @@
-const VALUE_OPTIONS = new Set([
-  '--category-tag',
-  '--description',
-  '--display-name',
-  '--emoji',
-  '--homepage',
-  '--output-dir',
-  '--prompt',
-  '--slug',
-  '--type',
-]);
+const VALUE_OPTIONS = new Set(['--skill-dir', '--type']);
 
 /**
- * Parses the internal EMORI skill initializer arguments.
+ * Parses the internal EMORI skill validator arguments.
  *
  * @param {string[]} argv Raw argument tokens.
- * @param {string} defaultOutputDir Default skill parent directory.
- * @returns {object} Parsed initializer options.
+ * @returns {object} Parsed validator options.
  * @throws {Error} When an option is unknown, is missing its value, or a positional argument is present.
  */
-export default function parseInitSkillArgs(argv, defaultOutputDir) {
-  const parsed = {
-    outputDir: defaultOutputDir,
-    type: 'generic',
-  };
+export default function parseValidateSkillArgs(argv) {
+  const parsed = {};
 
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
 
     if (arg === '-h' || arg === '--help') {
       return { ...parsed, help: true };
-    }
-
-    if (arg === '--force') {
-      parsed.force = true;
-      continue;
     }
 
     if (!arg.startsWith('--')) {
