@@ -13,6 +13,7 @@
 
 # OpenClaw runtime state belongs outside this workspace
 /.openclaw/
+/openclaw-workspace-state.json
 /openclaw.json
 /auth-profiles.json
 /codex-home/

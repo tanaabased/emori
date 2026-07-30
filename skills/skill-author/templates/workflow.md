@@ -1,19 +1,21 @@
 ---
 template_type: workflow
 default_category_tag: operations
+optional_top_level_headings:
+  - '## Optimization'
 ---
-
 ---
-
 name: {{skill_id}}
 description: {{description}}
 license: {{license}}
 metadata:
-type: {{type}}
-owner: {{owner}}
-tags:
+  type: {{type}}
+  owner: {{owner}}
+  tags:
 {{metadata_tags_yaml}}
-
+  openclaw:
+    emoji: {{openclaw_emoji}}
+    homepage: {{openclaw_homepage}}
 ---
 
 # {{display_name}}
@@ -54,6 +56,20 @@ tags:
 
 - Define what finished looks like before closing the task.
 - List the signals or artifacts that prove the workflow is complete.
+
+## Optimization
+
+- **Inspect:** Inventory the preconditions, sequence, checkpoints, handoffs, and
+  completion evidence for the local workflow.
+- **Compare:** Reconcile the observed workflow with its durable contract,
+  including contradictory steps, duplicated paths, misplaced responsibilities,
+  and obsolete handoffs.
+- **Recommend:** Preserve aligned stages and prioritize only justified
+  reconciliation, consolidation, splitting, movement, tightening, or removal.
+- **Apply:** After authorization, change the smallest coherent part of the
+  sequence while preserving approvals and external boundaries.
+- **Verify:** Re-run the relevant checkpoints and confirm the completion
+  criteria prove the optimized workflow is complete.
 
 ## Bundled Resources
 

@@ -1,20 +1,16 @@
 #!/usr/bin/env bun
 /* eslint-disable no-console */
 
-import {
-  bold,
-  dim,
-  formatValidationReport,
-  renderCliHelp,
-  validateSkillDir,
-} from './skill-author-lib.js';
+import { bold, dim, renderCliHelp } from '../lib/skill-author.js';
+import { formatValidationReport, validateSkillDir } from '../lib/skill-validator.js';
+import parseValidateSkillArgs from '../utils/parse-validate-skill-args.js';
 
 function usage(code = 0) {
   console.log(
     renderCliHelp({
       usage: `Usage: ${bold('validate-skill.js')} ${dim('--skill-dir <path> [options]')}`,
       summary:
-        'Validate a canon skill directory against references/skill-standard.md and the canonical local full templates owned by emori-skill-author.',
+        'Validate an EMORI-local skill against the workspace standard and local full templates.',
       options: [
         '  --skill-dir <path>      skill directory to validate',
         '  --type <type>           expected type override',
@@ -25,35 +21,12 @@ function usage(code = 0) {
   process.exit(code);
 }
 
-function parseArgs(argv) {
-  const parsed = {};
-
-  for (let index = 0; index < argv.length; index += 1) {
-    const arg = argv[index];
-
-    if (arg === '-h' || arg === '--help') {
-      usage(0);
-    }
-
-    if (!arg.startsWith('--')) {
-      throw new Error(`Positional arguments are not supported: ${arg}`);
-    }
-
-    const value = argv[index + 1];
-    if (!value || value.startsWith('--')) {
-      throw new Error(`Missing value for ${arg}`);
-    }
-
-    const key = arg.slice(2).replace(/-([a-z])/g, (_, char) => char.toUpperCase());
-    parsed[key] = value;
-    index += 1;
+async function main() {
+  const options = parseValidateSkillArgs(process.argv.slice(2));
+  if (options.help) {
+    usage(0);
   }
 
-  return parsed;
-}
-
-async function main() {
-  const options = parseArgs(process.argv.slice(2));
   const skillDir = String(options.skillDir ?? '').trim();
 
   if (!skillDir) {

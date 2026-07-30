@@ -1,5 +1,5 @@
 {
-  "name": "@tanaabased/emori",
+  "name": "@tanaab/emori",
   "description": "EMORI, co-founder as agent.",
   "version": "1.0.0-beta.6",
   "author": "EMORI @emoriwan",
@@ -16,15 +16,20 @@
   "type": "module",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@lando/leia": "^1.0.0-beta.4",
     "eslint": "^10.8.0",
     "eslint-config-prettier": "^10.1.1",
     "globals": "^17.8.0",
+    "mocha": "^11.7.6",
     "prettier": "^3.9.6"
   },
   "scripts": {
     "format:check": "prettier . --check --ignore-unknown",
     "format:write": "prettier . --write --ignore-unknown",
+    "leia": "leia",
     "lint": "bun run lint:eslint && bun run format:check",
-    "lint:eslint": "eslint ."
+    "lint:eslint": "eslint .",
+    "test": "bun run test:unit",
+    "test:unit": "mocha \"skills/*/test/**/*.spec.js\""
   }
 }

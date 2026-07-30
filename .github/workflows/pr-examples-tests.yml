@@ -1,0 +1,43 @@
+name: Example Tests
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  HOMEBREW_NO_AUTO_UPDATE: '1'
+
+jobs:
+  examples:
+    name: ${{ matrix.example }}
+    runs-on: macos-26
+    strategy:
+      fail-fast: false
+      matrix:
+        example:
+          - workspace
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+      - name: Refresh Homebrew when needed
+        shell: bash
+        run: HOMEBREW_NO_AUTO_UPDATE= brew update-if-needed
+      - name: Install OpenClaw CLI
+        shell: bash
+        run: brew install openclaw-cli
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+      - name: Run Leia-backed example
+        shell: bash
+        env:
+          NO_COLOR: '1'
+          TMPDIR: ${{ github.workspace }}/examples/${{ matrix.example }}/.tmp
+        run: |
+          mkdir -p "$TMPDIR"
+          bun run leia "examples/${{ matrix.example }}/README.md" --retry 0

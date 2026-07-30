@@ -3,19 +3,20 @@ template_type: integration
 default_category_tag: external-systems
 optional_top_level_headings:
   - '## Release Workflow'
+  - '## Optimization'
 ---
-
 ---
-
 name: {{skill_id}}
 description: {{description}}
 license: {{license}}
 metadata:
-type: {{type}}
-owner: {{owner}}
-tags:
+  type: {{type}}
+  owner: {{owner}}
+  tags:
 {{metadata_tags_yaml}}
-
+  openclaw:
+    emoji: {{openclaw_emoji}}
+    homepage: {{openclaw_homepage}}
 ---
 
 # {{display_name}}
@@ -67,6 +68,19 @@ tags:
 - Describe the default release automation path for the owned product surface only when one canonical release mechanism materially shapes the skill.
 - Include one canonical mechanism and one minimal example only when it materially shapes the skill.
 - Do not widen this section into full workflow-topology ownership.
+
+## Optimization
+
+- **Inspect:** Resolve the exact target, prerequisites, authorization, and
+  current local or remote state through read-only operations first.
+- **Compare:** Normalize current and canonical state into an exact managed diff
+  while keeping unmanaged fields outside the local skill's scope.
+- **Recommend:** Preserve aligned and unmanaged state; prioritize confirmed
+  drift, tighter authorization, and only justified consolidation or removal.
+- **Apply:** After authorization, mutate only the approved target and managed
+  fields while preserving rollback and retry boundaries.
+- **Verify:** Re-read the resulting state through the narrowest reliable
+  interface and report remaining drift or remote uncertainty.
 
 ## Bundled Resources
 

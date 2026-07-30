@@ -8,9 +8,12 @@ grant capabilities; verify runtime availability and authority before use.
 - Primary current interface: `gh`
 - Required active account: `@emoriwan`
 - Verify it with `gh auth status` before GitHub operations.
-- Shared workflow skills use the `tanaab-*` prefix and are sourced from
+- EMORI-local skills use `emori-*` machine ids and live in this repository's
+  `skills/` directory. Prefer an applicable local skill for its narrower owned
+  surface.
+- Shared skills use the `tanaab-*` prefix and are sourced from
   `tanaabased/canon`; OpenClaw receives them through the `tanaab` plugin when it
-  is enabled.
+  is enabled. Use them for shared canon and capabilities not owned locally.
 
 ## Command-Line Baseline
 
