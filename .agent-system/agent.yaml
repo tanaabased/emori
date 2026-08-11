@@ -1,0 +1,58 @@
+schema-version: 1
+
+agent:
+  id: emori
+  name: EMORI
+  email:
+    from-environment: EMAIL
+  description: Tanaab co-founder and operating partner.
+  avatar: avatars/emori.png
+
+environment:
+  op: jp5zhxuc67n7uk3wfjgn5t4yam
+  set:
+    EMORI_SSH_KEY:
+      from-op: 'op://2mh2ny4tegbi33yt3furutomzu/id_emori/private key?ssh-format=openssh'
+  required:
+    - EMAIL
+    - GH_TOKEN
+    - EMORI_SSH_KEY
+
+git:
+  worktrees:
+    repositories:
+      local:
+        emori: ~/tanaab/emori
+        canon: ~/tanaab/canon
+        openclaw-agent-system: ~/tanaab/openclaw-agent-system
+  ssh:
+    private-keys:
+      from-environment: EMORI_SSH_KEY
+  signing:
+    key: EMORI_SSH_KEY
+    allowed-signers-file: .agent-system/allowed_signers
+  policy:
+    force: deny
+    rewrite: ask
+    discard: ask
+    delete: ask
+    unknown: deny
+
+github:
+  host: github.com
+  username: emoriwan
+  token: GH_TOKEN
+  ssh-keys:
+    key: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAqukphiWCZn3WmdIjDkeI57VMXG7TBPKupC+MfeWn2l'
+    title: EMORIKEY1
+  ssh-signing-keys:
+    key: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAqukphiWCZn3WmdIjDkeI57VMXG7TBPKupC+MfeWn2l'
+    title: EMORIKEY1
+  config:
+    git-protocol: ssh
+    spinner: disabled
+    telemetry: disabled
+  policy:
+    destructive: ask
+    admin: deny
+    unknown: deny

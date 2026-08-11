@@ -20,6 +20,8 @@ export default defineConfig([
     '**/dist/**',
     '**/_site/**',
     '**/coverage/**',
+    '**/.agent-system/repositories/**',
+    '**/.agent-system/worktrees/**',
     '**/.vitepress/cache/**',
     '**/.vitepress/dist/**',
   ]),
