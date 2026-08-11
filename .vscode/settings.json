@@ -3,8 +3,5 @@
     "**/.agent-system/repositories/**": true,
     "**/.agent-system/worktrees/**": true
   },
-  "git.repositoryScanIgnoredFolders": [
-    ".agent-system/repositories",
-    ".agent-system/worktrees"
-  ]
+  "git.repositoryScanIgnoredFolders": [".agent-system/repositories", ".agent-system/worktrees"]
 }
