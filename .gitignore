@@ -10,6 +10,8 @@
 /.private/
 /.scratch/
 /.worktrees/
+/.agent-system/repositories/
+/.agent-system/worktrees/
 
 # OpenClaw runtime state belongs outside this workspace
 /.openclaw/
@@ -65,3 +67,6 @@ coverage/
 .lock-wscript
 .wafpickle-*
 *.tar
+
+# Agent System local Codex configuration.
+.codex/config.toml
