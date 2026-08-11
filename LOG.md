@@ -207,3 +207,9 @@ Removed the temporary `dotfiles` package, its home-directory links, the local
 private key, and the obsolete pre-Stow SSH configuration. Agent System now owns
 the operational configuration; its external secret reference and generated SSH
 agent state remain.
+
+### Heartbeat retirement
+
+Removed EMORI's recurring heartbeat tasks. `HEARTBEAT.md` now contains only its
+title, which keeps the standard workspace surface while allowing OpenClaw to
+skip heartbeat model calls.

@@ -30,7 +30,7 @@ Its standard tracked workspace files include:
 - [`AGENTS.md`](./AGENTS.md) — operating and work-system guidance.
 - [`USER.md`](./USER.md) — context about EMORI's human partner.
 - [`TOOLS.md`](./TOOLS.md) — environment-specific tool conventions.
-- [`HEARTBEAT.md`](./HEARTBEAT.md) — periodic work checks.
+- [`HEARTBEAT.md`](./HEARTBEAT.md) — title-only marker that keeps recurring checks idle.
 
 ## Development
 

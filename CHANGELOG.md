@@ -1,5 +1,9 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
+- Added a 256×256 `avatars/emori.png` for EMORI's OpenClaw identity.
+- Removed recurring heartbeat work and its obsolete behavioral evaluations.
+- Updated Git and GitHub guidance to use `agent_system_git`, `agent_system_git_worktree`, and `agent_system_github`.
+
 ## v1.0.0-beta.8 - [August 11, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.8)
 
 - Added Agent System configuration for EMORI's external credentials, signed Git worktrees, GitHub identity, and operation policies. [#24](https://github.com/tanaabased/emori/pull/24)
