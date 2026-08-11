@@ -2,7 +2,7 @@
 
 Owner: Michael
 Visibility: Public
-Last reviewed: 2026-07-20
+Last reviewed: 2026-08-11
 Review cadence: Weekly and when new information materially changes the plan
 
 This file contains reviewed goals and priorities. Confidential details belong in
@@ -31,6 +31,29 @@ GitHub-based process.
 
 ## Active Workstream
 
+### Agent System ([`tanaabased/openclaw-agent-system`](https://github.com/tanaabased/openclaw-agent-system))
+
+- Product: A reusable OpenClaw plugin for agent workspaces.
+- Outcome: Each agent has workspace-level configuration for identity, trusted
+  principals, permissions, credential references, runtime needs, maintenance,
+  and Covenant protection.
+- Current state: Core identity, credential references, SSH signing, managed Git
+  and GitHub operations, and EMORI's cutover are operational.
+- Current integration work: Route trusted GitHub assignment notifications to
+  the correct agent and support policy-governed operations against declared
+  source repositories.
+- Scope decision: GitHub notification and routing work is part of Agent System,
+  not a separate communication-channel project.
+- Success evidence: Agent System configures EMORI without storing workspace
+  secrets, enforces authority boundaries, performs GitHub operations only as
+  `@emoriwan`, reliably routes authorized GitHub assignments, and can be adopted
+  independently of EMORI.
+- Constraints: Authenticate senders, treat unauthorized content as data rather
+  than instruction, preserve least-privilege access, prefer portable OpenClaw
+  mechanisms where sufficient, and keep secrets external.
+
+## Next Workstream
+
 ### GitHub Work Protocol (`tanaabased/canon`)
 
 - Outcome: Humans and agents can create, refine, triage, assign, execute, and
@@ -46,33 +69,6 @@ GitHub-based process.
   3. Prove them on real work and revise the conventions from evidence.
   4. Use them to create milestones and issues for the remaining workstreams.
 - Milestone: Pending the first usable milestone-management skill.
-
-## Planned Workstreams
-
-### Agent System
-
-- Proposed repository: `tanaabased/agent-system`
-- Product: A reusable OpenClaw plugin for any agent workspace.
-- Outcome: Each agent has workspace-level configuration for identity, trusted
-  principals, permissions, credential references, runtime needs, maintenance,
-  and Covenant protection.
-- Success evidence: The plugin can configure EMORI without storing workspace
-  secrets, enforce authority boundaries, require GitHub operations as
-  `@emoriwan`, route heartbeat alerts to a private Michael-visible destination,
-  and be adopted independently of EMORI.
-- Constraints: Prefer portable OpenClaw mechanisms where sufficient; keep
-  secrets external.
-
-### GitHub Communication Channel
-
-- Proposed repository: `tanaabased/github-channel`
-- Product: A reusable OpenClaw channel plugin for GitHub.
-- Outcome: Authorized GitHub assignments, mentions, comments, and state changes
-  reach an agent and support an ongoing work conversation through GitHub.
-- Success evidence: Trusted GitHub events reliably activate the correct agent;
-  unauthorized content is treated as data, not instruction.
-- Constraints: Authenticate senders, resist prompt injection, and preserve
-  least-privilege access.
 
 ## Next Objective
 
