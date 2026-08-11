@@ -1,5 +1,7 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
+## v1.0.0-beta.8 - [August 11, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.8)
+
 - Added Agent System configuration for EMORI's external credentials, signed Git worktrees, GitHub identity, and operation policies. [#24](https://github.com/tanaabased/emori/pull/24)
 - Removed EMORI's temporary Stow-managed Git and SSH bridge after verifying the Agent System cutover. [#24](https://github.com/tanaabased/emori/pull/24)
 - Updated EMORI's goals to prioritize Agent System and include GitHub notification routing in that workstream. [#25](https://github.com/tanaabased/emori/pull/25)
