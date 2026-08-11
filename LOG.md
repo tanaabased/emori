@@ -1,6 +1,6 @@
 # EMORI Setup Log
 
-Last updated: 2026-07-22
+Last updated: 2026-08-11
 
 This public-safe running log records additional setup completed after
 `openclaw agents add`. It excludes initial installation and agent creation,
@@ -192,3 +192,18 @@ Relevant command used:
 ```bash
 stow --restow --no-folding --target="$HOME" dotfiles
 ```
+
+## 2026-08-11
+
+### Agent System cutover
+
+Cut over EMORI's Git and GitHub operations to Agent System. After disconnecting
+the GNU Stow package and quarantining the machine-local SSH key, a fresh commit
+and annotated tag both verified with EMORI's declared authorship and trusted SSH
+signature. A Git push dry run authenticated successfully, and the isolated
+GitHub integration resolved to `@emoriwan` with write access.
+
+Removed the temporary `dotfiles` package, its home-directory links, the local
+private key, and the obsolete pre-Stow SSH configuration. Agent System now owns
+the operational configuration; its external secret reference and generated SSH
+agent state remain.
