@@ -33,7 +33,7 @@ git:
     allowed-signers-file: .agent-system/allowed_signers
   policy:
     force: deny
-    rewrite: deny
+    rewrite: allow
     discard: deny
     delete: deny
     unknown: deny
