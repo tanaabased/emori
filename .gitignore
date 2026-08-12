@@ -41,7 +41,8 @@
 logs
 .cache
 .temp
-.tmp
+/.tmp/*
+!/.tmp/.gitignore
 cache
 temp
 
