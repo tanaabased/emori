@@ -32,11 +32,8 @@ git:
     key: EMORI_SSH_KEY
     allowed-signers-file: .agent-system/allowed_signers
   policy:
-    force: deny
-    rewrite: allow
-    discard: deny
-    delete: deny
-    unknown: deny
+    delete-remote-ref: deny
+    force-push: deny
 
 github:
   host: github.com
@@ -53,6 +50,4 @@ github:
     spinner: disabled
     telemetry: disabled
   policy:
-    destructive: deny
-    admin: deny
-    unknown: deny
+    releases: deny
