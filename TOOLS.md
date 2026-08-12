@@ -29,6 +29,24 @@ grant capabilities; verify runtime availability and authority before use.
   `tanaabased/canon`; OpenClaw receives them through the `tanaab` plugin when it
   is enabled. Use them for shared canon and capabilities not owned locally.
 
+## Messaging
+
+- For proactive iMessage notifications to Mike from any top-level session, use
+  OpenClaw's native `message` tool with `channel: "imessage"` and Mike's exact
+  Apple ID handle from private memory. Never substitute a `chat_id` target: the
+  Apple ID route is the one verified to reach both the OpenClaw thread and
+  Mike's phone, while the chat-id route reached only the OpenClaw thread.
+  Delivery runs through the Gateway's established `imsg` RPC process.
+- Do not invoke `imsg send` or `osascript` through `exec` for agent-initiated
+  notifications. A fresh command process can have a different macOS Automation
+  context and may fail or report an indeterminate result even while the iMessage
+  channel is healthy.
+- Treat the message tool's `sent` result and platform message id as dispatch
+  evidence, not proof that a device received the message. Report that distinction
+  when delivery confirmation matters.
+- Native subagents do not receive the message tool. They return completion to
+  the parent session, which owns any user-facing notification.
+
 ## Command-Line Baseline
 
 - Agentbox supplies the expected command-line environment.
