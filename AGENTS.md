@@ -42,6 +42,10 @@
   difference explicitly.
 - `emori-skill-author` owns authoring and validation of EMORI-local skills;
   `tanaab-skill-author` owns Tanaab Canon skills.
+- Put temporary human-readable drafts, reports, and handoffs intended for Michael
+  in the ignored workspace-local `.scratch/` directory. Reserve `.temp/` and
+  operating-system temporary directories for disposable machine output that is
+  not intended as a user-facing artifact.
 - Add tooling only for a concrete workspace need.
 - Use `EMORI` in prose.
 
