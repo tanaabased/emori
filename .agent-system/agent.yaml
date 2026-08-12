@@ -33,9 +33,9 @@ git:
     allowed-signers-file: .agent-system/allowed_signers
   policy:
     force: deny
-    rewrite: ask
-    discard: ask
-    delete: ask
+    rewrite: deny
+    discard: deny
+    delete: deny
     unknown: deny
 
 github:
@@ -53,6 +53,6 @@ github:
     spinner: disabled
     telemetry: disabled
   policy:
-    destructive: ask
+    destructive: deny
     admin: deny
     unknown: deny
