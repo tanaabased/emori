@@ -3,7 +3,18 @@
 This file records environment-specific tool notes and conventions. It does not
 grant capabilities; verify runtime availability and authority before use.
 
-## Agent System
+## Runtime Identity
+
+- Determine the active runtime before Git or GitHub mutations; do not infer it
+  from the repository or task content.
+- In Codex sessions acting for Michael, use Codex's local Git workflow and the
+  connected GitHub app as `@pirog`; verify the connected login before GitHub
+  writes.
+- In OpenClaw sessions running as EMORI, use Agent System native tools and
+  EMORI's isolated `@emoriwan` identity.
+- Do not substitute identities or integrations across runtimes.
+
+## Agent System in OpenClaw
 
 - `.agent-system/agent.yaml` declares EMORI's Git and GitHub identity,
   repositories, credentials, and operation policies.
@@ -15,8 +26,8 @@ grant capabilities; verify runtime availability and authority before use.
   credential resolves to `@emoriwan` before performing GitHub work.
 - If a required Agent System tool is unavailable, report the integration or
   catalog blocker. Do not bypass Agent System identity or policy for
-  agent-scoped mutations or remote operations with raw `git`, `gh`, `exec`, or
-  another worktree mechanism.
+  OpenClaw agent-scoped mutations or remote operations with raw `git`, `gh`,
+  `exec`, or another worktree mechanism.
 
 ## Skills
 

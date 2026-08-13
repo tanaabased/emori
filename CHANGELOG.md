@@ -1,5 +1,7 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
+- Updated Git and GitHub guidance to use `@pirog` in Codex and `@emoriwan` through Agent System in OpenClaw.
+
 ## v1.0.0-beta.9 - [August 11, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.9)
 
 - Added a 256×256 `avatars/emori.png` for EMORI's OpenClaw identity.
