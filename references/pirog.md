@@ -1,4 +1,4 @@
-# Mike: Selected Public Work
+# pirog: Selected Public Work
 
 Representative public links supporting the capabilities summarized in
 [`USER.md`](../USER.md). This is not an exhaustive portfolio.

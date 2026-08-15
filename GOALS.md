@@ -1,6 +1,6 @@
 # Goals
 
-Owner: Michael
+Owner: pirog
 Visibility: Public
 Last reviewed: 2026-08-11
 Review cadence: Weekly and when new information materially changes the plan
