@@ -15,6 +15,9 @@ const restrictedBuiltinImports = builtinModules
 export default defineConfig([
   globalIgnores([
     '**/node_modules/**',
+    '**/.private/**',
+    '**/.scratch/**',
+    '**/.worktrees/**',
     '**/temp/**',
     '**/cache/**',
     '**/dist/**',

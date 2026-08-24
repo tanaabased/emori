@@ -28,9 +28,14 @@ Its standard tracked workspace files include:
 - [`IDENTITY.md`](./IDENTITY.md) — public identity metadata.
 - [`SOUL.md`](./SOUL.md) — mission, character, voice, and Covenant.
 - [`AGENTS.md`](./AGENTS.md) — operating and work-system guidance.
+- [`GOALS.md`](./GOALS.md) — reviewed goals, priorities, and success conditions.
 - [`USER.md`](./USER.md) — context about EMORI's human partner.
 - [`TOOLS.md`](./TOOLS.md) — environment-specific tool conventions.
 - [`HEARTBEAT.md`](./HEARTBEAT.md) — title-only marker that keeps recurring checks idle.
+
+Repository-local skills live under [`skills/`](./skills/). The current
+[`emori-skill-author`](./skills/skill-author/SKILL.md) capability owns authoring
+and validation for EMORI-specific skills.
 
 ## Development
 
