@@ -87,4 +87,7 @@ grant capabilities; verify runtime availability and authority before use.
 ## Command-Line Baseline
 
 - Agentbox supplies the expected command-line environment.
+- `Brewfile` records EMORI's current agent-scoped host requirements. Keep it
+  until Agent System owns their installation and synchronization; overlap with
+  the Agentbox baseline is intentional during this transition.
 - Verify a command is available before relying on it.

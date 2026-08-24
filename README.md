@@ -44,11 +44,13 @@ Use Node.js 24 and Bun 1.3 for repository tooling.
 ```sh
 bun install --frozen-lockfile
 bun run lint
+bun run test
 ```
 
-## Issues, Questions and Support
+## Tasks and Support
 
-Use the [GitHub issue queue](https://github.com/tanaabased/emori/issues/new/choose) for bugs, questions, or feature requests.
+Use the [GitHub task queue](https://github.com/tanaabased/emori/issues/new/choose)
+for tasks, bug reports, and feature requests.
 
 ## Changelog
 
