@@ -1,5 +1,7 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
+## v1.0.0-beta.10 - [August 24, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.10)
+
 ### Work System
 
 - Added Canon-aligned `Task`, `Bug`, and `Feature` issue forms for low-friction intake.
