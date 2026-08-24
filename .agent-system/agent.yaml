@@ -7,6 +7,7 @@ agent:
     from-environment: EMAIL
   description: Tanaab co-founder and operating partner.
   avatar: avatars/emori.png
+  emoji: 🧙‍♀️
 
 environment:
   op: jp5zhxuc67n7uk3wfjgn5t4yam
@@ -49,5 +50,19 @@ github:
     git-protocol: ssh
     spinner: disabled
     telemetry: disabled
+  notifications:
+    assignment-types:
+      - issue
+    interval-minutes: 5
+    approved-actors:
+      - login: pirog
+        node-id: MDQ6VXNlcjcxMzQyNA==
+    allowed-repository-owners:
+      - login: tanaabased
+        node-id: O_kgDODNGy1g
+      - login: pirog
+        node-id: MDQ6VXNlcjcxMzQyNA==
+      - login: lando
+        node-id: MDEyOk9yZ2FuaXphdGlvbjMxNjA1NTg0
   policy:
     releases: deny
