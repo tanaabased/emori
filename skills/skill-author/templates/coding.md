@@ -2,6 +2,7 @@
 template_type: coding
 default_category_tag: implementation
 optional_top_level_headings:
+  - '## Deployment'
   - '## Optimization'
 ---
 ---
@@ -59,7 +60,9 @@ metadata:
 
 - Describe how this skill documents the owned code surface.
 - Keep documentation guidance focused on public contracts, user-facing examples, and durable repo-local surfaces that belong to this skill.
-- Point to narrower references or companion skills when README, docs-site, inline API docs, or operational examples have a more specific owner.
+- Link documentation-specific references here when they materially shape the owned surface.
+- Keep `## Bundled Resources` as an inventory, not the only discovery path for documentation guidance.
+- Keep testing artifacts in `## Testing` even when they are README- or Markdown-backed, unless they are explicitly durable user-facing examples.
 - Keep comments and examples sparse enough to clarify the contract without duplicating obvious implementation details.
 
 ## Testing
@@ -68,25 +71,29 @@ metadata:
 - Include one canonical mechanism and one minimal example only when that test pattern materially shapes the skill.
 - Keep specialized or surface-coupled test patterns in narrower companion skills.
 
+## Deployment
+
+- Describe the default deployment or publication lifecycle only when one canonical delivery mechanism materially shapes the owned code surface.
+- Include one canonical mechanism and one minimal example only when that deployment pattern materially shapes the skill.
+- Keep surface-local build, package, artifact, and delivery decisions here; hand independent workflow-graph changes to the workflow owner.
+
 ## GitHub Actions
 
-- Describe the default GitHub Actions validation path for the owned code surface when GHA is the standard CI mechanism.
-- Include one canonical mechanism and one minimal example only when it materially shapes the skill.
-- Do not widen this section into full workflow-topology ownership.
+- Treat this as the automation projection of the skill's owned lifecycle sections, not as a separate owner of testing, linting, deployment, or release doctrine.
+- Reference the applicable lifecycle section and its canonical workflow template instead of repeating their rules or embedding complete workflow YAML.
+- Name each canonical target path under `.github/workflows/` so workflow boundaries and resulting check identities remain stable across repositories.
+- Use descriptive H3 headings only when the skill maps two or more materially different workflow paths; omit them for one-path sections.
+- Keep complete copyable workflow artifacts in `templates/`, surface-specific mechanics with their lifecycle owner, and independent workflow topology with the workflow owner.
 
 ## Optimization
 
-- **Inspect:** Inventory the implementation, owning scopes, behavior,
-  documentation, tests, and CI for the local code surface.
-- **Compare:** Reconcile the observed surface with repository patterns and
-  shared coding canon, including contradictions, duplication, overloaded
-  modules, misplaced code, and dead paths.
-- **Recommend:** Preserve aligned behavior and prioritize only justified
-  reconciliation, deduplication, extraction, movement, tightening, or removal.
-- **Apply:** After authorization, make the smallest coherent code change without
-  unrelated refactoring or language migration.
-- **Verify:** Run the narrowest relevant tests, lint, type-check, build, or smoke
-  checks and re-inspect the changed boundary.
+Use the shared operation lenses—**keep**, **reconcile**, **deduplicate**, **consolidate/merge**, **split**, **extract**, **move**, **tighten**, and **remove**—only where they fit this code surface; do not manufacture changes to satisfy the list.
+
+- **Inspect:** Inventory the existing implementation, owning scopes, public behavior, documentation, tests, and CI for this code surface.
+- **Compare:** Evaluate the observed surface against repository-local patterns and linked coding canon, including contradictions, duplicated logic, overloaded modules, misplaced code, dead paths, and unsupported layers.
+- **Recommend:** Preserve aligned behavior; reconcile conflicting representations; and prioritize justified deduplication, consolidation, splitting, extraction, movement, tightening, or removal.
+- **Apply:** After explicit authorization, make the smallest coherent code change; avoid style-only refactors, forced utility extraction, and unrequested language migration.
+- **Verify:** Run the narrowest relevant tests, lint, type-check, build, or smoke checks, then re-inspect the changed surface for remaining drift.
 
 ## Bundled Resources
 
@@ -97,5 +104,6 @@ metadata:
 
 - Run the narrowest relevant tests, lint, build, or smoke checks for the owned code path.
 - Confirm broad discovery language still funnels toward one dominant implementation pattern when present.
+- Confirm `GitHub Actions` maps the owned lifecycle sections without duplicating their doctrine or embedding a complete copyable workflow artifact.
 - Confirm the lifecycle sections do not introduce multiple materially different validation mechanisms without a clear split decision.
 - Confirm the change did not widen scope or introduce unrelated drift.

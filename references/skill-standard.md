@@ -102,6 +102,12 @@ skill-folder/
   standard, OpenClaw metadata, and section order are deterministic.
 - Supply a skill-specific OpenClaw emoji. Use the repository skill URL as the
   default homepage unless the skill has a different canonical source.
+- Coding skills own their `Documentation` and `Testing` guidance and may retain
+  optional `Deployment` only when one canonical delivery mechanism materially
+  shapes the owned code surface.
+- A coding skill's `GitHub Actions` section projects its owned lifecycle into
+  canonical workflow paths and templates. It does not own or duplicate the
+  underlying documentation, testing, deployment, or release doctrine.
 - Retain and tailor `## Optimization` when the skill owns persistent alignment.
   Remove it for incident-specific, event-specific, or execution-only skills.
 - Apply keep, reconcile, deduplicate, consolidate or merge, split, extract,
@@ -114,6 +120,8 @@ skill-folder/
 - Fix every `[error]`; review `[warn]` and `[manual]` results explicitly.
 - Confirm an EMORI-local skill owns one narrow local surface and does not absorb
   a shared Tanaab capability merely to override precedence.
+- For coding skills, confirm optional `Deployment` has one material mechanism
+  and `GitHub Actions` maps lifecycle sections without duplicating their rules.
 - Search for stale ids, prompts, links, and folder names after identity changes.
 - Use `tanaab-skill-author` instead when the artifact being changed belongs to
   Tanaab Canon.

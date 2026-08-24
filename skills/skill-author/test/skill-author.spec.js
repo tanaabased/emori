@@ -14,7 +14,13 @@ const TYPES = [
   { id: 'generic', headings: ['## Workflow', '## Optimization'] },
   {
     id: 'coding',
-    headings: ['## Documentation', '## Testing', '## GitHub Actions', '## Optimization'],
+    headings: [
+      '## Documentation',
+      '## Testing',
+      '## Deployment',
+      '## GitHub Actions',
+      '## Optimization',
+    ],
   },
   { id: 'integration', headings: ['## Release Workflow', '## Optimization'] },
   { id: 'workflow', headings: ['## Checkpoints', '## Completion Criteria', '## Optimization'] },

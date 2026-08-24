@@ -517,8 +517,9 @@ function buildManualChecks({ expectedType }) {
       'Check that broad discovery language, if present, still funnels toward one dominant implementation pattern.',
       'Check that `Documentation` describes the canonical docs surface for the owned code path.',
       'Check that `Testing` describes one canonical direct-test mechanism with one minimal example.',
-      'Check that `GitHub Actions` describes one canonical GHA validation mechanism with one minimal example.',
-      'Check whether multiple materially different documentation, testing, or GitHub Actions mechanisms mean the skill should split.',
+      'Check that optional `Deployment` is retained only when one canonical delivery mechanism materially shapes the owned code surface.',
+      'Check that `GitHub Actions` maps lifecycle sections to canonical workflow paths and templates without duplicating their doctrine.',
+      'Check whether multiple materially different documentation, testing, deployment, or GitHub Actions mechanisms mean the skill should split.',
     );
   }
 

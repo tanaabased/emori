@@ -63,6 +63,8 @@ ownership of Tanaab Canon.
   `agents/openai.yaml`.
 - Keep each local skill narrowly scoped even when its contract departs from a
   shared skill.
+- Keep coding-skill documentation, testing, optional deployment, and GitHub
+  Actions projection aligned with the local template contract.
 - Prefer references and deterministic scripts over repeated doctrine.
 
 ## Anti-Patterns
@@ -91,8 +93,9 @@ ownership of Tanaab Canon.
 3. Read the matching local template when type shape or metadata needs review.
 4. Use [`./scripts/init-skill.js`](./scripts/init-skill.js) for a clean scaffold
    or patch an existing skill narrowly.
-5. Supply a skill-specific OpenClaw emoji and review whether `Optimization`
-   applies to the persistent surface.
+5. Supply a skill-specific OpenClaw emoji, review whether `Optimization`
+   applies to the persistent surface, and decide whether a coding skill has one
+   material deployment mechanism worth retaining.
 6. Run [`./scripts/validate-skill.js`](./scripts/validate-skill.js), fix every
    error, and review warnings and manual checks explicitly.
 
@@ -141,5 +144,7 @@ ownership of Tanaab Canon.
   skill tree.
 - Confirm local discovery narrows or extends shared capability rather than
   silently replacing it.
+- Confirm coding-skill lifecycle sections and their GitHub Actions projection
+  follow the local template without duplicated doctrine.
 - Confirm retained `Optimization` guidance is surface-specific.
 - Run `validate-skill.js` and fix all errors before finishing.
