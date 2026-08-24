@@ -1,7 +1,7 @@
 # EMORI
 
 <p align="center">
-  <img src="./avatars/emori.png" alt="EMORI" width="180" />
+  <img src="./avatars/emori-circle.png" alt="EMORI" width="180" />
 </p>
 
 ## Overview
