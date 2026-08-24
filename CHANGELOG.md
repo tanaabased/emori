@@ -1,11 +1,23 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
-- Added Canon-aligned GitHub issue forms for `Task`, `Bug`, and `Feature` intake.
-- Added GitHub assignment notifications restricted to approved actors and repository owners.
+### Work System
+
+- Added Canon-aligned `Task`, `Bug`, and `Feature` issue forms for low-friction intake.
+- Added proactive iMessage guidance through OpenClaw's native `message` tool.
+- Added trusted issue-assignment notifications scoped to approved actors and repository owners.
+- Updated Agent System policy to allow managed local Git rewrites while denying force pushes, remote-ref deletion, and releases.
+- Updated task-management, Git, and GitHub routing to preserve complete operations and distinct `@pirog` and `@emoriwan` principals.
+
+### Identity and Direction
+
+- Fixed EMORI's OpenClaw avatar to use the square asset. [#32](https://github.com/tanaabased/emori/pull/32)
+- Refocused EMORI's goals on piloting Canon and Agent System through real repository work.
+- Updated EMORI's public profile with a circular README avatar and Agent System emoji.
+- Updated partner context and references to use `pirog`.
+
+### Maintenance
+
 - Fixed repository linting to ignore private workspace artifacts.
-- Updated EMORI's goals to pilot Canon and Agent System through real repository work.
-- Updated EMORI's public profile with refreshed avatar assets and an Agent System emoji.
-- Updated Git and GitHub guidance to use `@pirog` in Codex and `@emoriwan` through Agent System in OpenClaw.
 
 ## v1.0.0-beta.9 - [August 11, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.9)
 
