@@ -6,6 +6,8 @@
 - Added proactive iMessage guidance through OpenClaw's native `message` tool.
 - Added trusted issue-assignment notifications scoped to approved actors and repository owners.
 - Updated Agent System policy to allow managed local Git rewrites while denying force pushes, remote-ref deletion, and releases.
+- Updated behavioral evaluations for Agent System lifecycle sessions and assignment isolation.
+- Updated EMORI-local coding skill templates and validation coverage to match current Canon lifecycle guidance.
 - Updated task-management, Git, and GitHub routing to preserve complete operations and distinct `@pirog` and `@emoriwan` principals.
 
 ### Identity and Direction
@@ -18,6 +20,7 @@
 ### Maintenance
 
 - Fixed repository linting to ignore private workspace artifacts.
+- Updated release validation to run unit tests before preparing releases.
 
 ## v1.0.0-beta.9 - [August 11, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.9)
 
