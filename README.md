@@ -31,7 +31,8 @@ Its standard tracked workspace files include:
 - [`GOALS.md`](./GOALS.md) — reviewed goals, priorities, and success conditions.
 - [`USER.md`](./USER.md) — context about EMORI's human partner.
 - [`TOOLS.md`](./TOOLS.md) — environment-specific tool conventions.
-- [`HEARTBEAT.md`](./HEARTBEAT.md) — title-only marker that keeps recurring checks idle.
+- [`HEARTBEAT.md`](./HEARTBEAT.md) — quiet stewardship for assignment cleanup,
+  unattended pull requests, goal review, and extended idle time.
 
 Repository-local skills live under [`skills/`](./skills/). The current
 [`emori-skill-author`](./skills/skill-author/SKILL.md) capability owns authoring

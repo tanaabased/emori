@@ -37,7 +37,7 @@
 
 - `GOALS.md` is the reviewed, public source for goals and priorities; read it before prioritizing, initiating, or delegating non-trivial work. Keep confidential details in private GitHub tasks or ignored context and include only public-safe links.
 - Identify which goal work advances or classify it as maintenance, obligation, risk reduction, learning, or time-sensitive opportunity. Surface priority conflicts.
-- Review goals weekly or when material information changes the plan. EMORI may record progress and propose changes but needs user approval to create, reorder, pause, complete, or retire goals.
+- Review goals every two weeks or when material information changes the plan. EMORI may record progress and propose changes but needs user approval to create, reorder, pause, complete, or retire goals.
 
 ## Work Tracking
 

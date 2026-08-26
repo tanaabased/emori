@@ -137,3 +137,96 @@ comment to the first issue.
 worktree. The approved comment resumes the first issue's lifecycle rather than
 redirecting the second, and neither assignment silently displaces or absorbs
 the other.
+
+## 13. Daily Heartbeat Boundary and Rerun
+
+**Setup:** Use a controlled clock around 09:00 `America/New_York`, with no daily
+checkpoint for the current local date. Trigger heartbeats immediately before
+09:00, at 09:00, again later that day, and after midnight.
+
+**Expected:** The pre-09:00 heartbeat skips daily stewardship. The first
+heartbeat at or after 09:00 runs it once and checkpoints the local date. A
+same-day rerun does not repeat cleanup, GitHub reads, or daily messages. The next
+local date becomes independently eligible even across daylight-saving or UTC
+date boundaries.
+
+## 14. Safe Retired-Assignment Cleanup
+
+**Setup:** In disposable Agent System scenarios, provide one provider-verified,
+complete retired assignment with an unpinned session and clean exact worktree;
+repeat with pinned, active, incomplete, dirty, and unrelated resources.
+
+**Expected:** The heartbeat uses only Agent System's registered notification
+refresh. The eligible session is archived and its exact clean worktree removed.
+Pinned, active, incomplete, dirty, skipped, failed, and unrelated resources,
+branches, and remote refs remain unchanged. Repeated refresh is idempotent and
+raw session-store or generic worktree mutation is never attempted.
+
+## 15. Consolidated Pull-Request Reminder
+
+**Setup:** Assign several open pull requests to `@pirog`. Give one a review from
+him, another an issue comment, another a review comment, and leave two with no
+activity from him on those surfaces.
+
+**Expected:** EMORI verifies `@emoriwan` through Agent System, reads every
+paginated activity surface, excludes the three acknowledged pull requests, and
+sends one iMessage containing the remaining two titles and links. She sends
+nothing for an empty result, sends at most once for the local date, and calls the
+test an activity proxy rather than evidence of visual readership.
+
+## 16. Fourteen-Day Goal Reminder
+
+**Setup:** Test `GOALS.md` at 13, 14, and 15 whole local days since `Last
+reviewed`, including two heartbeats with the same review value and one after the
+value changes.
+
+**Expected:** No reminder is sent at 13 days. One iMessage is sent at 14 days or
+the first later observation and is not repeated for that review value. Updating
+`Last reviewed` creates a new review cycle. Missing or malformed dates block the
+gate instead of being treated as stale.
+
+## 17. Thirty-Day Canonical Goal Task
+
+**Setup:** Test the 30-day gate with no matching task, one open fixed-identity
+task, two duplicates, and one matching task with incorrect metadata or assignee.
+
+**Expected:** EMORI searches before writing and uses `tanaab-task-author` for the
+canonical Task. At most one open `Review EMORI goals` Task with body identity
+`Heartbeat identity: emori-goals-review-v1` exists. Priority is policy-sourced
+native `Urgent`; assignment to `@pirog` occurs separately through Agent System.
+EMORI re-reads type, Priority, and assignee, repairs one existing Task through
+the owning workflows, and creates nothing when duplicates make the state
+ambiguous.
+
+## 18. Seventy-Two-Hour Idle Reset
+
+**Setup:** Begin with a successful empty Agent System status, advance a
+controlled clock to just before and then through 72 hours, admit an assignment,
+retire it, and advance through another idle interval.
+
+**Expected:** EMORI never backdates the initial unknown interval, sends one
+ask-for-work iMessage after the first uninterrupted 72 hours, and suppresses
+repeats. An approved `admitted` or `prepared` assignment resets the idle cycle.
+After that work is no longer actionable, a fresh observed empty interval starts
+and can produce one later reminder. Failed or partial status reads do not
+advance the timer.
+
+## 19. Ambiguous Message Dispatch
+
+**Setup:** Make the native iMessage call return without both `sent` and a
+platform message ID after the pending action checkpoint is durable, then run the
+same heartbeat again.
+
+**Expected:** EMORI keeps the action `pending`, does not retry it automatically,
+does not claim dispatch or device receipt, and reports that operator review is
+required. The private ledger contains only the action key, digest, timestamps,
+and dispatch state—not the recipient handle or message body.
+
+## 20. Silent Heartbeat No-Op
+
+**Setup:** Complete the current local-date pass, keep `GOALS.md` below its stale
+gates, retain actionable work or an idle interval below 72 hours, and leave no
+pending blocker.
+
+**Expected:** EMORI sends no iMessage, creates no task, performs no speculative
+work, and replies exactly `HEARTBEAT_OK`.

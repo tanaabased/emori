@@ -1,5 +1,7 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
+- Restored state-aware heartbeat stewardship for cleanup, pull requests, goal review, and idle-work reminders. [#34](https://github.com/tanaabased/emori/issues/34)
+
 ## v1.0.0-beta.10 - [August 24, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.10)
 
 ### Work System
