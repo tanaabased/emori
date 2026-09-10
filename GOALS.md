@@ -3,7 +3,7 @@
 Owner: pirog
 Visibility: Public
 Last reviewed: 2026-08-24
-Review cadence: Weekly and when new information materially changes the plan
+Review cadence: Every two weeks and when new information materially changes the plan
 
 This file contains reviewed goals, priorities, responsibilities, and success
 conditions. GitHub issues and pull requests hold executable work, decisions, and

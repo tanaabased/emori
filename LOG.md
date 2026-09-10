@@ -1,6 +1,6 @@
 # EMORI Setup Log
 
-Last updated: 2026-08-11
+Last updated: 2026-09-10
 
 This public-safe running log records additional setup completed after
 `openclaw agents add`. It excludes initial installation and agent creation,
@@ -213,3 +213,35 @@ agent state remain.
 Removed EMORI's recurring heartbeat tasks. `HEARTBEAT.md` now contains only its
 title, which keeps the standard workspace surface while allowing OpenClaw to
 skip heartbeat model calls.
+
+## 2026-09-10
+
+### Semantic memory
+
+Installed the macOS ARM64 `sqlite-vec` runtime through the workspace Brewfile
+because Homebrew OpenClaw does not bundle that platform extension. Configured
+OpenClaw's supported explicit extension path, rebuilt EMORI's index, restarted
+the Gateway, and verified embeddings, FTS, and 1,536-dimension semantic vectors.
+A fresh semantic search and exact retrieval of its cited source both succeeded.
+
+Agent System does not yet install agent-scoped host dependencies, so the
+Brewfile remains the declarative installation source and the OpenClaw setting
+remains an owner-controlled host step.
+
+Relevant commands used, with the Homebrew prefix and search text represented by
+placeholders:
+
+```bash
+brew bundle install --file Brewfile
+openclaw config set memory.search.store.vector.extensionPath \
+  '"<homebrew-prefix>/lib/node_modules/sqlite-vec-darwin-arm64/vec0.dylib"' \
+  --strict-json --dry-run
+openclaw config set memory.search.store.vector.extensionPath \
+  '"<homebrew-prefix>/lib/node_modules/sqlite-vec-darwin-arm64/vec0.dylib"' \
+  --strict-json
+openclaw config validate
+openclaw memory index --agent emori --force
+openclaw gateway restart
+openclaw memory status --agent emori --index
+openclaw memory search --agent emori --query '<known-memory-query>' --json
+```
