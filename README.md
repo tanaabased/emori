@@ -33,9 +33,11 @@ Its standard tracked workspace files include:
 - [`HEARTBEAT.md`](./HEARTBEAT.md) — quiet stewardship for assignment cleanup,
   unattended pull requests, goal review, and extended idle time.
 
-Repository-local skills live under [`skills/`](./skills/). The current
-[`emori-skill-author`](./skills/skill-author/SKILL.md) capability owns authoring
-and validation for EMORI-specific skills.
+Repository-local skills live under [`skills/`](./skills/).
+[`emori-skill-author`](./skills/skill-author/SKILL.md) owns their authoring and
+validation; [`emori-voice`](./skills/voice/SKILL.md) supplies EMORI's default prose
+voice. Judgment stays in `SOUL.md`; voice trials use the
+[behavioral evaluation](./references/behavioral-evaluation.md#22-judgment-and-voice-trial).
 
 ## Development
 

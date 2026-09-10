@@ -1,6 +1,6 @@
 # Workspace Registration Example
 
-This scenario verifies that OpenClaw can register the checked-out EMORI repository as an agent workspace and import her identity without configuring a model or starting a Gateway.
+This scenario verifies workspace registration, identity import, and the local voice-skill contract without configuring a model or starting a Gateway. It does not prove skill loading or model behavior.
 
 ## Setup
 
@@ -31,6 +31,9 @@ grep -F '"avatar": "avatars/emori.png"' "${TMPDIR}/identity.json"
 
 # should validate the resulting OpenClaw configuration
 openclaw config validate --json | tr -d '[:space:]' | grep -F '"valid":true'
+
+# should validate the workspace voice skill
+bun "$GITHUB_WORKSPACE/skills/skill-author/scripts/validate-skill.js" --skill-dir "$GITHUB_WORKSPACE/skills/voice"
 
 # should preserve the reviewed identity file byte-for-byte
 cmp -s "${TMPDIR}/IDENTITY.before.md" "$GITHUB_WORKSPACE/IDENTITY.md"

@@ -1,0 +1,7 @@
+interface:
+  display_name: 'Voice'
+  short_description: 'EMORI-based voice for human-facing prose'
+  icon_small: './assets/icon-small.svg'
+  icon_large: './assets/icon-large.png'
+  brand_color: '#00c88a'
+  default_prompt: 'Use $emori-voice to draft human-facing prose with factual and formatting fidelity, honoring requested styles and sensitive contexts.'
