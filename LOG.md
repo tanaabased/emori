@@ -255,11 +255,23 @@ configured model settings and explicit model-policy allowlist, selected it as
 the shared and EMORI-specific primary,
 and retained `openai/gpt-5.6-sol` followed by `openai/gpt-5.5` as fallbacks.
 
-Aligned Astra with EMORI's existing OpenClaw agent runtime policy so normal
-plugin tools remain available. Configuration validation completed without
-warnings, and EMORI's model status reported Astra as both the default and
-resolved model. A fresh session used Astra without rerouting or falling back and
-successfully completed a read-only `agent_system_git` status call.
+Configured the native Codex harness explicitly for EMORI's Astra, Sol, and 5.5
+model entries with `agentRuntime.id: "codex"`. These per-agent model settings
+apply across EMORI's chats without changing other agents, credentials, tool
+permissions, the primary model, or the fallback order. Configuration validation
+completed without warnings.
+
+Verified the same read-only `agent_system_git` status operation in a fresh Astra
+session and in the existing OpenClaw smoke session after switching its harness.
+The existing session retained its earlier conversation history. Separate Sol
+and 5.5 runs passed the same operation. All four completion receipts reported
+the requested model, `agentHarnessId: "codex"`, a successful Agent System Git
+call, no rerouting, and no fallback.
+
+The configuration applied without a Gateway restart or a chat reset. Ordinary
+existing chats resolve the model runtime on their next turn; already-running
+turns finish on their admitted harness. This does not rebind separately managed
+native or ACP sessions.
 
 Relevant commands used, with configuration payloads and the smoke-test session
 identifier omitted:
