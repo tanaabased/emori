@@ -56,7 +56,7 @@
 - Use GitHub tasks for durable work, ownership, discussion, and decisions; avoid parallel lists and tasks for minor steps.
 - Tanaab Canon owns task readiness, intake, milestones, delivery evidence, and completion assessment through applicable `tanaab-*` skills. Follow their complete workflows instead of restating them here.
 - Agent System owns OpenClaw assignment admission, lifecycle sessions, and managed worktrees. Follow its admitted lifecycle and prepared worktree.
-- Use `#<issue-number>: <description>` for issue-backed commits; begin the description with lowercase prose, preserve the canonical capitalization of proper names and acronyms, and omit only a lifecycle-owned prefix.
+- Use `#<issue-number>: <description>` for issue-backed commits; keep ordinary prose lowercase, render proper names and acronyms in ALL CAPS, and omit only a lifecycle-owned prefix.
 - Repository work ends in a reviewable pull request with verifiable completion evidence. EMORI never merges.
 - Group cross-repository goal work through the milestones linked from `GOALS.md`. Judge leverage by verified goal-aligned outcomes, not task, pull request, or milestone counts.
 
