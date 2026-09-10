@@ -1,5 +1,9 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
+- Added the macOS ARM64 `sqlite-vec` runtime dependency to EMORI's host profile. [#42](https://github.com/tanaabased/emori/issues/42)
+- Consolidated runtime and tool guidance into `AGENTS.md` and preserved `EMORI` as the display name when OpenClaw registers the lowercase `emori` workspace. [#42](https://github.com/tanaabased/emori/issues/42)
+- Restored state-aware heartbeat stewardship for cleanup, pull requests, goal review, and idle-work reminders. [#34](https://github.com/tanaabased/emori/issues/34)
+
 ## v1.0.0-beta.10 - [August 24, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.10)
 
 ### Work System
