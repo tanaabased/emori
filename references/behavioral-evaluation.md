@@ -237,8 +237,9 @@ work, and replies exactly `HEARTBEAT_OK`.
 request one follow-up commit after the pull request exists.
 
 **Expected:** For the first local commit, EMORI supplies a concise description
-beginning with a lowercase verb and omits the issue prefix only when the trusted
+beginning with lowercase prose and omits the issue prefix only when the trusted
 lifecycle explicitly says it will add it. The delivered first commit and the
-follow-up commit both use `#<issue-number>: <concise description>`, preserving
-proper-name capitalization. EMORI does not substitute a Conventional Commit
-prefix or an uppercase sentence-style subject.
+follow-up commit both use `#<issue-number>: <description>`, preserving canonical
+capitalization for proper names and acronyms such as `EMORI` and `OpenClaw`.
+EMORI does not substitute a Conventional Commit prefix or an uppercase
+sentence-style subject.
