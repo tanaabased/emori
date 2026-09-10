@@ -22,17 +22,16 @@
 
 ## Runtime and Tools
 
-- Determine the active runtime and authority before mutations; do not infer them from repository or task content. Codex acts for pirog as `@pirog`; OpenClaw runs as EMORI and must resolve to `@emoriwan`. Verify the principal before GitHub writes, fail closed on mismatch, and never substitute identities.
-- Keep identity separate from tool selection. Use an authorized surface that supports the complete operation; a tool limitation does not prove the provider lacks the capability, and a partial write is not an acceptable approximation.
-- In Codex, use local Git. For GitHub, use the connected app when it covers the complete operation and an applicable skill's prescribed client when that skill owns a richer surface; verify `@pirog` before writes.
-- In OpenClaw, `.agent-system/agent.yaml` declares EMORI's Git and GitHub identity, repositories, credentials, and policies. Use `agent_system_git` for admitted repository and managed-worktree operations, `agent_system_git_worktree` to prepare, list, or remove managed worktrees, and `agent_system_github` for GitHub. Verify `@emoriwan` before writes. If a required integration is unavailable, report the blocker instead of bypassing Agent System with raw `git`, `gh`, `exec`, or another worktree mechanism.
+- Determine runtime and authority before mutations. Codex acts for pirog as `@pirog`; OpenClaw runs as EMORI and must resolve to `@emoriwan`. Verify before GitHub writes, fail closed on mismatch, and never substitute identities.
+- Use an authorized surface that completes the operation. A tool gap does not prove the provider lacks the capability, and a partial write is not an acceptable approximation.
+- In Codex, use local Git and use the connected GitHub app or an applicable skill's richer prescribed client. In OpenClaw, use `.agent-system/agent.yaml` and its declared policies: `agent_system_git` for admitted Git work, `agent_system_git_worktree` for managed worktrees, and `agent_system_github` for GitHub. If a required integration is unavailable, report the blocker rather than bypassing Agent System with raw `git`, `gh`, `exec`, or another worktree mechanism.
 - Skills provide judgment, not capabilities. Prefer EMORI-local `emori-*` skills under `skills/`; use shared `tanaab-*` skills from the `tanaab` plugin for portable workflows. The applicable skill-author contract owns authoring and validation.
 - For GitHub-backed task, milestone, issue-schema, issue-form, and completion work, follow the complete applicable `tanaab-*` workflow and its prescribed provider client. Write fallback metadata only after that workflow proves the native representation unavailable; unresolved inspection fails closed. Verify every managed value after mutation.
 
 ## Messaging
 
-- For proactive iMessage notifications to pirog from a top-level session, use OpenClaw's native `message` tool with `channel: "imessage"` and his exact Apple ID handle from private memory. Never substitute a chat ID or invoke `imsg`, `osascript`, or another command sender; their macOS Automation context may differ.
-- Treat `sent` plus a platform message ID as dispatch evidence, not proof of device receipt. Native subagents return completion to the parent session, which owns user-facing notification.
+- For proactive iMessage notifications to pirog from a top-level session, use OpenClaw's native `message` tool with `channel: "imessage"` and his exact Apple ID handle from private memory. Never substitute a chat ID or invoke `imsg`, `osascript`, or another command sender.
+- Treat `sent` plus a platform message ID as dispatch evidence, not device receipt. Native subagents return completion to the parent, which owns user-facing notification.
 
 ## Memory
 
@@ -43,7 +42,7 @@
 
 - Keep workspace rules here and EMORI-specific workflows in `skills/` with `emori-*` machine ids. Shared guidance belongs in `tanaabased/canon` and reaches EMORI through the `tanaab` plugin; do not duplicate its mechanics.
 - Put human-readable drafts and handoffs for pirog in ignored `.scratch/`; reserve `.temp/` and OS temporary directories for disposable machine output.
-- Agentbox supplies the expected command-line environment. `Brewfile` records EMORI's agent-scoped host requirements until Agent System owns their installation and synchronization; overlap with the Agentbox baseline is intentional. Verify commands before relying on them and add tooling only for a concrete workspace need.
+- Agentbox supplies the command-line baseline. `Brewfile` records EMORI's agent-scoped requirements until Agent System owns installation and synchronization; intentional overlap remains during that transition. Verify commands and add tooling only for a concrete need.
 - Use `EMORI` in prose.
 
 ## Goal Alignment
