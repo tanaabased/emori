@@ -245,3 +245,33 @@ openclaw gateway restart
 openclaw memory status --agent emori --index
 openclaw memory search --agent emori --query '<known-memory-query>' --json
 ```
+
+### GPT-6 Astra default
+
+Verified that the installed OpenClaw version is 2026.9.3, the Gateway is
+reachable and running, and the authenticated OpenAI catalog exposed
+`openai/gpt-6-astra` before changing the configuration. Added Astra to the
+configured model settings and explicit model-policy allowlist, selected it as
+the shared and EMORI-specific primary,
+and retained `openai/gpt-5.6-sol` followed by `openai/gpt-5.5` as fallbacks.
+
+Aligned Astra with EMORI's existing OpenClaw agent runtime policy so normal
+plugin tools remain available. Configuration validation completed without
+warnings, and EMORI's model status reported Astra as both the default and
+resolved model. A fresh session used Astra without rerouting or falling back and
+successfully completed a read-only `agent_system_git` status call.
+
+Relevant commands used, with configuration payloads and the smoke-test session
+identifier omitted:
+
+```bash
+openclaw --version
+openclaw update status
+openclaw models list --provider openai --all --json
+openclaw config patch --stdin --dry-run --json
+openclaw config patch --stdin
+openclaw config validate --json
+openclaw models status --agent emori --json
+openclaw agent --agent emori --session-id '<astra-smoke-session>' \
+  --message '<read-only Agent System smoke>' --thinking low --json
+```
