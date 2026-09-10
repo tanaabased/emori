@@ -36,8 +36,7 @@ Its standard tracked workspace files include:
 Repository-local skills live under [`skills/`](./skills/).
 [`emori-skill-author`](./skills/skill-author/SKILL.md) owns their authoring and
 validation; [`emori-voice`](./skills/voice/SKILL.md) supplies EMORI's default prose
-voice. Judgment stays in `SOUL.md`; voice trials use the
-[behavioral evaluation](./references/behavioral-evaluation.md#22-judgment-and-voice-trial).
+voice. Judgment stays in `SOUL.md`.
 
 ## Development
 

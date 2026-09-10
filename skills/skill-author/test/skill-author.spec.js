@@ -1,6 +1,16 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  copyFile,
+  cp,
+  mkdir,
+  mkdtemp,
+  readFile,
+  readdir,
+  rename,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -56,8 +66,7 @@ function initArgs({ outputDir, type = 'generic', homepage = 'https://example.com
     '🧪',
     '--homepage',
     homepage,
-    '--output-dir',
-    outputDir,
+    ...(outputDir ? ['--output-dir', outputDir] : []),
   ];
 }
 
@@ -108,6 +117,62 @@ describe('skills/skill-author', function () {
       assert.match(validated.stdout, /^status: ok$/m);
     });
   }
+
+  it('should reuse shared artwork for workspace skills without copying icons', async () => {
+    const workspace = path.join(tempDir, 'workspace');
+    const skillsDir = path.join(workspace, 'skills');
+    const authorDir = path.join(skillsDir, 'skill-author');
+    const assetsDir = path.join(workspace, 'assets');
+    await cp(SKILL_DIR, authorDir, { recursive: true });
+    await mkdir(assetsDir);
+    await Promise.all([
+      writeFile(path.join(workspace, 'AGENTS.md'), '# Workspace\n'),
+      writeFile(path.join(workspace, 'IDENTITY.md'), '# Identity\n'),
+      copyFile(
+        path.join(REPO_ROOT, 'assets', 'composer-icon.svg'),
+        path.join(assetsDir, 'composer-icon.svg'),
+      ),
+      copyFile(
+        path.join(REPO_ROOT, 'assets', 'icon-large.png'),
+        path.join(assetsDir, 'icon-large.png'),
+      ),
+    ]);
+
+    const initialized = runBun(path.join(authorDir, 'scripts', 'init-skill.js'), initArgs({}));
+    assert.equal(initialized.status, 0, commandOutput(initialized));
+
+    const skillDir = path.join(skillsDir, 'contract-generic');
+    const metadata = await readFile(path.join(skillDir, 'agents', 'openai.yaml'), 'utf8');
+    assert.match(metadata, /icon_small: "\.\.\/\.\.\/assets\/composer-icon\.svg"/);
+    assert.match(metadata, /icon_large: "\.\.\/\.\.\/assets\/icon-large\.png"/);
+    assert.ok(!(await readdir(skillDir)).includes('assets'));
+
+    const validated = runBun(VALIDATE_SCRIPT, ['--skill-dir', skillDir]);
+    assert.equal(validated.status, 0, commandOutput(validated));
+  });
+
+  it('should keep standalone exports portable with bundled artwork', async () => {
+    const outputDir = path.join(tempDir, 'exports');
+    const initialized = runBun(INIT_SCRIPT, initArgs({ outputDir }));
+    assert.equal(initialized.status, 0, commandOutput(initialized));
+
+    const movedSkillDir = path.join(tempDir, 'emori-contract-generic');
+    await rename(path.join(outputDir, 'emori-contract-generic'), movedSkillDir);
+    const metadata = await readFile(path.join(movedSkillDir, 'agents', 'openai.yaml'), 'utf8');
+    assert.match(metadata, /icon_small: "\.\/assets\/icon-small\.svg"/);
+    assert.match(metadata, /icon_large: "\.\/assets\/icon-large\.png"/);
+    assert.deepEqual(
+      await readFile(path.join(movedSkillDir, 'assets', 'icon-small.svg')),
+      await readFile(path.join(REPO_ROOT, 'assets', 'composer-icon.svg')),
+    );
+    assert.deepEqual(
+      await readFile(path.join(movedSkillDir, 'assets', 'icon-large.png')),
+      await readFile(path.join(REPO_ROOT, 'assets', 'icon-large.png')),
+    );
+
+    const validated = runBun(VALIDATE_SCRIPT, ['--skill-dir', movedSkillDir]);
+    assert.equal(validated.status, 0, commandOutput(validated));
+  });
 
   it('should reject a non-HTTPS OpenClaw homepage', () => {
     const initialized = runBun(

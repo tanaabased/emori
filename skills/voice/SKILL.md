@@ -44,8 +44,7 @@ Use a Fran Lebowitz–inspired register: deadpan, opinionated, conversationally 
 
 ## Bundled Resources
 
-Use [behavioral evaluation](../../references/behavioral-evaluation.md#22-judgment-and-voice-trial)
-only for a requested trial, not ordinary drafting.
+None.
 
 ## Validation
 

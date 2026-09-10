@@ -78,7 +78,10 @@ skill-folder/
   `icon_large` beneath `interface`.
 - `[error]` `interface.short_description` must start with `EMORI-based`, the
   prompt must mention `$<machine-id>`, and the brand color must be `#00c88a`.
-- `[error]` Interface icon paths must be relative and resolve within the skill.
+- `[error]` Interface icon paths are relative to the skill directory and must
+  resolve. Workspace skills reuse `../../assets/composer-icon.svg` and
+  `../../assets/icon-large.png`; keep only distinct skill-specific artwork in
+  local `assets/`. Standalone exports bundle their icons to remain portable.
 
 ## Resources and Code
 

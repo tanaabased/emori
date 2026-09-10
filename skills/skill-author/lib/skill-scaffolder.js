@@ -42,12 +42,12 @@ function quoteYaml(value) {
   return `"${String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
 }
 
-function makeOpenAiYaml({ displayName, shortDescription, defaultPrompt }) {
+function makeOpenAiYaml({ displayName, shortDescription, defaultPrompt, iconSmall, iconLarge }) {
   return `interface:
   display_name: ${quoteYaml(displayName)}
   short_description: ${quoteYaml(shortDescription)}
-  icon_small: "./assets/icon-small.svg"
-  icon_large: "./assets/icon-large.png"
+  icon_small: ${quoteYaml(iconSmall)}
+  icon_large: ${quoteYaml(iconLarge)}
   brand_color: ${quoteYaml(EMORI_SKILL_BRAND_COLOR)}
   default_prompt: ${quoteYaml(defaultPrompt)}
 `;
@@ -130,9 +130,9 @@ export async function initializeSkill(options) {
 
   const tags = [EMORI_SKILL_OWNER, type, categoryTag];
   const validationTargetDir = path.resolve(options.outputDir ?? SKILLS_ROOT_DIR);
+  const usesWorkspaceAssets = validationTargetDir === SKILLS_ROOT_DIR;
   const pluginRootPath = path.resolve(validationTargetDir, '..', '.codex-plugin', 'plugin.json');
-  const usesUnprefixedFolder =
-    validationTargetDir === SKILLS_ROOT_DIR || (await pathExists(pluginRootPath));
+  const usesUnprefixedFolder = usesWorkspaceAssets || (await pathExists(pluginRootPath));
   const folderName = usesUnprefixedFolder ? stripSkillPrefix(skillId) : skillId;
   const skillDir = path.resolve(validationTargetDir, folderName);
   const agentsDir = path.join(skillDir, 'agents');
@@ -154,7 +154,9 @@ export async function initializeSkill(options) {
   }
 
   await mkdir(agentsDir, { recursive: true });
-  await mkdir(assetsDir, { recursive: true });
+  if (!usesWorkspaceAssets) {
+    await mkdir(assetsDir, { recursive: true });
+  }
 
   const skillContent = renderSkillTemplate(typeDefinition.templateBody, {
     description: normalizedDescription,
@@ -172,14 +174,20 @@ export async function initializeSkill(options) {
   const openAiContent = makeOpenAiYaml({
     defaultPrompt,
     displayName,
+    iconLarge: usesWorkspaceAssets ? '../../assets/icon-large.png' : './assets/icon-large.png',
+    iconSmall: usesWorkspaceAssets ? '../../assets/composer-icon.svg' : './assets/icon-small.svg',
     shortDescription: makeShortDescription(normalizedDescription),
   });
 
   await Promise.all([
     writeFile(path.join(skillDir, 'SKILL.md'), skillContent, 'utf8'),
     writeFile(path.join(agentsDir, 'openai.yaml'), openAiContent, 'utf8'),
-    copyFile(getBundledSmallIconPath(), path.join(assetsDir, 'icon-small.svg')),
-    copyFile(getBundledLargeIconPath(), path.join(assetsDir, 'icon-large.png')),
+    ...(usesWorkspaceAssets
+      ? []
+      : [
+          copyFile(getBundledSmallIconPath(), path.join(assetsDir, 'icon-small.svg')),
+          copyFile(getBundledLargeIconPath(), path.join(assetsDir, 'icon-large.png')),
+        ]),
   ]);
 
   const result = await validateSkillDir(skillDir, {

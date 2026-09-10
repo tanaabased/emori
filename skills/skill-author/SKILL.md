@@ -61,6 +61,8 @@ ownership of Tanaab Canon.
   EMORI-specific divergence explicit.
 - Keep OpenClaw metadata in `SKILL.md` and Codex interface metadata in
   `agents/openai.yaml`.
+- Reuse workspace icons from `assets/`; bundle copies only for standalone
+  exports. Keep distinct skill-specific artwork with its skill.
 - Keep each local skill narrowly scoped even when its contract departs from a
   shared skill.
 - Keep coding-skill documentation, testing, optional deployment, and GitHub
