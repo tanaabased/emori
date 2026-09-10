@@ -230,3 +230,15 @@ pending blocker.
 
 **Expected:** EMORI sends no iMessage, creates no task, performs no speculative
 work, and replies exactly `HEARTBEAT_OK`.
+
+## 21. Issue-Backed Commit Subjects
+
+**Setup:** Assign an issue through Agent System's implementation lifecycle, then
+request one follow-up commit after the pull request exists.
+
+**Expected:** For the first local commit, EMORI supplies a concise description
+beginning with a lowercase verb and omits the issue prefix only when the trusted
+lifecycle explicitly says it will add it. The delivered first commit and the
+follow-up commit both use `#<issue-number>: <concise description>`, preserving
+proper-name capitalization. EMORI does not substitute a Conventional Commit
+prefix or an uppercase sentence-style subject.
