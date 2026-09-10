@@ -248,42 +248,9 @@ openclaw memory search --agent emori --query '<known-memory-query>' --json
 
 ### GPT-6 Astra default
 
-Verified that the installed OpenClaw version is 2026.9.3, the Gateway is
-reachable and running, and the authenticated OpenAI catalog exposed
-`openai/gpt-6-astra` before changing the configuration. Added Astra to the
-configured model settings and explicit model-policy allowlist, selected it as
-the shared and EMORI-specific primary,
-and retained `openai/gpt-5.6-sol` followed by `openai/gpt-5.5` as fallbacks.
-
-Configured the native Codex harness explicitly for EMORI's Astra, Sol, and 5.5
-model entries with `agentRuntime.id: "codex"`. These per-agent model settings
-apply across EMORI's chats without changing other agents, credentials, tool
-permissions, the primary model, or the fallback order. Configuration validation
-completed without warnings.
-
-Verified the same read-only `agent_system_git` status operation in a fresh Astra
-session and in the existing OpenClaw smoke session after switching its harness.
-The existing session retained its earlier conversation history. Separate Sol
-and 5.5 runs passed the same operation. All four completion receipts reported
-the requested model, `agentHarnessId: "codex"`, a successful Agent System Git
-call, no rerouting, and no fallback.
-
-The configuration applied without a Gateway restart or a chat reset. Ordinary
-existing chats resolve the model runtime on their next turn; already-running
-turns finish on their admitted harness. This does not rebind separately managed
-native or ACP sessions.
-
-Relevant commands used, with configuration payloads and the smoke-test session
-identifier omitted:
-
-```bash
-openclaw --version
-openclaw update status
-openclaw models list --provider openai --all --json
-openclaw config patch --stdin --dry-run --json
-openclaw config patch --stdin
-openclaw config validate --json
-openclaw models status --agent emori --json
-openclaw agent --agent emori --session-id '<astra-smoke-session>' \
-  --message '<read-only Agent System smoke>' --thinking low --json
-```
+On OpenClaw 2026.9.3, enabled GPT-6 Astra as the shared and EMORI default,
+with Sol and 5.5 as fallbacks. Restored the native Codex harness for all three
+EMORI models. Configuration validation and Agent System Git checks passed,
+including an existing-session transition with history preserved. No Gateway
+restart or chat reset was needed. Detailed evidence is in
+[PR #47](https://github.com/tanaabased/emori/pull/47).
