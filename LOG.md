@@ -245,3 +245,12 @@ openclaw gateway restart
 openclaw memory status --agent emori --index
 openclaw memory search --agent emori --query '<known-memory-query>' --json
 ```
+
+### GPT-6 Astra default
+
+On OpenClaw 2026.9.3, enabled GPT-6 Astra as the shared and EMORI default,
+with Sol and 5.5 as fallbacks. Restored the native Codex harness for all three
+EMORI models. Configuration validation and Agent System Git checks passed,
+including an existing-session transition with history preserved. No Gateway
+restart or chat reset was needed. Detailed evidence is in
+[PR #47](https://github.com/tanaabased/emori/pull/47).
