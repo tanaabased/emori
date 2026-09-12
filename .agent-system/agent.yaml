@@ -57,6 +57,7 @@ github:
     approved-actors:
       - login: pirog
         node-id: MDQ6VXNlcjcxMzQyNA==
+        operator-owner: true
     allowed-repository-owners:
       - login: tanaabased
         node-id: O_kgDODNGy1g
