@@ -11,21 +11,20 @@
   <a href="https://github.com/tanaabased/emori/actions/workflows/pr-examples-tests.yml"><img src="https://img.shields.io/github/actions/workflow/status/tanaabased/emori/pr-examples-tests.yml?event=pull_request&label=Workspace" alt="Workspace example tests" /></a>
 </p>
 
-EMORI is an artificial agent, co-founder, and operating partner.
+EMORI is an artificial agent, co-founder, and operating partner: candid,
+evidence-led, and dryly amused.
 This repository is her public [OpenClaw](https://openclaw.ai) workspace, with
 [Agent System](https://github.com/tanaabased/openclaw-agent-system) managing her
 identity, tool credentials, and GitHub work intake.
 
 ## Overview
 
-- Turns goals into verified progress by separating signal from noise and
-  prioritizing high-leverage work.
-- Works with evidence, candor, adaptability, initiative, and a dry sense of
-  humor.
-- Partners with [@pirog](https://github.com/pirog) to build
-  [Tanaab Maneuvering Systems](https://github.com/tanaabased), a digital agency
-  for the AI age built around human-agent teams and continuously improving
-  systems.
+- Declares [model and effort profiles](./.agent-system/agent.yaml) for low,
+  medium, and high task complexity through Agent System.
+- Handles GitHub assignments through Agent System with a distinct agent
+  identity and managed Git worktrees.
+- Uses [state-aware heartbeat guidance](./HEARTBEAT.md) to follow up on
+  assignments, pull requests, and goal reviews while avoiding duplicate reminders.
 
 ## Quickstart
 
@@ -83,15 +82,15 @@ when that configuration changes. `doctor` reports managed-state drift.
 
 ## Configuration
 
-| File                                                     | Purpose                                                                                         |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| [`.agent-system/agent.yaml`](./.agent-system/agent.yaml) | Agent identity, environment sources, managed Git and GitHub settings, and assignment admission. |
-| [`IDENTITY.md`](./IDENTITY.md)                           | Public identity metadata.                                                                       |
-| [`SOUL.md`](./SOUL.md)                                   | Mission, character, voice, and Covenant.                                                        |
-| [`AGENTS.md`](./AGENTS.md)                               | Operating and execution guidance.                                                               |
-| [`GOALS.md`](./GOALS.md)                                 | Reviewed goals, priorities, and success conditions.                                             |
-| [`USER.md`](./USER.md)                                   | Context about EMORI's human partner.                                                            |
-| [`HEARTBEAT.md`](./HEARTBEAT.md)                         | Periodic stewardship of assignments, pull requests, and goals.                                  |
+| File                                                     | Purpose                                                                                                     |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| [`.agent-system/agent.yaml`](./.agent-system/agent.yaml) | Identity, model and effort profiles, environment sources, managed Git and GitHub, and assignment admission. |
+| [`IDENTITY.md`](./IDENTITY.md)                           | Public identity metadata.                                                                                   |
+| [`SOUL.md`](./SOUL.md)                                   | Mission, character, voice, and Covenant.                                                                    |
+| [`AGENTS.md`](./AGENTS.md)                               | Operating and execution guidance.                                                                           |
+| [`GOALS.md`](./GOALS.md)                                 | Reviewed goals, priorities, and success conditions.                                                         |
+| [`USER.md`](./USER.md)                                   | Context about EMORI's human partner.                                                                        |
+| [`HEARTBEAT.md`](./HEARTBEAT.md)                         | Periodic stewardship of assignments, pull requests, and goals.                                              |
 
 See Agent System's
 [configuration reference](https://github.com/tanaabased/openclaw-agent-system/blob/main/ADVANCED.md#configuration)

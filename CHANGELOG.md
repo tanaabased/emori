@@ -1,8 +1,12 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
-- Added the macOS ARM64 `sqlite-vec` runtime dependency to EMORI's host profile. [#42](https://github.com/tanaabased/emori/issues/42)
-- Consolidated runtime and tool guidance into `AGENTS.md` and preserved `EMORI` as the display name when OpenClaw registers the lowercase `emori` workspace. [#42](https://github.com/tanaabased/emori/issues/42)
+- Added Agent System model and effort profiles for low, medium, and high task complexity. [#50](https://github.com/tanaabased/emori/issues/50) [#51](https://github.com/tanaabased/emori/pull/51)
+- Added `emori-voice` and sharpened EMORI's guidance on evidence, tradeoffs, and candid disagreement. [#37](https://github.com/tanaabased/emori/issues/37) [#48](https://github.com/tanaabased/emori/pull/48)
+- Consolidated runtime and tool guidance into `AGENTS.md`. [#42](https://github.com/tanaabased/emori/issues/42)
+- Fixed macOS ARM64 semantic memory support with the `sqlite-vec` runtime dependency. [#42](https://github.com/tanaabased/emori/issues/42)
+- Preserved `EMORI` as the display name when registering the lowercase `emori` workspace. [#42](https://github.com/tanaabased/emori/issues/42)
 - Restored state-aware heartbeat stewardship for cleanup, pull requests, goal review, and idle-work reminders. [#34](https://github.com/tanaabased/emori/issues/34)
+- Updated Agent System policy to recognize `pirog` as EMORI's operator-owner. [aa80e6a](https://github.com/tanaabased/emori/commit/aa80e6a80260584224b0a09f7649cb70361a885d)
 
 ## v1.0.0-beta.10 - [August 24, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.10)
 

@@ -1,13 +1,8 @@
 # EMORI Skill Standard
 
-This repository owns the contract for EMORI-local skills. It was seeded from
-the shared Tanaab skill contract, but it may deliberately diverge as EMORI's
-needs and operating model evolve. Tanaab skills remain the shared layer outside
-surfaces owned by an applicable EMORI skill.
-
-`emori-skill-author` maintains an independent local scaffolder and validator.
-Treat differences from Tanaab as durable EMORI decisions when this standard
-states them explicitly, not as temporary compatibility gaps.
+This is the contract for EMORI-local skills and their independent scaffolder
+and validator. Explicit differences from its Tanaab seed are durable local
+decisions, not temporary compatibility gaps.
 
 ## Layering
 
@@ -91,9 +86,6 @@ skill-folder/
 - Keep public commands in `bin/`, internal commands in `scripts/`, orchestration
   in `lib/`, independently testable functions in `utils/`, and flat tests in
   `test/`.
-- Treat the local scaffolder and validator as an EMORI-owned implementation, not
-  a second global canon. Evolve it when concrete EMORI skill needs justify the
-  change.
 - Prefer kebab-case for repository-authored resource filenames unless an
   external tool requires a fixed name.
 - Shebang-bearing entrypoints should be executable; ordinary source files
@@ -118,13 +110,11 @@ skill-folder/
 
 ## Validation
 
-- Run `skills/skill-author/scripts/validate-skill.js` for every created or
-  standardized EMORI-local skill.
+- Run `bun skills/skill-author/scripts/validate-skill.js --skill-dir <path>`
+  from the repository root for every created or standardized local skill.
 - Fix every `[error]`; review `[warn]` and `[manual]` results explicitly.
 - Confirm an EMORI-local skill owns one narrow local surface and does not absorb
   a shared Tanaab capability merely to override precedence.
 - For coding skills, confirm optional `Deployment` has one material mechanism
   and `GitHub Actions` maps lifecycle sections without duplicating their rules.
 - Search for stale ids, prompts, links, and folder names after identity changes.
-- Use `tanaab-skill-author` instead when the artifact being changed belongs to
-  Tanaab Canon.
