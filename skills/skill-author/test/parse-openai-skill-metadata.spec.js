@@ -18,7 +18,7 @@ dependencies:
       dependencyTools: [{ type: 'mcp', value: 'github' }],
       hasDependencyToolsSection: true,
       interfaceValues: { brand_color: '#00c88a', display_name: 'Example' },
-      policyValues: { allow_implicit_invocation: 'false' },
+      policyValues: { allow_implicit_invocation: false },
     });
   });
 
@@ -29,5 +29,29 @@ dependencies:
       interfaceValues: { display_name: 'Example' },
       policyValues: {},
     });
+  });
+
+  it('should decode quoted strings and preserve typed policy values', () => {
+    const parsed = parseOpenAiSkillMetadata(String.raw`# authored metadata
+interface:
+  display_name: "Say \"hello\": keep # punctuation"
+policy:
+  allow_implicit_invocation: true
+`);
+    assert.equal(parsed.interfaceValues.display_name, 'Say "hello": keep # punctuation');
+    assert.equal(parsed.policyValues.allow_implicit_invocation, true);
+  });
+
+  it('should reject malformed YAML and invalid section shapes', () => {
+    for (const content of [
+      'interface: [',
+      'interface: null',
+      'policy: false',
+      'dependencies: []',
+      'dependencies: {tools: [null]}',
+      'dependencies: {tools: false}',
+    ]) {
+      assert.throws(() => parseOpenAiSkillMetadata(content), Error);
+    }
   });
 });

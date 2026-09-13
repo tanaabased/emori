@@ -44,4 +44,22 @@ metadata:
       /Template is missing leading template frontmatter/,
     );
   });
+
+  it('should retain fields after comments and decode multiline descriptions', () => {
+    const text =
+      '---\r\nname: emori-example\r\n# comment\r\nlicense: MIT\r\ndescription: >-\r\n  EMORI-based help:\r\n  keeps # punctuation.\r\n---\r\n# Example\r\n';
+    assert.deepEqual(parseSkillFrontmatter(text), {
+      name: 'emori-example',
+      license: 'MIT',
+      description: 'EMORI-based help: keeps # punctuation.',
+    });
+  });
+
+  it('should reject invalid YAML instead of returning partially parsed metadata', () => {
+    assert.throws(
+      () => parseSkillFrontmatter('---\nname: emori-example\ndescription: bad: value\n---\n'),
+      SyntaxError,
+    );
+    assert.throws(() => splitLeadingSkillFrontmatter('---\n- sequence\n---\n'), /mapping/);
+  });
 });

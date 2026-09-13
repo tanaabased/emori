@@ -133,7 +133,7 @@ function pushForbiddenFieldErrors(source, fieldSpecs, errors) {
 }
 
 function normalizeTagList(tags) {
-  if (!Array.isArray(tags)) {
+  if (!Array.isArray(tags) || tags.some((tag) => typeof tag !== 'string')) {
     return null;
   }
 
@@ -195,13 +195,19 @@ function validateOpenclawMetadata(metadata, errors) {
   }
 
   const requires = openclaw.requires;
-  if (requires !== undefined && (typeof requires !== 'object' || Array.isArray(requires))) {
+  if (
+    requires !== undefined &&
+    (!requires || typeof requires !== 'object' || Array.isArray(requires))
+  ) {
     errors.push('SKILL.md frontmatter metadata.openclaw.requires must be a mapping when present.');
     return;
   }
 
   for (const [key, values] of Object.entries(requires ?? {})) {
-    if (!Array.isArray(values) || values.some((value) => !String(value).trim())) {
+    if (
+      !Array.isArray(values) ||
+      values.some((value) => typeof value !== 'string' || !value.trim())
+    ) {
       errors.push(
         `SKILL.md frontmatter metadata.openclaw.requires.${key} must be a list of nonempty strings.`,
       );
@@ -212,6 +218,11 @@ function validateOpenclawMetadata(metadata, errors) {
 function validateFrontmatter({ frontmatter, requestedType, errors, warnings }) {
   pushMissingFieldErrors(frontmatter, REQUIRED_FRONTMATTER_FIELDS, errors);
   pushForbiddenFieldErrors(frontmatter, FORBIDDEN_TOP_LEVEL_FIELDS, errors);
+  for (const key of ['name', 'description', 'license']) {
+    if (Object.hasOwn(frontmatter, key) && typeof frontmatter[key] !== 'string') {
+      errors.push(`SKILL.md frontmatter ${key} must be a string.`);
+    }
+  }
 
   const metadata = getSkillMetadata(frontmatter);
   if (!metadata) {
@@ -246,7 +257,10 @@ function validateFrontmatter({ frontmatter, requestedType, errors, warnings }) {
   if (declaredType && !isKnownSkillType(declaredType)) {
     errors.push(`SKILL.md metadata.type must be one of: ${formatSkillTypeIds()}`);
   }
-  if (frontmatter.description && !hasEmoriBasedPrefix(frontmatter.description)) {
+  if (
+    typeof frontmatter.description === 'string' &&
+    !hasEmoriBasedPrefix(frontmatter.description)
+  ) {
     errors.push(
       `Frontmatter description must start with \`${EMORI_SKILL_DESCRIPTION_PREFIX.trim()}\`.`,
     );
@@ -254,14 +268,20 @@ function validateFrontmatter({ frontmatter, requestedType, errors, warnings }) {
   if (frontmatter.license && frontmatter.license !== EMORI_SKILL_LICENSE) {
     errors.push(`Frontmatter license must equal \`${EMORI_SKILL_LICENSE}\`.`);
   }
-  if (frontmatter.name && !isKebabCaseId(frontmatter.name)) {
+  if (typeof frontmatter.name === 'string' && !isKebabCaseId(frontmatter.name)) {
     errors.push('Frontmatter name must use lowercase letters, digits, and single hyphens only.');
   }
-  if (frontmatter.name && !frontmatter.name.startsWith(EMORI_SKILL_MACHINE_PREFIX_WITH_HYPHEN)) {
+  if (
+    typeof frontmatter.name === 'string' &&
+    !frontmatter.name.startsWith(EMORI_SKILL_MACHINE_PREFIX_WITH_HYPHEN)
+  ) {
     errors.push(`Frontmatter name must start with \`${EMORI_SKILL_MACHINE_PREFIX_WITH_HYPHEN}\`.`);
   }
 
-  if (declaredTags && !Array.isArray(declaredTags)) {
+  if (
+    declaredTags &&
+    (!Array.isArray(declaredTags) || declaredTags.some((tag) => typeof tag !== 'string'))
+  ) {
     errors.push('SKILL.md frontmatter metadata.tags must be a list of strings.');
   }
 
@@ -387,12 +407,26 @@ async function validateOpenAiMetadata({
   skillPath,
   warnings,
 }) {
-  const { dependencyTools, hasDependencyToolsSection, interfaceValues, policyValues } =
-    parseOpenAiSkillMetadata(openAiContent);
+  let parsed;
+  try {
+    parsed = parseOpenAiSkillMetadata(openAiContent);
+  } catch (error) {
+    errors.push(`Invalid agents/openai.yaml: ${error.message}`);
+    return;
+  }
+  const {
+    dependencyTools,
+    hasDependencyToolsSection,
+    interfaceValues: rawInterfaceValues,
+    policyValues,
+  } = parsed;
 
+  const interfaceValues = {};
   for (const key of REQUIRED_OPENAI_INTERFACE_KEYS) {
-    if (!interfaceValues[key]) {
-      errors.push(`agents/openai.yaml is missing interface.${key}.`);
+    if (typeof rawInterfaceValues[key] !== 'string' || !rawInterfaceValues[key].trim()) {
+      errors.push(`agents/openai.yaml is missing interface.${key} or it is not a nonempty string.`);
+    } else {
+      interfaceValues[key] = rawInterfaceValues[key];
     }
   }
 
@@ -442,8 +476,8 @@ async function validateOpenAiMetadata({
   }
 
   if (
-    policyValues.allow_implicit_invocation &&
-    !['true', 'false'].includes(policyValues.allow_implicit_invocation)
+    policyValues.allow_implicit_invocation !== undefined &&
+    typeof policyValues.allow_implicit_invocation !== 'boolean'
   ) {
     errors.push('policy.allow_implicit_invocation must be `true` or `false` when present.');
   }
@@ -454,11 +488,11 @@ async function validateOpenAiMetadata({
     }
 
     for (const [index, tool] of dependencyTools.entries()) {
-      if (!tool.type) {
-        errors.push(`dependencies.tools[${index}] is missing type.`);
+      if (typeof tool.type !== 'string' || !tool.type.trim()) {
+        errors.push(`dependencies.tools[${index}].type must be a nonempty string.`);
       }
-      if (!tool.value) {
-        errors.push(`dependencies.tools[${index}] is missing value.`);
+      if (typeof tool.value !== 'string' || !tool.value.trim()) {
+        errors.push(`dependencies.tools[${index}].value must be a nonempty string.`);
       }
     }
   }
@@ -549,12 +583,17 @@ export function formatValidationReport(result) {
  *
  * @param {string} skillDir Skill directory to validate.
  * @param {object} [options] Validation options.
+ * @param {string} [options.destinationDir] Final sibling path when validating a staged scaffold.
  * @returns {Promise<object>} Validation errors, warnings, and manual checks.
  */
 export async function validateSkillDir(skillDir, options = {}) {
   const requestedType = normalizeLowercaseString(options.expectedType);
   const skillPath = path.resolve(skillDir);
-  const folderName = path.basename(skillPath);
+  const destinationPath = path.resolve(options.destinationDir ?? skillPath);
+  if (path.dirname(destinationPath) !== path.dirname(skillPath)) {
+    throw new Error('A staged skill and its destination must share a parent directory.');
+  }
+  const folderName = path.basename(destinationPath);
   const errors = [];
   const warnings = [];
   let actualType = requestedType ?? 'generic';
@@ -581,11 +620,15 @@ export async function validateSkillDir(skillDir, options = {}) {
   let frontmatter = null;
   if (skillMdExists) {
     const skillContent = await readFile(skillMdPath, 'utf8');
-    if (!skillContent.startsWith('---\n')) {
+    if (!/^---\r?\n/.test(skillContent)) {
       errors.push('SKILL.md must start with YAML frontmatter.');
     }
 
-    frontmatter = parseSkillFrontmatter(skillContent);
+    try {
+      frontmatter = parseSkillFrontmatter(skillContent);
+    } catch (error) {
+      errors.push(`Invalid SKILL.md frontmatter: ${error.message}`);
+    }
     if (!frontmatter) {
       errors.push('SKILL.md frontmatter is missing or malformed.');
     } else {
@@ -609,8 +652,8 @@ export async function validateSkillDir(skillDir, options = {}) {
   await validateFolderName({
     errors,
     folderName,
-    frontmatterName: frontmatter?.name,
-    skillPath,
+    frontmatterName: typeof frontmatter?.name === 'string' ? frontmatter.name : undefined,
+    skillPath: destinationPath,
   });
 
   if (openAiYamlExists) {
@@ -618,7 +661,7 @@ export async function validateSkillDir(skillDir, options = {}) {
     await validateOpenAiMetadata({
       actualOwner,
       errors,
-      frontmatterName: frontmatter?.name,
+      frontmatterName: typeof frontmatter?.name === 'string' ? frontmatter.name : undefined,
       openAiContent,
       skillPath,
       warnings,

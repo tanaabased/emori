@@ -1,6 +1,8 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { YAML } from 'bun';
+
 import bundledLargeIconImport from '../../../assets/icon-large.png';
 import bundledSmallIconImport from '../../../assets/composer-icon.svg';
 import codingTemplateText from '../templates/coding.md' with { type: 'text' };
@@ -181,5 +183,5 @@ export function stripSkillPrefix(value) {
 }
 
 export function renderMetadataTagsYaml(tags) {
-  return tags.map((tag) => `    - ${tag}`).join('\n');
+  return tags.map((tag) => `    - ${YAML.stringify(tag)}`).join('\n');
 }

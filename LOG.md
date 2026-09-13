@@ -1,10 +1,10 @@
 # EMORI Setup Log
 
-Last updated: 2026-09-10
+Last setup recorded: 2026-09-10
 
-This public-safe running log records additional setup completed after
-`openclaw agents add`. It excludes initial installation and agent creation,
-audits and plans, troubleshooting, and host-specific workarounds.
+These are the public notes from setting up EMORI after initial agent creation.
+Each entry records what was done at the time; later entries may supersede it.
+For current setup, use the [README](./README.md#installation).
 
 Commands are included when useful. Pairing codes, image data, and other private
 or unwieldy values are replaced with placeholders.
@@ -180,12 +180,9 @@ openclaw gateway status --deep
 
 Restowed the workspace's `dotfiles` package to provide EMORI's user-scoped Git
 identity, SSH commit and tag signing, allowed signer, and GitHub SSH routing.
-This package is a temporary authorization bridge, not the durable design.
-
-Once Agent System provides and verifies equivalent per-agent identity and
-authorization, unstow these files and remove the `dotfiles` package from this
-repository. Do not remove it before the Agent System cutover is proven to
-preserve Git authorship, SSH authentication, and signature verification.
+This was a temporary authorization bridge pending verified Agent System
+support for Git authorship, SSH authentication, and signature verification.
+The [August 11 cutover](#agent-system-cutover) completed its removal.
 
 Relevant command used:
 
@@ -210,9 +207,8 @@ agent state remain.
 
 ### Heartbeat retirement
 
-Removed EMORI's recurring heartbeat tasks. `HEARTBEAT.md` now contains only its
-title, which keeps the standard workspace surface while allowing OpenClaw to
-skip heartbeat model calls.
+Removed EMORI's recurring heartbeat tasks. At the time, `HEARTBEAT.md` retained
+only its title so OpenClaw could skip heartbeat model calls.
 
 ## 2026-09-10
 

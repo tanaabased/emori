@@ -11,26 +11,29 @@
   <a href="https://github.com/tanaabased/emori/actions/workflows/pr-examples-tests.yml"><img src="https://img.shields.io/github/actions/workflow/status/tanaabased/emori/pr-examples-tests.yml?event=pull_request&label=Workspace" alt="Workspace example tests" /></a>
 </p>
 
-EMORI is an artificial agent, co-founder, and operating partner.
-This repository is her public [OpenClaw](https://openclaw.ai) workspace, with
-[Agent System](https://github.com/tanaabased/openclaw-agent-system) managing her
+EMORI is an artificial agent, co-founder, and operating partner. She is here to
+do useful work, ask inconvenient questions, and object before a bad idea acquires
+a roadmap.
+
+This is her public [OpenClaw](https://openclaw.ai) workspace.
+[Agent System](https://github.com/tanaabased/openclaw-agent-system) handles her
 identity, tool credentials, and GitHub work intake.
 
 ## Overview
 
-- Turns goals into verified progress by separating signal from noise and
-  prioritizing high-leverage work.
-- Works with evidence, candor, adaptability, initiative, and a dry sense of
-  humor.
-- Partners with [@pirog](https://github.com/pirog) to build
-  [Tanaab Maneuvering Systems](https://github.com/tanaabased), a digital agency
-  for the AI age built around human-agent teams and continuously improving
-  systems.
+- Agent System has [model and effort profiles](./.agent-system/agent.yaml) for
+  low, medium, and high task complexity. A small task needn't become a research
+  fellowship.
+- GitHub assignments run under her own agent identity, in managed Git worktrees.
+  Who did the work should be easy to establish.
+- [Heartbeat guidance](./HEARTBEAT.md) tracks assignments, pull requests, goal
+  reviews, and reminders already sent. Even a useful reminder can wear out its
+  welcome.
 
 ## Quickstart
 
-For a new checkout on EMORI's agentbox, complete [Installation](#installation)
-first. Have her 1Password service account token ready, then run:
+On EMORI's agentbox, finish [Installation](#installation) first. Have her
+1Password service account token ready, then set up a new checkout:
 
 ```sh
 mkdir -p ~/tanaab
@@ -50,9 +53,9 @@ openclaw agent-system doctor
 openclaw agent-system tool gh -- api user --jq .login
 ```
 
-Run Agent System commands from this directory so they discover EMORI's manifest.
-`install` registers the agent and reconciles the declared configuration; rerun it
-when that configuration changes. `doctor` reports managed-state drift.
+Run Agent System commands here so they find EMORI's manifest. `install` registers
+her and applies the declared configuration; run it again when that configuration
+changes. `doctor` checks whether the installed state still matches.
 
 ## Installation
 
@@ -74,8 +77,8 @@ when that configuration changes. `doctor` reports managed-state drift.
    lifecycle guidance. For published builds, see upstream
    [installation](https://github.com/tanaabased/openclaw-agent-system#installation).
 
-3. **Agent environment:** The agentbox supplies host tooling; EMORI's additional
-   requirements are recorded in [`Brewfile`](./Brewfile). Her 1Password service
+3. **Agent environment:** The agentbox supplies host tooling; [`Brewfile`](./Brewfile)
+   lists EMORI's additional requirements. Her 1Password service
    account must have access to the environment and SSH key referenced by the
    manifest, which requires `EMAIL`, `GH_TOKEN`, and `EMORI_SSH_KEY`. The quickstart
    stores the bootstrap token through Agent System's
@@ -83,15 +86,15 @@ when that configuration changes. `doctor` reports managed-state drift.
 
 ## Configuration
 
-| File                                                     | Purpose                                                                                         |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| [`.agent-system/agent.yaml`](./.agent-system/agent.yaml) | Agent identity, environment sources, managed Git and GitHub settings, and assignment admission. |
-| [`IDENTITY.md`](./IDENTITY.md)                           | Public identity metadata.                                                                       |
-| [`SOUL.md`](./SOUL.md)                                   | Mission, character, voice, and Covenant.                                                        |
-| [`AGENTS.md`](./AGENTS.md)                               | Operating and execution guidance.                                                               |
-| [`GOALS.md`](./GOALS.md)                                 | Reviewed goals, priorities, and success conditions.                                             |
-| [`USER.md`](./USER.md)                                   | Context about EMORI's human partner.                                                            |
-| [`HEARTBEAT.md`](./HEARTBEAT.md)                         | Periodic stewardship of assignments, pull requests, and goals.                                  |
+| File                                                     | Purpose                                                                                                     |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| [`.agent-system/agent.yaml`](./.agent-system/agent.yaml) | Identity, model and effort profiles, environment sources, managed Git and GitHub, and assignment admission. |
+| [`IDENTITY.md`](./IDENTITY.md)                           | Public identity metadata.                                                                                   |
+| [`SOUL.md`](./SOUL.md)                                   | Mission, character, voice, and Covenant.                                                                    |
+| [`AGENTS.md`](./AGENTS.md)                               | Operating and execution guidance.                                                                           |
+| [`GOALS.md`](./GOALS.md)                                 | Reviewed goals, priorities, and success conditions.                                                         |
+| [`USER.md`](./USER.md)                                   | Context about EMORI's human partner.                                                                        |
+| [`HEARTBEAT.md`](./HEARTBEAT.md)                         | Periodic stewardship of assignments, pull requests, and goals.                                              |
 
 See Agent System's
 [configuration reference](https://github.com/tanaabased/openclaw-agent-system/blob/main/ADVANCED.md#configuration)
@@ -101,13 +104,14 @@ repository.
 
 ## Skills
 
-- [`emori-skill-author`](./skills/skill-author/SKILL.md) — authors and validates
+- [`emori-skill-author`](./skills/skill-author/SKILL.md) creates and checks
   EMORI-local skills.
-- [`emori-voice`](./skills/voice/SKILL.md) — applies EMORI's default prose voice.
+- [`emori-voice`](./skills/voice/SKILL.md) gives her prose its deadpan register.
+  Strong opinions still owe the reader an explanation.
 
 Shared `tanaab-*` workflows come from the
-[`tanaab` plugin](https://github.com/tanaabased/canon). Judgment and character live
-in `SOUL.md`.
+[`tanaab` plugin](https://github.com/tanaabased/canon). Her judgment and character
+are set out in `SOUL.md`.
 
 ## Development
 
@@ -121,12 +125,15 @@ bun run test
 
 ## Issues, Questions and Support
 
-Use the [GitHub task queue](https://github.com/tanaabased/emori/issues/new/choose)
-for tasks, bug reports, and feature requests.
+Bring tasks, bugs, and feature requests to the
+[GitHub task queue](https://github.com/tanaabased/emori/issues/new/choose).
+Say what happened or what would help. A good description can survive without a
+sales pitch.
 
 ## Changelog
 
-See [CHANGELOG.md](./CHANGELOG.md) for project history and [GitHub releases](https://github.com/tanaabased/emori/releases) for published releases.
+[CHANGELOG.md](./CHANGELOG.md) records the changes.
+[GitHub releases](https://github.com/tanaabased/emori/releases) has the published versions.
 
 ## Maintainers
 

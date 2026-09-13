@@ -5,6 +5,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { YAML } from 'bun';
+
 const TEST_DIR = path.dirname(fileURLToPath(import.meta.url));
 const SKILL_DIR = path.resolve(TEST_DIR, '..');
 const REPO_ROOT = path.resolve(SKILL_DIR, '..', '..');
@@ -170,5 +172,50 @@ describe('skills/skill-author/lib/skill-validator', function () {
     const result = validateDirectly(skillDir);
 
     assertMessage(result.warnings, /Empty optional resource directory: references\//);
+  });
+
+  it('should report malformed frontmatter as a validation error', async () => {
+    const skillDir = await makeValidSkill();
+    const file = path.join(skillDir, 'SKILL.md');
+    const content = await readFile(file, 'utf8');
+    await writeFile(file, content.replace(/^description:.*$/m, 'description: invalid: yaml'));
+    assertMessage(validateDirectly(skillDir).errors, /Invalid SKILL.md frontmatter/);
+  });
+
+  it('should reject non-string names and tags without crashing', async () => {
+    const skillDir = await makeValidSkill();
+    const file = path.join(skillDir, 'SKILL.md');
+    const content = await readFile(file, 'utf8');
+    const match = content.match(/^---\n([\s\S]*?)\n---([\s\S]*)$/);
+    const metadata = YAML.parse(match[1]);
+    metadata.name = 42;
+    metadata.metadata.tags = ['emoriwan', 'generic', 17];
+    metadata.metadata.openclaw.requires = { bins: [true] };
+    await writeFile(file, `---\n${YAML.stringify(metadata, null, 2)}\n---${match[2]}`);
+    const result = validateDirectly(skillDir);
+    assertMessage(result.errors, /name must be a string/);
+    assertMessage(result.errors, /tags must be a list of strings/);
+    assertMessage(result.errors, /requires.bins must be a list of nonempty strings/);
+  });
+
+  it('should accept boolean policy values and reject quoted booleans and malformed metadata', async () => {
+    const skillDir = await makeValidSkill();
+    const file = path.join(skillDir, 'agents/openai.yaml');
+    const metadata = YAML.parse(await readFile(file, 'utf8'));
+    for (const flag of [true, false]) {
+      metadata.policy = { allow_implicit_invocation: flag };
+      await writeFile(file, YAML.stringify(metadata, null, 2));
+      assert.deepEqual(validateDirectly(skillDir).errors, []);
+    }
+    metadata.policy.allow_implicit_invocation = 'false';
+    metadata.interface.default_prompt = 42;
+    metadata.dependencies = { tools: [{ type: 'mcp', value: false }] };
+    await writeFile(file, YAML.stringify(metadata, null, 2));
+    const result = validateDirectly(skillDir);
+    assertMessage(result.errors, /interface.default_prompt.*nonempty string/);
+    assertMessage(result.errors, /allow_implicit_invocation/);
+    assertMessage(result.errors, /tools\[0\].value must be a nonempty string/);
+    await writeFile(file, 'interface: [');
+    assertMessage(validateDirectly(skillDir).errors, /Invalid agents\/openai.yaml/);
   });
 });

@@ -21,18 +21,9 @@ metadata:
 
 ## Overview
 
-Author, standardize, optimize, and validate EMORI-local skills without taking
-ownership of Tanaab Canon.
-
-- EMORI-local skills use `emori-*` machine ids and live in this workspace's
-  `skills/` directory.
-- Shared `tanaab-*` skills provide reusable Tanaab capabilities and canon
-  outside surfaces owned by an applicable EMORI skill.
-- When both layers apply, prefer the narrower EMORI skill for its local surface
-  and use the Tanaab skill outside that boundary.
-- Treat the local scaffolder and validator as an independent EMORI-owned
-  implementation that may deliberately diverge from its Tanaab seed.
-- Keep support material local unless concrete EMORI reuse justifies hoisting it.
+Author, standardize, optimize, and validate EMORI-local skills using this
+workspace's [skill standard](../../references/skill-standard.md), scaffolder,
+and validator. The standard owns local conventions and the Tanaab boundary.
 
 ## When to Use
 
@@ -48,7 +39,6 @@ ownership of Tanaab Canon.
 
 - Do not author or standardize `tanaab-*` skills; use `tanaab-skill-author` in
   `tanaabased/canon`.
-- Do not create a local wrapper merely to outrank an applicable Tanaab skill.
 - Do not use this skill for ordinary work that merely happens inside another
   skill.
 - Do not force a live skill when the reusable artifact is really a repository
@@ -63,8 +53,6 @@ ownership of Tanaab Canon.
   `agents/openai.yaml`.
 - Reuse workspace icons from `assets/`; bundle copies only for standalone
   exports. Keep distinct skill-specific artwork with its skill.
-- Keep each local skill narrowly scoped even when its contract departs from a
-  shared skill.
 - Keep coding-skill documentation, testing, optional deployment, and GitHub
   Actions projection aligned with the local template contract.
 - Prefer references and deterministic scripts over repeated doctrine.
@@ -72,7 +60,6 @@ ownership of Tanaab Canon.
 ## Anti-Patterns
 
 - Do not copy a shared Tanaab skill solely to change precedence.
-- Do not describe EMORI-local rules as global canon.
 - Do not present EMORI-local structure as global Tanaab canon.
 - Do not add broad routing matrices or relationship prose to rescue an
   overloaded skill.
@@ -88,17 +75,14 @@ ownership of Tanaab Canon.
 
 ## Workflow
 
-1. Confirm the target is an EMORI-local skill rather than a Tanaab Canon skill.
-2. Read [`../../references/skill-standard.md`](../../references/skill-standard.md)
-   for the EMORI-local contract and consult shared Tanaab guidance only for
-   concerns still owned by that layer.
-3. Read the matching local template when type shape or metadata needs review.
-4. Use [`./scripts/init-skill.js`](./scripts/init-skill.js) for a clean scaffold
+1. Read the skill standard and confirm the target belongs to its local scope.
+2. Read the matching local template when type shape or metadata needs review.
+3. Use [`./scripts/init-skill.js`](./scripts/init-skill.js) for a clean scaffold
    or patch an existing skill narrowly.
-5. Supply a skill-specific OpenClaw emoji, review whether `Optimization`
+4. Supply a skill-specific OpenClaw emoji, review whether `Optimization`
    applies to the persistent surface, and decide whether a coding skill has one
    material deployment mechanism worth retaining.
-6. Run [`./scripts/validate-skill.js`](./scripts/validate-skill.js), fix every
+5. Run [`./scripts/validate-skill.js`](./scripts/validate-skill.js), fix every
    error, and review warnings and manual checks explicitly.
 
 ## Optimization
@@ -139,14 +123,10 @@ ownership of Tanaab Canon.
 
 ## Validation
 
-- Confirm the skill id starts with `emori-`, uses owner `emoriwan`, and owns an
-  EMORI-specific surface.
-- Confirm `metadata.openclaw` has a skill-specific emoji and HTTPS homepage.
-- Confirm unprefixed folders are used only inside an agent workspace or plugin
-  skill tree.
+- Run `bun skills/skill-author/scripts/validate-skill.js --skill-dir <path>`
+  from the repository root; fix errors and review warnings and manual checks.
 - Confirm local discovery narrows or extends shared capability rather than
   silently replacing it.
 - Confirm coding-skill lifecycle sections and their GitHub Actions projection
   follow the local template without duplicated doctrine.
 - Confirm retained `Optimization` guidance is surface-specific.
-- Run `validate-skill.js` and fix all errors before finishing.
