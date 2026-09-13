@@ -61,21 +61,18 @@ changes. `doctor` checks whether the installed state still matches.
 
 1. **OpenClaw:** Install and onboard [OpenClaw](https://docs.openclaw.ai/install)
    on the agentbox. This workspace targets **2026.9.3**.
-2. **Agent System:** Use a build compatible with that OpenClaw version. The
-   [compatibility table](https://github.com/tanaabased/openclaw-agent-system/blob/main/ADVANCED.md#version-compatibility)
-   currently lists 2026.9.3 support as unreleased. Follow the
-   [source-build instructions](https://github.com/tanaabased/openclaw-agent-system/blob/main/DEVELOPMENT.md#install-from-source)
-   with the checkout at `~/tanaab/openclaw-agent-system`, then register it:
+2. **Agent System:** [v0.6.0](https://github.com/tanaabased/openclaw-agent-system/releases/tag/v0.6.0)
+   supports OpenClaw 2026.9.2 or newer and was developed against 2026.9.3.
+   Install the published release:
 
    ```sh
-   openclaw plugins install --link ~/tanaab/openclaw-agent-system --accept-capabilities
-   openclaw plugins enable agent-system
+   openclaw plugins install clawhub:@tanaab/openclaw-agent-system --accept-capabilities
    openclaw config set plugins.entries.agent-system.hooks.allowConversationAccess true
    ```
 
    The conversation-access setting lets Agent System supply manifest and GitHub
-   lifecycle guidance. For published builds, see upstream
-   [installation](https://github.com/tanaabased/openclaw-agent-system#installation).
+   lifecycle guidance. For older OpenClaw versions, see Agent System's
+   [compatibility table](https://github.com/tanaabased/openclaw-agent-system/blob/main/ADVANCED.md#version-compatibility).
 
 3. **Agent environment:** The agentbox supplies host tooling; [`Brewfile`](./Brewfile)
    lists EMORI's additional requirements. Her 1Password service
