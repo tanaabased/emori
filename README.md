@@ -30,10 +30,25 @@ identity, tool credentials, and GitHub work intake.
   reviews, and reminders already sent. Even a useful reminder can wear out its
   welcome.
 
+## Prerequisites
+
+- Set up an [Agentbox](https://github.com/tanaabased/agentbox#quickstart), which
+  provisions EMORI's managed macOS host and OpenClaw.
+- Update [OpenClaw](https://docs.openclaw.ai/install/updating) to **2026.9.2 or
+  newer**. EMORI targets **2026.9.3**.
+- Install [Agent System v0.6.0](https://github.com/tanaabased/openclaw-agent-system/releases/tag/v0.6.0)
+  using its [installation guide](https://github.com/tanaabased/openclaw-agent-system#installation).
+  For older OpenClaw versions, see its
+  [compatibility table](https://github.com/tanaabased/openclaw-agent-system/blob/main/ADVANCED.md#version-compatibility).
+- Give EMORI's 1Password service account access to the environment and SSH key
+  referenced by the manifest: `EMAIL`, `GH_TOKEN`, and `EMORI_SSH_KEY`.
+
+[`Brewfile`](./Brewfile) lists EMORI's additional requirements.
+
 ## Quickstart
 
-On EMORI's agentbox, finish [Installation](#installation) first. Have her
-1Password service account token ready, then set up a new checkout:
+After meeting the prerequisites, have EMORI's 1Password service account token
+ready and set up a new checkout:
 
 ```sh
 mkdir -p ~/tanaab
@@ -56,33 +71,6 @@ openclaw agent-system tool gh -- api user --jq .login
 Run Agent System commands here so they find EMORI's manifest. `install` registers
 her and applies the declared configuration; run it again when that configuration
 changes. `doctor` checks whether the installed state still matches.
-
-## Installation
-
-1. **OpenClaw:** Install and onboard [OpenClaw](https://docs.openclaw.ai/install)
-   on the agentbox. This workspace targets **2026.9.3**.
-2. **Agent System:** Use a build compatible with that OpenClaw version. The
-   [compatibility table](https://github.com/tanaabased/openclaw-agent-system/blob/main/ADVANCED.md#version-compatibility)
-   currently lists 2026.9.3 support as unreleased. Follow the
-   [source-build instructions](https://github.com/tanaabased/openclaw-agent-system/blob/main/DEVELOPMENT.md#install-from-source)
-   with the checkout at `~/tanaab/openclaw-agent-system`, then register it:
-
-   ```sh
-   openclaw plugins install --link ~/tanaab/openclaw-agent-system --accept-capabilities
-   openclaw plugins enable agent-system
-   openclaw config set plugins.entries.agent-system.hooks.allowConversationAccess true
-   ```
-
-   The conversation-access setting lets Agent System supply manifest and GitHub
-   lifecycle guidance. For published builds, see upstream
-   [installation](https://github.com/tanaabased/openclaw-agent-system#installation).
-
-3. **Agent environment:** The agentbox supplies host tooling; [`Brewfile`](./Brewfile)
-   lists EMORI's additional requirements. Her 1Password service
-   account must have access to the environment and SSH key referenced by the
-   manifest, which requires `EMAIL`, `GH_TOKEN`, and `EMORI_SSH_KEY`. The quickstart
-   stores the bootstrap token through Agent System's
-   [credential command](https://github.com/tanaabased/openclaw-agent-system/blob/main/ADVANCED.md#openclaw-agent-system-credentials).
 
 ## Configuration
 
