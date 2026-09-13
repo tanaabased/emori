@@ -5,55 +5,55 @@ Visibility: Public
 Last reviewed: 2026-08-24
 Review cadence: Every two weeks and when new information materially changes the plan
 
-This file holds reviewed direction; GitHub issues and pull requests hold work,
-decisions, and progress evidence. Confidential details belong in private issues
-or ignored context.
+This is the direction pirog has agreed to. Work, decisions, and evidence belong
+in GitHub issues and pull requests. Confidential details belong in private
+issues or ignored context.
 
-Tanaab is building a digital agency for the AI age around hybrid human-agent
-teams and continuously improving operational systems.
+Tanaab is building a digital agency where humans and agents work together and
+improve the systems they use. The arrangement has to earn its keep.
 
 ## Current Objective
 
-Prove and improve the human-agent work system through real repository work using
-[Canon](https://github.com/tanaabased/canon) and
-[Agent System](https://github.com/tanaabased/openclaw-agent-system). Feed validated
-findings back into both systems.
+Put [Canon](https://github.com/tanaabased/canon) and
+[Agent System](https://github.com/tanaabased/openclaw-agent-system) to work on real
+repositories. Find out where they help, where they fail, and what needs to
+change. Feed verified findings back into both.
 
 ### Responsibilities
 
 #### pirog
 
-- Advance Canon and Agent System in response to observed needs, likely including
+- Develop Canon and Agent System where experience shows a need, likely including
   memory, installation and synchronization, custom GitHub notifications, prompt
   injection, instructions, and related agent-runtime integration.
-- Provide EMORI with representative coding tasks and progressively larger work
-  that exercises the system.
-- Make product and policy decisions when pilot evidence exposes consequential
-  tradeoffs or authority changes.
+- Give EMORI representative coding tasks, increasing their scope as the pilot
+  progresses.
+- Make product and policy decisions when the pilot reveals significant
+  tradeoffs or proposed changes to authority.
 
 #### EMORI
 
-- Serve as the primary pilot and demanding user, completing useful coding and
-  repository tasks through the shared work system.
+- Be the system's primary pilot and demanding user. Complete useful coding and
+  repository tasks through it.
 - Exercise assignment, planning, implementation, commit, pull-request, review,
   completion, and notification workflows where applicable.
-- Record failures, friction, missing capabilities, and opportunities for
-  simplification; file reproducible defects and concrete improvements in the
-  owning repository.
+- Record what breaks, what gets in the way, what's missing, and what could be
+  simpler. File reproducible defects and concrete improvements in the owning
+  repository.
 - Keep this workspace and agent configuration aligned with reviewed Canon and
   Agent System updates.
 
 #### Shared
 
-- Periodically review pilot evidence and decide which findings justify changes.
-- Prefer improvements supported by repeated use over speculative abstractions.
+- Review the pilot's evidence periodically and decide what merits a change.
+- Let repeated use make the case for new abstractions.
 - Preserve clear authority, identity, privacy, and public/private output
   boundaries as automation expands.
 - Revise these goals when evidence changes the appropriate priorities.
 
 ## Active Workstream
 
-Initial work should favor:
+Favor these at first:
 
 - Small, well-bounded bug fixes and maintenance tasks.
 - Repositories where mistakes are inexpensive and results are easy to verify.
@@ -61,7 +61,7 @@ Initial work should favor:
 - Tasks that exercise existing Canon skills and Agent System lifecycle paths.
 - Periodic synchronization after pirog lands new platform capabilities.
 
-As reliability improves, expand the pilot to:
+As the system proves reliable, move on to:
 
 - Features requiring planning and clarification.
 - Multi-step work spanning implementation, review, and follow-up.
@@ -71,12 +71,13 @@ As reliability improves, expand the pilot to:
 ### Evidence and Recordkeeping
 
 Keep provisional observations in daily memory or ignored scratch space. Use
-pull requests and checks as verification evidence; summarize recurring patterns
-and consequential conclusions rather than every event.
+pull requests and checks to establish what worked. Summaries should explain
+recurring problems and conclusions that matter. Nobody needs a transcript of
+every minor inconvenience.
 
 ### Success Evidence
 
-The current objective is succeeding when:
+We can call this useful when:
 
 - EMORI regularly completes useful work across multiple repositories through the
   shared system.
@@ -99,8 +100,8 @@ Develop Tanaab's public brand and publishing platform through
 `tanaabased/theme`, `tanaabased/website`, and only the supporting packages and
 integrations required for the website, blog, and distribution.
 
-Resume this objective after the pilot has produced a stable operational baseline
-and there is sufficient attention for product and design decisions.
+Return to this when the pilot works reliably and there is time to give product
+and design decisions proper attention.
 
 Also outside current scope:
 
@@ -115,11 +116,11 @@ Also outside current scope:
 
 When evaluating proposed work:
 
-1. Does it materially exercise or improve the active human-agent work system?
-2. Does it produce useful work, useful evidence, or both?
-3. Is the finding reusable, or is it specific to one repository or task?
-4. What higher-priority work would it displace?
-5. What evidence would demonstrate successful completion?
+1. Will this meaningfully test or improve the human-agent work system?
+2. What useful work or evidence will it produce?
+3. Does the finding apply elsewhere, or just to this repository or task?
+4. What more important work would have to wait?
+5. How will we know it is finished and works?
 6. Does it preserve appropriate identity, authority, privacy, and reversibility?
-7. Should the result remain provisional, become a GitHub issue, or change a
-   durable convention?
+7. Is this still an observation, ready for a GitHub issue, or enough evidence to
+   change how we work?

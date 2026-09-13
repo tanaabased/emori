@@ -2,9 +2,9 @@
 
 Last setup recorded: 2026-09-10
 
-This public setup history records changes after initial agent creation. Entries
-and commands describe the state on their date; later entries may supersede them.
-Use the [README](./README.md#installation) for current setup instructions.
+These are the public notes from setting up EMORI after initial agent creation.
+Each entry records what was done at the time; later entries may supersede it.
+For current setup, use the [README](./README.md#installation).
 
 Commands are included when useful. Pairing codes, image data, and other private
 or unwieldy values are replaced with placeholders.
