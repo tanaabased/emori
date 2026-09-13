@@ -15,6 +15,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { YAML } from 'bun';
+
 const TEST_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(TEST_DIR, '..', '..', '..');
 const SKILL_DIR = path.join(REPO_ROOT, 'skills', 'skill-author');
@@ -143,8 +145,8 @@ describe('skills/skill-author', function () {
 
     const skillDir = path.join(skillsDir, 'contract-generic');
     const metadata = await readFile(path.join(skillDir, 'agents', 'openai.yaml'), 'utf8');
-    assert.match(metadata, /icon_small: "\.\.\/\.\.\/assets\/composer-icon\.svg"/);
-    assert.match(metadata, /icon_large: "\.\.\/\.\.\/assets\/icon-large\.png"/);
+    assert.equal(YAML.parse(metadata).interface.icon_small, '../../assets/composer-icon.svg');
+    assert.equal(YAML.parse(metadata).interface.icon_large, '../../assets/icon-large.png');
     assert.ok(!(await readdir(skillDir)).includes('assets'));
 
     const validated = runBun(VALIDATE_SCRIPT, ['--skill-dir', skillDir]);
@@ -159,8 +161,8 @@ describe('skills/skill-author', function () {
     const movedSkillDir = path.join(tempDir, 'emori-contract-generic');
     await rename(path.join(outputDir, 'emori-contract-generic'), movedSkillDir);
     const metadata = await readFile(path.join(movedSkillDir, 'agents', 'openai.yaml'), 'utf8');
-    assert.match(metadata, /icon_small: "\.\/assets\/icon-small\.svg"/);
-    assert.match(metadata, /icon_large: "\.\/assets\/icon-large\.png"/);
+    assert.equal(YAML.parse(metadata).interface.icon_small, './assets/icon-small.svg');
+    assert.equal(YAML.parse(metadata).interface.icon_large, './assets/icon-large.png');
     assert.deepEqual(
       await readFile(path.join(movedSkillDir, 'assets', 'icon-small.svg')),
       await readFile(path.join(REPO_ROOT, 'assets', 'composer-icon.svg')),

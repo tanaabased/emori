@@ -7,7 +7,7 @@ optional_top_level_headings:
 ---
 ---
 name: {{skill_id}}
-description: {{description}}
+description: {{description_yaml}}
 license: {{license}}
 metadata:
   type: {{type}}

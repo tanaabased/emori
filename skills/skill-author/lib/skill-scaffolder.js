@@ -1,5 +1,7 @@
-import { copyFile, mkdir, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+
+import { YAML } from 'bun';
 
 import {
   EMORI_SKILL_BRAND_COLOR,
@@ -22,6 +24,7 @@ import normalizeSkillDescription, {
   makeShortDescription,
 } from '../utils/normalize-skill-description.js';
 import pathExists from '../utils/path-exists.js';
+import publishSkillDirectory from '../utils/publish-skill-directory.js';
 import renderSkillTemplate from '../utils/render-skill-template.js';
 
 function normalizeSlug(value) {
@@ -38,31 +41,37 @@ function normalizeSlug(value) {
   return slug;
 }
 
-function quoteYaml(value) {
-  return `"${String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
-}
-
 function makeOpenAiYaml({ displayName, shortDescription, defaultPrompt, iconSmall, iconLarge }) {
-  return `interface:
-  display_name: ${quoteYaml(displayName)}
-  short_description: ${quoteYaml(shortDescription)}
-  icon_small: ${quoteYaml(iconSmall)}
-  icon_large: ${quoteYaml(iconLarge)}
-  brand_color: ${quoteYaml(EMORI_SKILL_BRAND_COLOR)}
-  default_prompt: ${quoteYaml(defaultPrompt)}
-`;
+  return (
+    YAML.stringify(
+      {
+        interface: {
+          display_name: displayName,
+          short_description: shortDescription,
+          icon_small: iconSmall,
+          icon_large: iconLarge,
+          brand_color: EMORI_SKILL_BRAND_COLOR,
+          default_prompt: defaultPrompt,
+        },
+      },
+      null,
+      2,
+    ) + '\n'
+  );
 }
 
 /**
  * Creates and validates one EMORI-local skill from the selected template.
  *
- * This workflow writes the skill directory and replaces it when force is enabled.
+ * Validates a sibling candidate before publication; failed forced replacement
+ * restores the existing skill or reports its retained backup path.
  *
  * @param {object} options Authored skill values and filesystem options.
+ * @param {object} [dependencies] File-writing boundary for deterministic failure checks.
  * @returns {Promise<{result: object, skillDir: string}>} Created path and validation report.
  * @throws {Error} When authored values are invalid or the generated skill fails validation.
  */
-export async function initializeSkill(options) {
+export async function initializeSkill(options, { writeSkillFile = writeFile } = {}) {
   const type = String(options.type ?? '')
     .trim()
     .toLowerCase();
@@ -135,8 +144,6 @@ export async function initializeSkill(options) {
   const usesUnprefixedFolder = usesWorkspaceAssets || (await pathExists(pluginRootPath));
   const folderName = usesUnprefixedFolder ? stripSkillPrefix(skillId) : skillId;
   const skillDir = path.resolve(validationTargetDir, folderName);
-  const agentsDir = path.join(skillDir, 'agents');
-  const assetsDir = path.join(skillDir, 'assets');
   const openclawHomepage = String(
     options.homepage ?? `https://github.com/tanaabased/emori/tree/main/skills/${folderName}`,
   ).trim();
@@ -149,22 +156,14 @@ export async function initializeSkill(options) {
     throw new Error(`Skill directory already exists: ${skillDir}`);
   }
 
-  if (options.force) {
-    await rm(skillDir, { force: true, recursive: true });
-  }
-
-  await mkdir(agentsDir, { recursive: true });
-  if (!usesWorkspaceAssets) {
-    await mkdir(assetsDir, { recursive: true });
-  }
-
   const skillContent = renderSkillTemplate(typeDefinition.templateBody, {
     description: normalizedDescription,
+    description_yaml: YAML.stringify(normalizedDescription),
     display_name: displayName,
     license: EMORI_SKILL_LICENSE,
     metadata_tags_yaml: renderMetadataTagsYaml(tags),
-    openclaw_emoji: quoteYaml(openclawEmoji),
-    openclaw_homepage: quoteYaml(openclawHomepage),
+    openclaw_emoji: YAML.stringify(openclawEmoji),
+    openclaw_homepage: YAML.stringify(openclawHomepage),
     owner: EMORI_SKILL_OWNER,
     skill_id: skillId,
     type,
@@ -179,23 +178,31 @@ export async function initializeSkill(options) {
     shortDescription: makeShortDescription(normalizedDescription),
   });
 
-  await Promise.all([
-    writeFile(path.join(skillDir, 'SKILL.md'), skillContent, 'utf8'),
-    writeFile(path.join(agentsDir, 'openai.yaml'), openAiContent, 'utf8'),
-    ...(usesWorkspaceAssets
-      ? []
-      : [
-          copyFile(getBundledSmallIconPath(), path.join(assetsDir, 'icon-small.svg')),
-          copyFile(getBundledLargeIconPath(), path.join(assetsDir, 'icon-large.png')),
-        ]),
-  ]);
+  await mkdir(validationTargetDir, { recursive: true });
+  const stagedDir = await mkdtemp(path.join(validationTargetDir, '.emori-skill-'));
+  const agentsDir = path.join(stagedDir, 'agents');
+  const assetsDir = path.join(stagedDir, 'assets');
+  try {
+    await mkdir(agentsDir);
+    await writeSkillFile(path.join(stagedDir, 'SKILL.md'), skillContent, 'utf8');
+    await writeSkillFile(path.join(agentsDir, 'openai.yaml'), openAiContent, 'utf8');
+    if (!usesWorkspaceAssets) {
+      await mkdir(assetsDir);
+      await copyFile(getBundledSmallIconPath(), path.join(assetsDir, 'icon-small.svg'));
+      await copyFile(getBundledLargeIconPath(), path.join(assetsDir, 'icon-large.png'));
+    }
 
-  const result = await validateSkillDir(skillDir, {
-    expectedType: type,
-  });
-  if (result.errors.length > 0) {
-    throw new Error(`Generated skill failed validation.\n${formatValidationReport(result)}`);
+    const result = await validateSkillDir(stagedDir, {
+      destinationDir: skillDir,
+      expectedType: type,
+    });
+    if (result.errors.length > 0) {
+      throw new Error(`Generated skill failed validation.\n${formatValidationReport(result)}`);
+    }
+
+    await publishSkillDirectory(stagedDir, skillDir, { force: options.force });
+    return { result: { ...result, skillDir }, skillDir };
+  } finally {
+    await rm(stagedDir, { force: true, recursive: true });
   }
-
-  return { result, skillDir };
 }

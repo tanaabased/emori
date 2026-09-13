@@ -66,6 +66,9 @@ skill-folder/
 - `[error]` `metadata.openclaw` must contain a skill-specific nonempty `emoji`
   and an HTTPS `homepage`.
 - `[error]` Relative links in `SKILL.md` must resolve.
+- `[error]` Frontmatter and `agents/openai.yaml` must be valid YAML mappings.
+  String fields must remain strings; optional `policy.allow_implicit_invocation`
+  uses YAML booleans (`true` or `false`, without quotes).
 - `[error]` Section order must match the selected local full template; optional
   sections must appear in their declared positions.
 - `[error]` `agents/openai.yaml` must contain `display_name`,
