@@ -1,5 +1,7 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
+## v1.0.0-beta.11 - [September 13, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.11)
+
 - Added Agent System model and effort profiles for low, medium, and high task complexity. [#50](https://github.com/tanaabased/emori/issues/50) [#51](https://github.com/tanaabased/emori/pull/51)
 - Added `emori-voice` and sharpened EMORI's guidance on evidence, tradeoffs, and candid disagreement. [#37](https://github.com/tanaabased/emori/issues/37) [#48](https://github.com/tanaabased/emori/pull/48)
 - Consolidated runtime and tool guidance into `AGENTS.md`. [#42](https://github.com/tanaabased/emori/issues/42)
