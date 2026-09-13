@@ -57,6 +57,21 @@ describe('skills/skill-author/lib/skill-scaffolder', () => {
     await rm(outputDir, { recursive: true, force: true });
   });
 
+  it('should preserve scalar-like category tags as strings', async () => {
+    for (const categoryTag of ['true', 'false', 'null', '123', '1e3', '0x10', 'writing']) {
+      const { skillDir, result } = await initializeSkill({
+        ...options,
+        slug: `example-${categoryTag}`,
+        categoryTag,
+      });
+      const frontmatter = parseSkillFrontmatter(
+        await readFile(path.join(skillDir, 'SKILL.md'), 'utf8'),
+      );
+      assert.deepEqual(frontmatter.metadata.tags, ['emoriwan', 'generic', categoryTag]);
+      assert.deepEqual(result.errors, []);
+    }
+  });
+
   it('should round-trip authored punctuation and newlines through valid YAML', async () => {
     const description =
       'EMORI-based help: keep "quotes", # symbols and \\ paths.\nUse when testing.';
