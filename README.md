@@ -32,36 +32,22 @@ identity, tool credentials, and GitHub work intake.
 
 ## Prerequisites
 
-EMORI is designed to run on [Agentbox](https://github.com/tanaabased/agentbox),
-which supplies her managed host tooling. Set up an Agentbox before continuing.
+- Set up an [Agentbox](https://github.com/tanaabased/agentbox#quickstart), which
+  provisions EMORI's managed macOS host and OpenClaw.
+- Update [OpenClaw](https://docs.openclaw.ai/install/updating) to **2026.9.2 or
+  newer**. EMORI targets **2026.9.3**.
+- Install [Agent System v0.6.0](https://github.com/tanaabased/openclaw-agent-system/releases/tag/v0.6.0)
+  using its [installation guide](https://github.com/tanaabased/openclaw-agent-system#installation).
+  For older OpenClaw versions, see its
+  [compatibility table](https://github.com/tanaabased/openclaw-agent-system/blob/main/ADVANCED.md#version-compatibility).
+- Give EMORI's 1Password service account access to the environment and SSH key
+  referenced by the manifest: `EMAIL`, `GH_TOKEN`, and `EMORI_SSH_KEY`.
+
 [`Brewfile`](./Brewfile) lists EMORI's additional requirements.
-
-Her 1Password service account must access the environment and SSH key referenced
-by the manifest: `EMAIL`, `GH_TOKEN`, and `EMORI_SSH_KEY`.
-
-## Installation
-
-### OpenClaw
-
-Install and onboard [OpenClaw](https://docs.openclaw.ai/install) on the Agentbox.
-This workspace targets **2026.9.3**.
-
-### Agent System
-
-[v0.6.0](https://github.com/tanaabased/openclaw-agent-system/releases/tag/v0.6.0)
-supports OpenClaw 2026.9.2 or newer and was developed against 2026.9.3. Install
-the published release:
-
-```sh
-openclaw plugins install clawhub:@tanaab/openclaw-agent-system --accept-capabilities
-```
-
-For older OpenClaw versions, see Agent System's
-[compatibility table](https://github.com/tanaabased/openclaw-agent-system/blob/main/ADVANCED.md#version-compatibility).
 
 ## Quickstart
 
-After completing the installation, have EMORI's 1Password service account token
+After meeting the prerequisites, have EMORI's 1Password service account token
 ready and set up a new checkout:
 
 ```sh
