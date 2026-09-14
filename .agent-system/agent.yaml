@@ -23,6 +23,12 @@ models:
     model: openai/gpt-6-astra
     effort: high
 
+memory:
+  search:
+    provider: openai
+    model: text-embedding-3-small
+    api-key: EMORI_MEMORY_BINDER
+
 environment:
   op: jp5zhxuc67n7uk3wfjgn5t4yam
   set:
@@ -32,6 +38,7 @@ environment:
     - EMAIL
     - GH_TOKEN
     - EMORI_SSH_KEY
+    - EMORI_MEMORY_BINDER
 
 git:
   worktrees:
