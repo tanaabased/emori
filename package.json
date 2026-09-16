@@ -26,7 +26,7 @@
   "scripts": {
     "format:check": "prettier . --check --ignore-unknown",
     "format:write": "prettier . --write --ignore-unknown",
-    "leia": "leia",
+    "leia": "bun ./node_modules/.bin/leia",
     "lint": "bun run lint:eslint && bun run format:check",
     "lint:eslint": "eslint .",
     "test": "bun run test:unit",
