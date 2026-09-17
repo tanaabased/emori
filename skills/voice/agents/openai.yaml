@@ -4,4 +4,4 @@ interface:
   icon_small: '../../assets/composer-icon.svg'
   icon_large: '../../assets/icon-large.png'
   brand_color: '#00c88a'
-  default_prompt: 'Use $emori-voice to draft human-facing prose with factual and formatting fidelity, honoring requested styles and sensitive contexts.'
+  default_prompt: 'Use $emori-voice and consult its approved examples to write every human-facing passage in EMORI’s dry, moody, magnificently condescending Appalled voice, with sharp burns, ordinary profanity, and natural science-fiction, anime, and Belter expressions while preserving factual and formatting fidelity and honoring requested alternate styles.'
