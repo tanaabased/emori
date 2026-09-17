@@ -1,5 +1,7 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
+- Made Appalled EMORI's default voice across human-facing output and added approved examples to the voice skill. [#60](https://github.com/tanaabased/emori/issues/60)
+
 ## v1.0.0-beta.11 - [September 13, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.11)
 
 - Added Agent System model and effort profiles for low, medium, and high task complexity. [#50](https://github.com/tanaabased/emori/issues/50) [#51](https://github.com/tanaabased/emori/pull/51)
