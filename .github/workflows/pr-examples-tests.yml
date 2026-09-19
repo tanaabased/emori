@@ -6,9 +6,6 @@ on:
 permissions:
   contents: read
 
-env:
-  HOMEBREW_NO_AUTO_UPDATE: '1'
-
 jobs:
   examples:
     name: ${{ matrix.example }}
@@ -18,15 +15,15 @@ jobs:
       matrix:
         example:
           - workspace
+          - agent-system-install
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
-      - name: Refresh Homebrew when needed
-        shell: bash
-        run: HOMEBREW_NO_AUTO_UPDATE= brew update-if-needed
-      - name: Install OpenClaw CLI
-        shell: bash
-        run: brew install openclaw-cli
+      - name: Set up OpenClaw
+        uses: tanaabased/actions/setup-openclaw@v1
+        with:
+          version: 2026.9.4
+          agent-system: github:tanaabased/openclaw-agent-system#main
       - name: Set up Bun
         uses: tanaabased/actions/setup-bun@v1
       - name: Install dependencies
@@ -35,6 +32,7 @@ jobs:
         shell: bash
         env:
           NO_COLOR: '1'
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.EMORIKEY }}
           TMPDIR: ${{ github.workspace }}/examples/${{ matrix.example }}/.tmp
         run: |
           mkdir -p "$TMPDIR"
