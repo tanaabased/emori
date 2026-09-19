@@ -23,10 +23,13 @@ openclaw agents list --json | grep -F '"id": "emori"'
 ```
 
 ```bash
-# should leave EMORI's repeated installation and doctor check converged
+# should leave EMORI's repeated installation converged
 cd "$GITHUB_WORKSPACE"
 openclaw agent-system install --json | jq -e '.outcomes | any(.component == "agent" and .status == "unchanged")'
-openclaw agent-system doctor --json | jq -e 'all(.findings[]; .status != "blocked")'
+
+# should allow only the Gateway-dependent notification access finding in CI
+openclaw agent-system doctor --json > "$TMPDIR/doctor.json" || true
+jq -e 'all(.findings[]; .status != "blocked" or .code == "github-operator-loaded-access-unverified")' "$TMPDIR/doctor.json"
 openclaw agent-system tool gh -- api user --jq .login | grep -Fx emoriwan
 
 # should leave EMORI's checkout clean
