@@ -15,7 +15,7 @@ jobs:
       matrix:
         example:
           - workspace
-          - agent-system-install
+          - agent-system
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -28,6 +28,14 @@ jobs:
         uses: tanaabased/actions/setup-bun@v1
       - name: Install dependencies
         run: bun install --frozen-lockfile --ignore-scripts
+      - name: Set up EMORI worktree repositories
+        if: matrix.example == 'agent-system'
+        shell: bash
+        run: |
+          mkdir -p "$HOME/tanaab"
+          git clone --depth 1 https://github.com/tanaabased/emori.git "$HOME/tanaab/emori"
+          git clone --depth 1 https://github.com/tanaabased/canon.git "$HOME/tanaab/canon"
+          git clone --depth 1 https://github.com/tanaabased/openclaw-agent-system.git "$HOME/tanaab/openclaw-agent-system"
       - name: Run Leia-backed example
         shell: bash
         env:
