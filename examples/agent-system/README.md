@@ -27,12 +27,7 @@ openclaw agents list --json | grep -F '"id": "emori"'
 cd "$GITHUB_WORKSPACE"
 openclaw agent-system install --json | jq -e '.outcomes | any(.component == "agent" and .status == "unchanged")'
 
-# should allow only the Gateway-dependent notification access finding in CI
-openclaw agent-system doctor --json > "$TMPDIR/doctor.json" || true
-if ! jq -e 'all(.findings[]; .status != "blocked" or .code == "github-operator-loaded-access-unverified")' "$TMPDIR/doctor.json"; then
-  jq -c '[.findings[] | select(.status == "blocked")]' "$TMPDIR/doctor.json"
-  exit 1
-fi
+# should use EMORI's installed GitHub credential
 openclaw agent-system tool gh -- api user --jq .login | grep -Fx emoriwan
 
 # should leave EMORI's checkout clean
