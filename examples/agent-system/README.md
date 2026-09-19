@@ -29,7 +29,10 @@ openclaw agent-system install --json | jq -e '.outcomes | any(.component == "age
 
 # should allow only the Gateway-dependent notification access finding in CI
 openclaw agent-system doctor --json > "$TMPDIR/doctor.json" || true
-jq -e 'all(.findings[]; .status != "blocked" or .code == "github-operator-loaded-access-unverified")' "$TMPDIR/doctor.json"
+if ! jq -e 'all(.findings[]; .status != "blocked" or .code == "github-operator-loaded-access-unverified")' "$TMPDIR/doctor.json"; then
+  jq -c '[.findings[] | select(.status == "blocked")]' "$TMPDIR/doctor.json"
+  exit 1
+fi
 openclaw agent-system tool gh -- api user --jq .login | grep -Fx emoriwan
 
 # should leave EMORI's checkout clean
