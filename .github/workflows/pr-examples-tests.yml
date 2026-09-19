@@ -6,9 +6,6 @@ on:
 permissions:
   contents: read
 
-env:
-  HOMEBREW_NO_AUTO_UPDATE: '1'
-
 jobs:
   examples:
     name: ${{ matrix.example }}
@@ -18,25 +15,32 @@ jobs:
       matrix:
         example:
           - workspace
+          - agent-system
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
-      - name: Refresh Homebrew when needed
-        shell: bash
-        run: HOMEBREW_NO_AUTO_UPDATE= brew update-if-needed
-      - name: Install OpenClaw CLI
-        shell: bash
-        run: brew install openclaw-cli
-      - name: Install Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Set up OpenClaw
+        uses: tanaabased/actions/setup-openclaw@v1
         with:
-          bun-version-file: .bun-version
+          version: 2026.9.4
+          agent-system: github:tanaabased/openclaw-agent-system#main
+      - name: Set up Bun
+        uses: tanaabased/actions/setup-bun@v1
       - name: Install dependencies
         run: bun install --frozen-lockfile --ignore-scripts
+      - name: Set up EMORI worktree repositories
+        if: matrix.example == 'agent-system'
+        shell: bash
+        run: |
+          mkdir -p "$HOME/tanaab"
+          git clone --depth 1 https://github.com/tanaabased/emori.git "$HOME/tanaab/emori"
+          git clone --depth 1 https://github.com/tanaabased/canon.git "$HOME/tanaab/canon"
+          git clone --depth 1 https://github.com/tanaabased/openclaw-agent-system.git "$HOME/tanaab/openclaw-agent-system"
       - name: Run Leia-backed example
         shell: bash
         env:
           NO_COLOR: '1'
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.EMORIKEY }}
           TMPDIR: ${{ github.workspace }}/examples/${{ matrix.example }}/.tmp
         run: |
           mkdir -p "$TMPDIR"

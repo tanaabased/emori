@@ -16,30 +16,16 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - name: Install Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: .bun-version
+          ref: ${{ github.sha }}
+      - name: Set up Bun
+        uses: tanaabased/actions/setup-bun@v1
       - name: Install dependencies
         run: bun install --frozen-lockfile --ignore-scripts
       - name: Run linter
         run: bun run lint
       - name: Run unit tests
         run: bun run test
-      - name: Export formatted release date
-        run: echo "RELEASE_DATE=$(date -d "${{ github.event.release.published_at }}" "+%B %e, %Y" | tr -s ' ')" >> "${GITHUB_ENV}"
-      - name: Prepare release
-        uses: tanaabased/prepare-release-action@v1
+      - name: Publish repository
+        uses: tanaabased/actions/publish-repo@v1
         with:
-          bun-version: 1.3.14
           sync-token: ${{ secrets.TANAAB_COAXIUM_INJECTOR }}
-          sync-email: tanaabot@tanaab.dev
-          sync-username: tanaabot
-          sync-verified: true
-          update-files: CHANGELOG.md
-          update-files-header: |
-            ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
-          update-files-meta: |
-            UNRELEASED_DATE=${{ env.RELEASE_DATE }}
-            UNRELEASED_LINK=${{ github.event.release.html_url }}
-            UNRELEASED_VERSION=${{ github.event.release.tag_name }}
