@@ -8,9 +8,9 @@ import { spawnSync } from 'node:child_process';
 export const setupGroups = ['dependencies', 'plugins', 'configuration', 'memory'];
 
 const agentId = 'emori';
-const officialPluginPackages = {
-  codex: '@openclaw/codex',
-  imessage: '@openclaw/imessage',
+export const officialPluginSources = {
+  codex: 'clawhub:@openclaw/codex',
+  imessage: 'clawhub:@openclaw/imessage',
 };
 const requiredPlugins = [
   'tanaab',
@@ -339,13 +339,12 @@ function applyPlugins() {
       '--acknowledge-install-policy-warning',
     ]);
   }
-  for (const [id, packageName] of Object.entries(officialPluginPackages)) {
+  for (const [id, source] of Object.entries(officialPluginSources)) {
     if (!pluginAvailable(id)) {
       run('openclaw', [
         'plugins',
         'install',
-        packageName,
-        '--pin',
+        source,
         '--accept-capabilities',
         '--acknowledge-install-policy-warning',
       ]);

@@ -7,6 +7,7 @@ import {
   homebrewEnvironment,
   memoryPatch,
   mergeRouteBinding,
+  officialPluginSources,
   setupGroups,
   sqliteVectorPackage,
 } from '../scripts/setup.js';
@@ -70,5 +71,12 @@ describe('setup helper', () => {
     assert.equal(sqliteVectorPackage('darwin', 'arm64'), 'sqlite-vec-darwin-arm64');
     assert.equal(sqliteVectorPackage('darwin', 'x64'), 'sqlite-vec-darwin-x64');
     assert.throws(() => sqliteVectorPackage('linux', 'x64'), /unavailable for linux-x64/u);
+  });
+
+  it('should install source-linked official plugins through ClawHub', () => {
+    assert.deepEqual(officialPluginSources, {
+      codex: 'clawhub:@openclaw/codex',
+      imessage: 'clawhub:@openclaw/imessage',
+    });
   });
 });
