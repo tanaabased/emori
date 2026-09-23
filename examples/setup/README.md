@@ -25,10 +25,19 @@ openclaw agent-system install --json | tee "${TMPDIR}/setup-install.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["dependencies", "plugins", "configuration", "memory"]' "${TMPDIR}/setup-install.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "updated")' "${TMPDIR}/setup-install.json"
 
-# should leave representative evidence for each real setup group
+# should satisfy EMORI's Brewfile dependencies
+HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --file "$GITHUB_WORKSPACE/Brewfile"
+
+# should create the Canon checkout
 test -d "$HOME/tanaab/canon/.git"
+
+# should activate the Canon plugin
 openclaw plugins inspect tanaab --json | jq -e '.plugin.id == "tanaab"'
+
+# should reconcile EMORI's owned configuration
 openclaw config get agents.entries.emori.heartbeat.every --json | grep -Fx '"30m"'
+
+# should initialize private memory without restoring it
 test -f "$GITHUB_WORKSPACE/MEMORY.md"
 openclaw config get plugins.entries.active-memory.config.enabled --json | grep -Fx 'true'
 ```
