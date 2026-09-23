@@ -9,4 +9,8 @@ brew "gh"
 brew "git"
 brew "openssh"
 
-npm "sqlite-vec-darwin-arm64"
+if Hardware::CPU.arm?
+  npm "sqlite-vec-darwin-arm64"
+elsif Hardware::CPU.intel?
+  npm "sqlite-vec-darwin-x64"
+end

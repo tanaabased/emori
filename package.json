@@ -30,6 +30,6 @@
     "lint": "bun run lint:eslint && bun run format:check",
     "lint:eslint": "eslint .",
     "test": "bun run test:unit",
-    "test:unit": "bun --bun mocha \"skills/*/test/**/*.spec.js\""
+    "test:unit": "bun --bun mocha \"skills/*/test/**/*.spec.js\" \"test/**/*.spec.js\""
   }
 }

@@ -45,7 +45,6 @@ git:
     repositories:
       local:
         emori: ~/tanaab/emori
-        canon: ~/tanaab/canon
         openclaw-agent-system: ~/tanaab/openclaw-agent-system
   ssh:
     private-keys:
@@ -88,3 +87,24 @@ github:
         node-id: MDEyOk9yZ2FuaXphdGlvbjMxNjA1NTg0
   policy:
     releases: deny
+
+setup:
+  steps:
+    - id: dependencies
+      check: [./scripts/setup.js, check, dependencies]
+      apply:
+        command: ./scripts/setup.js
+        args: [apply, dependencies]
+        timeout-seconds: 1800
+    - id: plugins
+      check: [./scripts/setup.js, check, plugins]
+      apply:
+        command: ./scripts/setup.js
+        args: [apply, plugins]
+        timeout-seconds: 1800
+    - id: configuration
+      check: [./scripts/setup.js, check, configuration]
+      apply: [./scripts/setup.js, apply, configuration]
+    - id: memory
+      check: [./scripts/setup.js, check, memory]
+      apply: [./scripts/setup.js, apply, memory]
