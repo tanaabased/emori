@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
+import { delimiter } from 'node:path';
 
 import {
   configurationPatch,
   containsSubset,
+  homebrewEnvironment,
   memoryPatch,
   mergeRouteBinding,
   setupGroups,
@@ -47,5 +49,19 @@ describe('setup helper', () => {
     assert.doesNotMatch(serialized, /apiKey|credential|primary|fallbacks/u);
     assert.equal(memoryPatch.agents.entries.emori.memory.search.provider, undefined);
     assert.equal(memoryPatch.agents.entries.emori.memory.search.model, undefined);
+  });
+
+  it('should keep managed launchers out of Homebrew child commands during setup', () => {
+    const result = homebrewEnvironment({
+      AGENT_SYSTEM_EXEC_AUTHORITY: 'authority',
+      AGENT_SYSTEM_EXEC_CAPABILITY: 'capability',
+      PATH: ['/managed/launchers', '/host/bin'].join(delimiter),
+      PRESERVE: 'yes',
+    });
+    assert.equal(result.PATH, '/host/bin');
+    assert.equal(result.AGENT_SYSTEM_EXEC_AUTHORITY, undefined);
+    assert.equal(result.AGENT_SYSTEM_EXEC_CAPABILITY, undefined);
+    assert.equal(result.HOMEBREW_NO_AUTO_UPDATE, '1');
+    assert.equal(result.PRESERVE, 'yes');
   });
 });

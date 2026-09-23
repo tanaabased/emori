@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { delimiter, dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
@@ -225,6 +225,18 @@ function checkPrerequisites() {
   if (process.platform !== 'darwin') throw new Error('EMORI setup requires macOS.');
 }
 
+export function homebrewEnvironment(environment = process.env) {
+  const {
+    AGENT_SYSTEM_EXEC_AUTHORITY: authority,
+    AGENT_SYSTEM_EXEC_CAPABILITY: capability,
+    ...hostEnvironment
+  } = environment;
+  if (authority && capability && hostEnvironment.PATH) {
+    hostEnvironment.PATH = hostEnvironment.PATH.split(delimiter).slice(1).join(delimiter);
+  }
+  return { ...hostEnvironment, HOMEBREW_NO_AUTO_UPDATE: '1' };
+}
+
 function dependenciesHealthy() {
   checkPrerequisites();
   const canon = canonPath();
@@ -233,7 +245,7 @@ function dependenciesHealthy() {
   }
   const bundle = run('brew', ['bundle', 'check', '--file', resolve('Brewfile')], {
     allowFailure: true,
-    env: { ...process.env, HOMEBREW_NO_AUTO_UPDATE: '1' },
+    env: homebrewEnvironment(),
   });
   return bundle.status === 0 && isDirectory(join(canon, '.git'));
 }
@@ -241,7 +253,7 @@ function dependenciesHealthy() {
 function applyDependencies() {
   checkPrerequisites();
   run('brew', ['bundle', '--file', resolve('Brewfile')], {
-    env: { ...process.env, HOMEBREW_NO_AUTO_UPDATE: '1' },
+    env: homebrewEnvironment(),
   });
   const canon = canonPath();
   if (existsSync(canon)) {
