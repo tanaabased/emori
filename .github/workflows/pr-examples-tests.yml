@@ -15,8 +15,8 @@ jobs:
       matrix:
         example:
           - workspace
-          - agent-system
-          - agent-system-setup
+          - install
+          - setup
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -30,7 +30,7 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile --ignore-scripts
       - name: Set up EMORI worktree repositories
-        if: startsWith(matrix.example, 'agent-system')
+        if: matrix.example == 'install' || matrix.example == 'setup'
         shell: bash
         run: |
           mkdir -p "$HOME/tanaab"

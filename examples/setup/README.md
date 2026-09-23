@@ -1,4 +1,4 @@
-# Agent System Setup Example
+# Setup
 
 This scenario installs EMORI from her checked-out workspace in an isolated
 OpenClaw profile and runs every declared operator setup group.
@@ -19,6 +19,7 @@ cd "$GITHUB_WORKSPACE"
 test ! -e "$HOME/tanaab/canon"
 ! openclaw config get plugins.entries.tanaab --json >/dev/null 2>&1
 
+# should run every setup group through Agent System
 openclaw agent-system validate
 openclaw agent-system install --json | tee "${TMPDIR}/setup-install.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["dependencies", "plugins", "configuration", "memory"]' "${TMPDIR}/setup-install.json"
@@ -39,5 +40,6 @@ openclaw agent-system install --json | tee "${TMPDIR}/setup-reinstall.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["dependencies", "plugins", "configuration", "memory"]' "${TMPDIR}/setup-reinstall.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "unchanged")' "${TMPDIR}/setup-reinstall.json"
 
+# should preserve EMORI's clean checkout
 test -z "$(git -C "$GITHUB_WORKSPACE" status --short --untracked-files=all)"
 ```

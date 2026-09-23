@@ -1,4 +1,4 @@
-# Agent System Example
+# Install
 
 This scenario installs Agent System from source in an isolated OpenClaw profile,
 then validates and reconciles EMORI's checked-out workspace using her declared
