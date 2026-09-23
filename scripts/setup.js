@@ -217,6 +217,7 @@ function checkPrerequisites() {
     ['brew', ['--version']],
     ['bun', ['--version']],
     ['git', ['--version']],
+    ['npm', ['--version']],
     ['openclaw', ['--version']],
   ]) {
     const result = commandResult(command, args);
@@ -237,6 +238,22 @@ export function homebrewEnvironment(environment = process.env) {
   return { ...hostEnvironment, HOMEBREW_NO_AUTO_UPDATE: '1' };
 }
 
+export function sqliteVectorPackage(platform = process.platform, arch = process.arch) {
+  if (platform !== 'darwin' || !['arm64', 'x64'].includes(arch)) {
+    throw new Error(`SQLite vector support is unavailable for ${platform}-${arch}.`);
+  }
+  return `sqlite-vec-darwin-${arch}`;
+}
+
+function npmPackageInstalled(packageName) {
+  const result = run('npm', ['list', '--global', '--depth=0', '--json'], {
+    allowFailure: true,
+    env: homebrewEnvironment(),
+  });
+  const packages = parseJson(result.stdout, 'npm list --global');
+  return packages.dependencies?.[packageName] !== undefined;
+}
+
 function dependenciesHealthy() {
   checkPrerequisites();
   const canon = canonPath();
@@ -252,6 +269,10 @@ function dependenciesHealthy() {
 
 function applyDependencies() {
   checkPrerequisites();
+  const vectorPackage = sqliteVectorPackage();
+  if (!npmPackageInstalled(vectorPackage)) {
+    run('npm', ['install', '--global', vectorPackage], { env: homebrewEnvironment() });
+  }
   run('brew', ['bundle', '--file', resolve('Brewfile')], {
     env: homebrewEnvironment(),
   });

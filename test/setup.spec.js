@@ -8,6 +8,7 @@ import {
   memoryPatch,
   mergeRouteBinding,
   setupGroups,
+  sqliteVectorPackage,
 } from '../scripts/setup.js';
 
 describe('setup helper', () => {
@@ -63,5 +64,11 @@ describe('setup helper', () => {
     assert.equal(result.AGENT_SYSTEM_EXEC_CAPABILITY, undefined);
     assert.equal(result.HOMEBREW_NO_AUTO_UPDATE, '1');
     assert.equal(result.PRESERVE, 'yes');
+  });
+
+  it('should select platform-specific SQLite vector packages', () => {
+    assert.equal(sqliteVectorPackage('darwin', 'arm64'), 'sqlite-vec-darwin-arm64');
+    assert.equal(sqliteVectorPackage('darwin', 'x64'), 'sqlite-vec-darwin-x64');
+    assert.throws(() => sqliteVectorPackage('linux', 'x64'), /unavailable for linux-x64/u);
   });
 });

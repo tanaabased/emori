@@ -26,10 +26,7 @@ jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["dependencies
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "updated")' "${TMPDIR}/setup-install.json"
 
 # should satisfy EMORI's Brewfile dependencies
-if ! HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --verbose --file "$GITHUB_WORKSPACE/Brewfile"; then
-  npm install --global sqlite-vec-darwin-arm64 --verbose
-  exit 1
-fi
+HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --verbose --file "$GITHUB_WORKSPACE/Brewfile"
 
 # should create the Canon checkout
 test -d "$HOME/tanaab/canon/.git"
