@@ -34,6 +34,17 @@ test -d "$HOME/tanaab/canon/.git"
 # should activate the Canon plugin
 openclaw plugins inspect tanaab --json | jq -e '.plugin.id == "tanaab"'
 
+# should install the Codex plugin
+openclaw plugins inspect codex --json | jq -e '.plugin.id == "codex"'
+
+# should install the iMessage plugin
+openclaw plugins inspect imessage --json | jq -e '.plugin.id == "imessage"'
+
+# should expose required bundled plugins
+for id in openai browser memory-core active-memory; do
+  openclaw plugins inspect "$id" --json | jq -e --arg id "$id" '.plugin.id == $id'
+done
+
 # should reconcile EMORI's owned configuration
 openclaw config get agents.entries.emori.heartbeat.every --json | grep -Fx '"30m"'
 
