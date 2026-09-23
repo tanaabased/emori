@@ -26,7 +26,7 @@ jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["dependencies
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "updated")' "${TMPDIR}/setup-install.json"
 
 # should satisfy EMORI's Brewfile dependencies
-HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --file "$GITHUB_WORKSPACE/Brewfile"
+HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --verbose --file "$GITHUB_WORKSPACE/Brewfile"
 
 # should create the Canon checkout
 test -d "$HOME/tanaab/canon/.git"
