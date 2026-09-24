@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 
-import { homebrewEnvironment, setupIds, sqliteVectorPackage } from '../scripts/setup.js';
+import {
+  homebrewEnvironment,
+  pluginInspectionHealthy,
+  setupIds,
+  sqliteVectorPackage,
+} from '../scripts/setup.js';
 
 describe('setup helper', () => {
   it('should expose only the verified setup prefix', () => {
@@ -25,5 +30,29 @@ describe('setup helper', () => {
     assert.equal(sqliteVectorPackage('darwin', 'arm64'), 'sqlite-vec-darwin-arm64');
     assert.equal(sqliteVectorPackage('darwin', 'x64'), 'sqlite-vec-darwin-x64');
     assert.throws(() => sqliteVectorPackage('linux', 'x64'), /unavailable for linux-x64/u);
+  });
+
+  it('should accept only the enabled healthy requested plugin', () => {
+    assert.equal(
+      pluginInspectionHealthy(
+        { plugin: { id: 'tanaab', enabled: true, status: 'loaded' } },
+        'tanaab',
+      ),
+      true,
+    );
+    assert.equal(
+      pluginInspectionHealthy(
+        { plugin: { id: 'tanaab', enabled: false, status: 'disabled' } },
+        'tanaab',
+      ),
+      false,
+    );
+    assert.equal(
+      pluginInspectionHealthy(
+        { plugin: { id: 'other', enabled: true, status: 'loaded' } },
+        'tanaab',
+      ),
+      false,
+    );
   });
 });

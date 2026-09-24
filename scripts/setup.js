@@ -33,14 +33,6 @@ function parseJson(output, label) {
   }
 }
 
-function configGet(path) {
-  const result = run('openclaw', ['config', 'get', path, '--json'], { allowFailure: true });
-  const payload = parseJson(result.stdout, `openclaw config get ${path}`);
-  if (result.status === 0) return payload;
-  if (payload?.error?.message?.includes('valid but unset')) return undefined;
-  throw new Error(`OpenClaw could not inspect ${path}.`);
-}
-
 function homePath(...parts) {
   const home = process.env.HOME;
   if (!home) throw new Error('HOME is unavailable.');
@@ -136,27 +128,29 @@ function applyCanonCheckout() {
   run('git', ['clone', 'git@github.com:tanaabased/canon.git', canon]);
 }
 
-function pluginAvailable(id) {
-  return run('openclaw', ['plugins', 'inspect', id, '--json'], { allowFailure: true }).status === 0;
+function inspectPlugin(id) {
+  const result = run('openclaw', ['plugins', 'inspect', id, '--json'], { allowFailure: true });
+  return result.status === 0 ? parseJson(result.stdout, `openclaw plugins inspect ${id}`) : null;
+}
+
+export function pluginInspectionHealthy(inspection, id) {
+  return (
+    inspection?.plugin?.id === id &&
+    inspection.plugin.enabled === true &&
+    inspection.plugin.status !== 'error'
+  );
 }
 
 function canonPluginHealthy() {
   const canon = resolve(canonPath());
   if (!isDirectory(join(canon, '.git'))) throw new Error('Canon is not ready.');
-  const entries = configGet('plugins.entries') ?? {};
-  const paths = configGet('plugins.load.paths') ?? [];
-  return (
-    pluginAvailable('tanaab') &&
-    entries.tanaab?.enabled === true &&
-    paths.map(resolve).includes(canon)
-  );
+  return pluginInspectionHealthy(inspectPlugin('tanaab'), 'tanaab');
 }
 
 function applyCanonPlugin() {
   const canon = resolve(canonPath());
   if (!isDirectory(join(canon, '.git'))) throw new Error('Canon is not ready.');
-  const paths = configGet('plugins.load.paths') ?? [];
-  if (!pluginAvailable('tanaab') || !paths.map(resolve).includes(canon)) {
+  if (!inspectPlugin('tanaab')) {
     run('openclaw', [
       'plugins',
       'install',
