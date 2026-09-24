@@ -34,8 +34,9 @@ identity, tool credentials, and GitHub work intake.
 
 - Set up an [Agentbox](https://github.com/tanaabased/agentbox#quickstart), which
   provisions EMORI's managed macOS host and OpenClaw.
-- Update [OpenClaw](https://docs.openclaw.ai/install/updating) to **2026.9.5 or
-  newer**. EMORI targets **2026.9.5**.
+- Use the OpenClaw version declared by
+  [`devDependencies.openclaw`](./package.json). That package declaration is the
+  compatibility and CI source of truth.
 - Install an Agent System build containing
   [operator-run setup support](https://github.com/tanaabased/openclaw-agent-system/pull/137)
   using its [installation guide](https://github.com/tanaabased/openclaw-agent-system#installation).
@@ -61,6 +62,11 @@ git remote set-url origin git@github.com:tanaabased/emori.git
 
 # store the 1Password service account token at the masked prompt.
 openclaw agent-system credentials set op
+
+# bootstrap the declared local repositories with EMORI's managed Git identity.
+openclaw agent-system tool git -- clone git@github.com:tanaabased/canon.git ~/tanaab/canon
+openclaw agent-system tool git -- clone git@github.com:tanaabased/openclaw-agent-system.git ~/tanaab/openclaw-agent-system
+
 openclaw agent-system validate
 openclaw agent-system install
 openclaw agent-system doctor
@@ -71,10 +77,10 @@ openclaw agent-system tool gh -- api user --jq .login
 
 Run Agent System commands here so they find EMORI's manifest. `install` registers
 her, applies the declared configuration, and converges the currently verified
-setup prefix: Homebrew dependencies and the Canon checkout. Run it again when
-that state changes. The prefix also links Canon as the `tanaab` plugin and
-installs the official Codex plugin. `doctor` checks whether the installed state
-still matches. Use `install --skip-setup` only for installation-only automation.
+setup prefix: Homebrew dependencies, the Canon `tanaab` plugin, and the official
+Codex plugin. Run it again when that state changes. `doctor` checks whether the
+installed state still matches. Use `install --skip-setup` only for
+installation-only automation.
 
 See [EMORI Setup](./SETUP.md) for ownership boundaries, manual iMessage and Codex
 onboarding, optional capabilities, and the separate private continuity path.

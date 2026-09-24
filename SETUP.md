@@ -8,17 +8,14 @@ independently; setup is not a museum for code that once looked plausible.
 
 ## Current setup prefix
 
-| ID                  | EMORI-owned effect                                                                                                  |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `brew-dependencies` | Reconciles [`Brewfile`](./Brewfile) and the platform-specific SQLite vector package.                                |
-| `canon-checkout`    | Creates `~/tanaab/canon` only when absent. Existing and dirty Canon checkouts are never updated, reset, or cleaned. |
-| `canon-plugin`      | Links the Canon checkout as the `tanaab` plugin and enables it without changing skill policy.                       |
-| `codex-plugin`      | Installs the official Codex plugin from ClawHub and enables it.                                                     |
+| ID                  | EMORI-owned effect                                                                                     |
+| ------------------- | ------------------------------------------------------------------------------------------------------ |
+| `brew-dependencies` | Reconciles [`Brewfile`](./Brewfile) and the platform-specific SQLite vector package.                   |
+| `canon-plugin`      | Links the declared Canon checkout as the `tanaab` plugin and enables it without changing skill policy. |
+| `codex-plugin`      | Installs the official Codex plugin from ClawHub and enables it.                                        |
 
-The steps invoke ordinary `brew`, `npm`, and `git` commands. They deliberately do
-not use `AGENT_SYSTEM_GIT`, `AGENT_SYSTEM_GH`, or another strict launcher
-environment variable. This exercises Agent System's default context-sensitive
-routing, including the plain `git clone` used for Canon. Homebrew receives only
+Each concern has an explicit task entrypoint under [`scripts/`](./scripts) and
+focused implementation under [`lib/setup/`](./lib/setup). Homebrew receives only
 `HOMEBREW_NO_AUTO_UPDATE=1`; setup does not strip Agent System authority or edit
 the inherited `PATH`.
 
@@ -31,19 +28,24 @@ Those values do not belong in setup patches wearing fake moustaches.
 Before running setup:
 
 - Provision the macOS host and OpenClaw with Agentbox.
-- Use OpenClaw 2026.9.5 or a compatible newer release.
+- Install the exact OpenClaw version declared by `devDependencies.openclaw`.
 - Install an Agent System build containing setup support, context-sensitive
-  command routing, and Agent System-owned model/runtime binding. CI pins the exact
-  tested revision until a compatible release exists.
+  command routing, and Agent System-owned model/runtime binding. CI follows
+  Agent System `main` and records the exact resolved commit for each run.
 - Give EMORI's 1Password service account access to the manifest's required
   environment and SSH key.
 - Install Node.js 24 and Bun 1.3. OpenClaw and Agent System are host
   prerequisites; setup does not recursively install its own floorboards.
+- Clone every path declared by `git.worktrees.repositories.local` before
+  installation. Agent System treats those mappings as existing repository
+  prerequisites, then admits managed Git operations from inside them.
 
 Run the full install from EMORI's checkout:
 
 ```sh
 openclaw agent-system credentials set op
+openclaw agent-system tool git -- clone git@github.com:tanaabased/canon.git ~/tanaab/canon
+openclaw agent-system tool git -- clone git@github.com:tanaabased/openclaw-agent-system.git ~/tanaab/openclaw-agent-system
 openclaw agent-system validate
 openclaw agent-system install
 openclaw agent-system doctor
@@ -57,7 +59,8 @@ openclaw agent-system install --skip-setup
 
 Checks are read-only. Exit `0` means healthy, `1` means actionable drift, and
 other statuses mean a prerequisite or inspection is blocked. Applies are safe to
-repeat. An existing Canon checkout is preserved without pulling or modifying it.
+repeat. Repository bootstrap remains explicit because declared local repositories
+must exist before Agent System can reconcile setup prerequisites.
 
 ## Deferred setup concerns
 

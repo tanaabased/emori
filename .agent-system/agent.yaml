@@ -45,6 +45,7 @@ git:
     repositories:
       local:
         emori: ~/tanaab/emori
+        canon: ~/tanaab/canon
         openclaw-agent-system: ~/tanaab/openclaw-agent-system
   ssh:
     private-keys:
@@ -91,26 +92,20 @@ github:
 setup:
   steps:
     - id: brew-dependencies
-      check: [./scripts/setup.js, check, brew-dependencies]
+      check: [./scripts/setup-brew-dependencies-task.js, check]
       apply:
-        command: ./scripts/setup.js
-        args: [apply, brew-dependencies]
-        timeout-seconds: 1800
-    - id: canon-checkout
-      check: [./scripts/setup.js, check, canon-checkout]
-      apply:
-        command: ./scripts/setup.js
-        args: [apply, canon-checkout]
+        command: ./scripts/setup-brew-dependencies-task.js
+        args: [apply]
         timeout-seconds: 1800
     - id: canon-plugin
-      check: [./scripts/setup.js, check, canon-plugin]
+      check: [./scripts/setup-canon-plugin-task.js, check]
       apply:
-        command: ./scripts/setup.js
-        args: [apply, canon-plugin]
+        command: ./scripts/setup-canon-plugin-task.js
+        args: [apply]
         timeout-seconds: 1800
     - id: codex-plugin
-      check: [./scripts/setup.js, check, codex-plugin]
+      check: [./scripts/setup-codex-plugin-task.js, check]
       apply:
-        command: ./scripts/setup.js
-        args: [apply, codex-plugin]
+        command: ./scripts/setup-codex-plugin-task.js
+        args: [apply]
         timeout-seconds: 1800

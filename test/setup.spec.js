@@ -1,23 +1,10 @@
 import assert from 'node:assert/strict';
 
-import {
-  homebrewEnvironment,
-  officialPluginSources,
-  pluginInspectionHealthy,
-  setupIds,
-  sqliteVectorPackage,
-} from '../scripts/setup.js';
+import { homebrewEnvironment, sqliteVectorPackage } from '../lib/setup/brew-dependencies.js';
+import { codexPluginSource } from '../lib/setup/codex-plugin.js';
+import { pluginInspectionHealthy } from '../lib/setup/plugin.js';
 
 describe('setup helper', () => {
-  it('should expose only the verified setup prefix', () => {
-    assert.deepEqual(setupIds, [
-      'brew-dependencies',
-      'canon-checkout',
-      'canon-plugin',
-      'codex-plugin',
-    ]);
-  });
-
   it('should preserve Agent System routing for Homebrew child commands', () => {
     const result = homebrewEnvironment({
       AGENT_SYSTEM_EXEC_AUTHORITY: 'authority',
@@ -63,6 +50,6 @@ describe('setup helper', () => {
   });
 
   it('should install Codex from the official ClawHub source', () => {
-    assert.equal(officialPluginSources.codex, 'clawhub:@openclaw/codex');
+    assert.equal(codexPluginSource, 'clawhub:@openclaw/codex');
   });
 });

@@ -10,6 +10,15 @@ credentials while explicitly skipping operator-run setup.
 # should store EMORI's 1Password service account credential in the isolated profile
 test -n "${OP_SERVICE_ACCOUNT_TOKEN:-}"
 openclaw agent-system credentials set op --from-env
+
+# should prepare every declared local repository before Agent System installation
+mkdir -p "$HOME/tanaab"
+git clone --no-local "$GITHUB_WORKSPACE" "$HOME/tanaab/emori"
+cd "$GITHUB_WORKSPACE"
+openclaw agent-system tool git -- clone git@github.com:tanaabased/canon.git "$HOME/tanaab/canon"
+openclaw agent-system tool git -- clone git@github.com:tanaabased/openclaw-agent-system.git "$HOME/tanaab/openclaw-agent-system"
+test -d "$HOME/tanaab/canon/.git"
+test -d "$HOME/tanaab/openclaw-agent-system/.git"
 ```
 
 ## Testing
@@ -22,7 +31,10 @@ openclaw agent-system install --skip-setup --json | tee "${TMPDIR}/install.json"
 jq -e '.outcomes | any(.component == "agent" and .status == "created")' "${TMPDIR}/install.json"
 jq -e '.outcomes | all(.component != "setup")' "${TMPDIR}/install.json"
 openclaw agents list --json | grep -F '"id": "emori"'
-test ! -e "$HOME/tanaab/canon"
+
+# should admit the declared Canon checkout with EMORI's managed Git identity
+cd "$HOME/tanaab/canon"
+openclaw agent-system tool git -- var GIT_AUTHOR_IDENT | grep -F 'EMORI <emori@tanaab.dev>'
 ```
 
 ```bash
