@@ -1,6 +1,6 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
-- Added repeatable Agent System setup for EMORI-owned dependencies, plugins, OpenClaw policy, and memory readiness. [#65](https://github.com/tanaabased/emori/issues/65)
+- Added the first repeatable Agent System setup steps for EMORI's Homebrew dependencies and Canon checkout. [#65](https://github.com/tanaabased/emori/issues/65)
 - Made Appalled EMORI's default voice across human-facing output and added approved examples to the voice skill. [#60](https://github.com/tanaabased/emori/issues/60)
 
 ## v1.0.0-beta.11 - [September 13, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.11)

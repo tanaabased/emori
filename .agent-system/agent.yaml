@@ -90,21 +90,15 @@ github:
 
 setup:
   steps:
-    - id: dependencies
-      check: [./scripts/setup.js, check, dependencies]
+    - id: brew-dependencies
+      check: [./scripts/setup.js, check, brew-dependencies]
       apply:
         command: ./scripts/setup.js
-        args: [apply, dependencies]
+        args: [apply, brew-dependencies]
         timeout-seconds: 1800
-    - id: plugins
-      check: [./scripts/setup.js, check, plugins]
+    - id: canon-checkout
+      check: [./scripts/setup.js, check, canon-checkout]
       apply:
         command: ./scripts/setup.js
-        args: [apply, plugins]
+        args: [apply, canon-checkout]
         timeout-seconds: 1800
-    - id: configuration
-      check: [./scripts/setup.js, check, configuration]
-      apply: [./scripts/setup.js, apply, configuration]
-    - id: memory
-      check: [./scripts/setup.js, check, memory]
-      apply: [./scripts/setup.js, apply, memory]
