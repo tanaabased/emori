@@ -12,6 +12,7 @@ independently; setup is not a museum for code that once looked plausible.
 | ------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `brew-dependencies` | Reconciles [`Brewfile`](./Brewfile) and the platform-specific SQLite vector package.                                |
 | `canon-checkout`    | Creates `~/tanaab/canon` only when absent. Existing and dirty Canon checkouts are never updated, reset, or cleaned. |
+| `canon-plugin`      | Links the Canon checkout as the `tanaab` plugin and enables it without changing skill policy.                       |
 
 The steps invoke ordinary `brew`, `npm`, and `git` commands. They deliberately do
 not use `AGENT_SYSTEM_GIT`, `AGENT_SYSTEM_GH`, or another strict launcher
@@ -59,10 +60,11 @@ repeat. An existing Canon checkout is preserved without pulling or modifying it.
 
 ## Deferred setup concerns
 
-Plugins, skill policy, execution policy, messaging, iMessage routing, session
-policy, heartbeat, Workshop, browser defaults, and memory behavior are not yet
-declared setup steps. They will be added one concern at a time after the current
-prefix passes its first-run and unchanged-rerun CI evidence.
+The Codex, iMessage, and bundled plugins plus skill policy, execution policy,
+messaging, iMessage routing, session policy, heartbeat, Workshop, browser
+defaults, and memory behavior are not yet declared setup steps. They will be
+added one concern at a time after the current prefix passes its first-run and
+unchanged-rerun CI evidence.
 
 The authoritative ordered inventory and current cutoff live in
 [issue #65](https://github.com/tanaabased/emori/issues/65). A manifest include

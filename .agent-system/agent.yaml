@@ -102,3 +102,9 @@ setup:
         command: ./scripts/setup.js
         args: [apply, canon-checkout]
         timeout-seconds: 1800
+    - id: canon-plugin
+      check: [./scripts/setup.js, check, canon-plugin]
+      apply:
+        command: ./scripts/setup.js
+        args: [apply, canon-plugin]
+        timeout-seconds: 1800

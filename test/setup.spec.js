@@ -4,7 +4,7 @@ import { homebrewEnvironment, setupIds, sqliteVectorPackage } from '../scripts/s
 
 describe('setup helper', () => {
   it('should expose only the verified setup prefix', () => {
-    assert.deepEqual(setupIds, ['brew-dependencies', 'canon-checkout']);
+    assert.deepEqual(setupIds, ['brew-dependencies', 'canon-checkout', 'canon-plugin']);
   });
 
   it('should preserve Agent System routing for Homebrew child commands', () => {

@@ -5,7 +5,7 @@ import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
-export const setupIds = ['brew-dependencies', 'canon-checkout'];
+export const setupIds = ['brew-dependencies', 'canon-checkout', 'canon-plugin'];
 
 function commandResult(command, args, options = {}) {
   return spawnSync(command, args, {
@@ -31,6 +31,14 @@ function parseJson(output, label) {
   } catch {
     throw new Error(`${label} returned invalid JSON.`);
   }
+}
+
+function configGet(path) {
+  const result = run('openclaw', ['config', 'get', path, '--json'], { allowFailure: true });
+  const payload = parseJson(result.stdout, `openclaw config get ${path}`);
+  if (result.status === 0) return payload;
+  if (payload?.error?.message?.includes('valid but unset')) return undefined;
+  throw new Error(`OpenClaw could not inspect ${path}.`);
 }
 
 function homePath(...parts) {
@@ -128,9 +136,44 @@ function applyCanonCheckout() {
   run('git', ['clone', 'git@github.com:tanaabased/canon.git', canon]);
 }
 
+function pluginAvailable(id) {
+  return run('openclaw', ['plugins', 'inspect', id, '--json'], { allowFailure: true }).status === 0;
+}
+
+function canonPluginHealthy() {
+  const canon = resolve(canonPath());
+  if (!isDirectory(join(canon, '.git'))) throw new Error('Canon is not ready.');
+  const entries = configGet('plugins.entries') ?? {};
+  const paths = configGet('plugins.load.paths') ?? [];
+  return (
+    pluginAvailable('tanaab') &&
+    entries.tanaab?.enabled === true &&
+    paths.map(resolve).includes(canon)
+  );
+}
+
+function applyCanonPlugin() {
+  const canon = resolve(canonPath());
+  if (!isDirectory(join(canon, '.git'))) throw new Error('Canon is not ready.');
+  const paths = configGet('plugins.load.paths') ?? [];
+  if (!pluginAvailable('tanaab') || !paths.map(resolve).includes(canon)) {
+    run('openclaw', [
+      'plugins',
+      'install',
+      '--link',
+      canon,
+      '--force',
+      '--accept-capabilities',
+      '--acknowledge-install-policy-warning',
+    ]);
+  }
+  run('openclaw', ['plugins', 'enable', 'tanaab', '--accept-capabilities']);
+}
+
 const handlers = {
   'brew-dependencies': { check: brewDependenciesHealthy, apply: applyBrewDependencies },
   'canon-checkout': { check: canonCheckoutHealthy, apply: applyCanonCheckout },
+  'canon-plugin': { check: canonPluginHealthy, apply: applyCanonPlugin },
 };
 
 export function runSetup(mode, id) {
