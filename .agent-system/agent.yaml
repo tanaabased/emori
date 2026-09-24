@@ -108,3 +108,9 @@ setup:
         command: ./scripts/setup.js
         args: [apply, canon-plugin]
         timeout-seconds: 1800
+    - id: codex-plugin
+      check: [./scripts/setup.js, check, codex-plugin]
+      apply:
+        command: ./scripts/setup.js
+        args: [apply, codex-plugin]
+        timeout-seconds: 1800

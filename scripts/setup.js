@@ -5,7 +5,10 @@ import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
-export const setupIds = ['brew-dependencies', 'canon-checkout', 'canon-plugin'];
+export const setupIds = ['brew-dependencies', 'canon-checkout', 'canon-plugin', 'codex-plugin'];
+export const officialPluginSources = {
+  codex: 'clawhub:@openclaw/codex',
+};
 
 function commandResult(command, args, options = {}) {
   return spawnSync(command, args, {
@@ -164,10 +167,31 @@ function applyCanonPlugin() {
   run('openclaw', ['plugins', 'enable', 'tanaab', '--accept-capabilities']);
 }
 
+function officialPluginHealthy(id) {
+  return pluginInspectionHealthy(inspectPlugin(id), id);
+}
+
+function applyOfficialPlugin(id) {
+  if (!inspectPlugin(id)) {
+    run('openclaw', [
+      'plugins',
+      'install',
+      officialPluginSources[id],
+      '--accept-capabilities',
+      '--acknowledge-install-policy-warning',
+    ]);
+  }
+  run('openclaw', ['plugins', 'enable', id, '--accept-capabilities']);
+}
+
 const handlers = {
   'brew-dependencies': { check: brewDependenciesHealthy, apply: applyBrewDependencies },
   'canon-checkout': { check: canonCheckoutHealthy, apply: applyCanonCheckout },
   'canon-plugin': { check: canonPluginHealthy, apply: applyCanonPlugin },
+  'codex-plugin': {
+    check: () => officialPluginHealthy('codex'),
+    apply: () => applyOfficialPlugin('codex'),
+  },
 };
 
 export function runSetup(mode, id) {

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 
 import {
   homebrewEnvironment,
+  officialPluginSources,
   pluginInspectionHealthy,
   setupIds,
   sqliteVectorPackage,
@@ -9,7 +10,12 @@ import {
 
 describe('setup helper', () => {
   it('should expose only the verified setup prefix', () => {
-    assert.deepEqual(setupIds, ['brew-dependencies', 'canon-checkout', 'canon-plugin']);
+    assert.deepEqual(setupIds, [
+      'brew-dependencies',
+      'canon-checkout',
+      'canon-plugin',
+      'codex-plugin',
+    ]);
   });
 
   it('should preserve Agent System routing for Homebrew child commands', () => {
@@ -54,5 +60,9 @@ describe('setup helper', () => {
       ),
       false,
     );
+  });
+
+  it('should install Codex from the official ClawHub source', () => {
+    assert.equal(officialPluginSources.codex, 'clawhub:@openclaw/codex');
   });
 });
