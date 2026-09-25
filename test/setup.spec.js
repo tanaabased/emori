@@ -35,6 +35,7 @@ import {
   nextMessagingToolGrants,
 } from '../lib/setup/messaging-policy.js';
 import { pluginInspectionHealthy } from '../lib/setup/plugin.js';
+import { workshopPolicy, workshopPolicyHealthy } from '../lib/setup/workshop-policy.js';
 
 describe('setup helper', () => {
   it('should keep every setup task entrypoint executable', () => {
@@ -391,5 +392,13 @@ describe('setup helper', () => {
       alsoAllow: undefined,
       message: undefined,
     });
+  });
+
+  it('should allow Workshop proposals without autonomous publication or application', () => {
+    assert.equal(workshopPolicy.autonomousMode, 'propose');
+    assert.equal(workshopPolicyHealthy('propose'), true);
+    assert.equal(workshopPolicyHealthy('off'), false);
+    assert.equal(workshopPolicyHealthy('apply'), false);
+    assert.equal(workshopPolicyHealthy(undefined), false);
   });
 });

@@ -139,3 +139,9 @@ setup:
         command: ./scripts/setup-imessage-routing-task.js
         args: [apply]
         timeout-seconds: 1800
+    - id: workshop-policy
+      check: [./scripts/setup-workshop-policy-task.js, check]
+      apply:
+        command: ./scripts/setup-workshop-policy-task.js
+        args: [apply]
+        timeout-seconds: 1800
