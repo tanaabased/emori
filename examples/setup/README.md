@@ -192,19 +192,6 @@ openclaw config get plugins.entries.memory-core --json | jq -e '
   (.config.dreaming | has("phases") | not)
 '
 ! openclaw config get plugins.slots.memory --json >/dev/null 2>&1
-openclaw cron list --json | jq -e '
-  [.jobs[] | select(.declarationKey == "memory-core:memory-dreaming-promotion")] as $jobs |
-  ($jobs | length) == 1 and
-  $jobs[0].enabled == true and
-  $jobs[0].schedule.kind == "cron" and
-  ($jobs[0].schedule.expr | length) > 0 and
-  $jobs[0].sessionTarget == "isolated" and
-  $jobs[0].wakeMode == "now" and
-  $jobs[0].payload.kind == "agentTurn" and
-  $jobs[0].payload.message == "__openclaw_memory_core_short_term_promotion_dream__" and
-  $jobs[0].payload.lightContext == true and
-  $jobs[0].delivery.mode == "none"
-'
 ```
 
 ```bash

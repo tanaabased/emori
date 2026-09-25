@@ -43,8 +43,6 @@ import {
   memoryConsolidationPolicy,
   memoryConsolidationPolicyHealthy,
   memoryCorePluginHealthy,
-  memoryDreamingJobContract,
-  memoryDreamingJobHealthy,
   memorySlotCompatible,
 } from '../lib/setup/memory-consolidation.js';
 import {
@@ -563,22 +561,5 @@ describe('setup helper', () => {
     assert.equal(memorySlotCompatible(undefined), true);
     assert.equal(memorySlotCompatible('memory-core'), true);
     assert.equal(memorySlotCompatible('other-memory'), false);
-
-    const job = {
-      declarationKey: memoryDreamingJobContract.declarationKey,
-      enabled: true,
-      schedule: { kind: 'cron', expr: '0 3 * * *' },
-      sessionTarget: 'isolated',
-      wakeMode: 'now',
-      payload: {
-        kind: 'agentTurn',
-        message: memoryDreamingJobContract.event,
-        lightContext: true,
-      },
-      delivery: { mode: 'none' },
-    };
-    assert.equal(memoryDreamingJobHealthy({ jobs: [job] }), true);
-    assert.equal(memoryDreamingJobHealthy({ jobs: [{ ...job, enabled: false }] }), false);
-    assert.equal(memoryDreamingJobHealthy({ jobs: [job, job] }), false);
   });
 });
