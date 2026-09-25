@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import { readdirSync, statSync } from 'node:fs';
 
+import {
+  activeMemoryPluginHealthy,
+  activeMemoryPolicy,
+  activeMemoryPolicyHealthy,
+} from '../lib/setup/active-memory.js';
 import { homebrewEnvironment, sqliteVectorPackage } from '../lib/setup/brew-dependencies.js';
 import {
   canonPluginInspectionHealthy,
@@ -477,6 +482,38 @@ describe('setup helper', () => {
     assert.equal(
       sessionMemoryHookHealthy({
         hooks: [{ name: 'session-memory', disabled: false, enabledByConfig: true }],
+      }),
+      false,
+    );
+  });
+
+  it('should require bounded Active Memory without transcript exports', () => {
+    assert.equal(activeMemoryPolicyHealthy(activeMemoryPolicy), true);
+    assert.equal(activeMemoryPolicyHealthy({ ...activeMemoryPolicy, mode: 'always' }), false);
+    assert.equal(activeMemoryPolicyHealthy({ ...activeMemoryPolicy, timeoutMs: 45000 }), false);
+    assert.equal(
+      activeMemoryPolicyHealthy({ ...activeMemoryPolicy, persistTranscripts: true }),
+      false,
+    );
+    assert.equal(
+      activeMemoryPluginHealthy({
+        plugin: {
+          id: 'active-memory',
+          enabled: true,
+          origin: 'bundled',
+          status: 'loaded',
+        },
+      }),
+      true,
+    );
+    assert.equal(
+      activeMemoryPluginHealthy({
+        plugin: {
+          id: 'active-memory',
+          enabled: true,
+          origin: 'external',
+          status: 'loaded',
+        },
       }),
       false,
     );

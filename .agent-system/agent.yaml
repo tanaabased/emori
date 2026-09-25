@@ -157,3 +157,9 @@ setup:
         command: ./scripts/setup-memory-recall-task.js
         args: [apply]
         timeout-seconds: 1800
+    - id: active-memory
+      check: [./scripts/setup-active-memory-task.js, check]
+      apply:
+        command: ./scripts/setup-active-memory-task.js
+        args: [apply]
+        timeout-seconds: 1800

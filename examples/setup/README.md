@@ -30,7 +30,7 @@ openclaw config set skills.load.extraDirs "[\"$HOME/tanaab/canon/skills\"]" --st
 # should run the verified setup prefix through Agent System
 openclaw agent-system validate
 openclaw agent-system install --json | tee "${TMPDIR}/setup-install.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing", "workshop-policy", "memory-vector-store", "memory-recall"]' "${TMPDIR}/setup-install.json"
+jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing", "workshop-policy", "memory-vector-store", "memory-recall", "active-memory"]' "${TMPDIR}/setup-install.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "updated")' "${TMPDIR}/setup-install.json"
 
 # should satisfy EMORI's Brewfile dependencies
@@ -150,13 +150,34 @@ openclaw hooks list --json | jq -e '
   .[0].disabled == true and
   .[0].enabledByConfig == false
 '
+
+# should enable bounded Active Memory without exporting private recall transcripts
+openclaw plugins inspect active-memory --json | jq -e '
+  .plugin.id == "active-memory" and
+  .plugin.origin == "bundled" and
+  .plugin.enabled == true and
+  .plugin.status != "error"
+'
+openclaw config get plugins.entries.active-memory --json | jq -e '
+  .enabled == true and
+  .config.enabled == true and
+  .config.mode == "escalate" and
+  .config.timeoutMs == 15000 and
+  .config.logging == true and
+  .config.persistTranscripts == false and
+  (.config | has("agents") | not) and
+  (.config | has("model") | not) and
+  (.config | has("modelFallback") | not) and
+  (.config | has("allowedChatTypes") | not) and
+  (.config | has("transcriptDir") | not)
+'
 ```
 
 ```bash
 # should leave a converged setup unchanged on repeat installation
 cd "$GITHUB_WORKSPACE"
 openclaw agent-system install --json | tee "${TMPDIR}/setup-reinstall.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing", "workshop-policy", "memory-vector-store", "memory-recall"]' "${TMPDIR}/setup-reinstall.json"
+jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing", "workshop-policy", "memory-vector-store", "memory-recall", "active-memory"]' "${TMPDIR}/setup-reinstall.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "unchanged")' "${TMPDIR}/setup-reinstall.json"
 
 # should preserve EMORI's clean checkout
