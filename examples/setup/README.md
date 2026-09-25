@@ -198,18 +198,23 @@ openclaw config get plugins.entries.memory-core --json | jq -e '
 ! openclaw config get plugins.slots.memory --json >/dev/null 2>&1
 
 # should initialize ignored private memory storage without restoring any content
-test -f "$HOME/tanaab/emori/MEMORY.md"
-test ! -s "$HOME/tanaab/emori/MEMORY.md"
-test -f "$HOME/tanaab/emori/DREAMS.md"
-test ! -s "$HOME/tanaab/emori/DREAMS.md"
-test -d "$HOME/tanaab/emori/memory"
-test -z "$(find "$HOME/tanaab/emori/memory" -mindepth 1 -print -quit)"
-test -d "$HOME/tanaab/emori/.private"
-test -z "$(find "$HOME/tanaab/emori/.private" -mindepth 1 -print -quit)"
-git -C "$HOME/tanaab/emori" check-ignore --quiet --no-index -- MEMORY.md
-git -C "$HOME/tanaab/emori" check-ignore --quiet --no-index -- DREAMS.md
-git -C "$HOME/tanaab/emori" check-ignore --quiet --no-index -- memory/.memory-storage-probe
-git -C "$HOME/tanaab/emori" check-ignore --quiet --no-index -- .private/.memory-storage-probe
+memory_workspace="$(openclaw config get agents.entries.emori.workspace --json | jq -r '.')"
+if [[ "$memory_workspace" == "~/"* ]]; then
+  memory_workspace="$HOME/${memory_workspace:2}"
+fi
+[[ "$memory_workspace" == /* ]]
+test -f "$memory_workspace/MEMORY.md"
+test ! -s "$memory_workspace/MEMORY.md"
+test -f "$memory_workspace/DREAMS.md"
+test ! -s "$memory_workspace/DREAMS.md"
+test -d "$memory_workspace/memory"
+test -z "$(find "$memory_workspace/memory" -mindepth 1 -print -quit)"
+test -d "$memory_workspace/.private"
+test -z "$(find "$memory_workspace/.private" -mindepth 1 -print -quit)"
+git -C "$memory_workspace" check-ignore --quiet --no-index -- MEMORY.md
+git -C "$memory_workspace" check-ignore --quiet --no-index -- DREAMS.md
+git -C "$memory_workspace" check-ignore --quiet --no-index -- memory/.memory-storage-probe
+git -C "$memory_workspace" check-ignore --quiet --no-index -- .private/.memory-storage-probe
 ```
 
 ```bash
