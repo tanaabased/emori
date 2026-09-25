@@ -13,8 +13,7 @@ openclaw agent-system credentials set op --from-env
 # should prepare installation prerequisites not owned by setup
 mkdir -p "$HOME/tanaab"
 git clone --no-local "$GITHUB_WORKSPACE" "$HOME/tanaab/emori"
-cd "$GITHUB_WORKSPACE"
-openclaw agent-system tool git --agent emori -- clone git@github.com:tanaabased/openclaw-agent-system.git "$HOME/tanaab/openclaw-agent-system"
+git clone https://github.com/tanaabased/openclaw-agent-system.git "$HOME/tanaab/openclaw-agent-system"
 test -d "$HOME/tanaab/openclaw-agent-system/.git"
 ```
 

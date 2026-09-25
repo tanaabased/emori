@@ -14,9 +14,8 @@ openclaw agent-system credentials set op --from-env
 # should prepare every declared local repository before Agent System installation
 mkdir -p "$HOME/tanaab"
 git clone --no-local "$GITHUB_WORKSPACE" "$HOME/tanaab/emori"
-cd "$GITHUB_WORKSPACE"
-openclaw agent-system tool git --agent emori -- clone git@github.com:tanaabased/canon.git "$HOME/tanaab/canon"
-openclaw agent-system tool git --agent emori -- clone git@github.com:tanaabased/openclaw-agent-system.git "$HOME/tanaab/openclaw-agent-system"
+git clone https://github.com/tanaabased/canon.git "$HOME/tanaab/canon"
+git clone https://github.com/tanaabased/openclaw-agent-system.git "$HOME/tanaab/openclaw-agent-system"
 test -d "$HOME/tanaab/canon/.git"
 test -d "$HOME/tanaab/openclaw-agent-system/.git"
 ```
