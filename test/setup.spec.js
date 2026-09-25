@@ -177,17 +177,10 @@ describe('setup helper', () => {
     );
   });
 
-  it('should require EMORI execution policy without rejecting Agent System grants', () => {
-    const tools = {
-      profile: executionPolicy.profile,
-      alsoAllow: ['agent_system_git', 'agent_system_github'],
-      exec: {
-        mode: executionPolicy.execMode,
-        pathPrepend: ['/managed/launchers'],
-      },
-    };
-    assert.equal(executionPolicyHealthy(tools), true);
-    assert.equal(executionPolicyHealthy({ ...tools, profile: 'full' }), false);
-    assert.equal(executionPolicyHealthy({ ...tools, exec: { ...tools.exec, mode: 'ask' } }), false);
+  it('should require both EMORI execution policy values', () => {
+    assert.equal(executionPolicyHealthy(executionPolicy.profile, executionPolicy.execMode), true);
+    assert.equal(executionPolicyHealthy('full', executionPolicy.execMode), false);
+    assert.equal(executionPolicyHealthy(executionPolicy.profile, 'ask'), false);
+    assert.equal(executionPolicyHealthy(undefined, undefined), false);
   });
 });
