@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readdirSync, statSync } from 'node:fs';
 
 import { homebrewEnvironment, sqliteVectorPackage } from '../lib/setup/brew-dependencies.js';
 import {
@@ -20,6 +21,16 @@ import {
 import { pluginInspectionHealthy } from '../lib/setup/plugin.js';
 
 describe('setup helper', () => {
+  it('should keep every setup task entrypoint executable', () => {
+    const scripts = readdirSync(new URL('../scripts/', import.meta.url)).filter((name) =>
+      /^setup-.+-task\.js$/u.test(name),
+    );
+    assert.notEqual(scripts.length, 0);
+    for (const script of scripts) {
+      assert.notEqual(statSync(new URL(`../scripts/${script}`, import.meta.url)).mode & 0o111, 0);
+    }
+  });
+
   it('should preserve Agent System routing for Homebrew child commands', () => {
     const result = homebrewEnvironment({
       AGENT_SYSTEM_EXEC_AUTHORITY: 'authority',
