@@ -87,7 +87,7 @@ github:
       - login: lando
         node-id: MDEyOk9yZ2FuaXphdGlvbjMxNjA1NTg0
   policy:
-    releases: deny
+    releases: allow
 
 setup:
   steps:
