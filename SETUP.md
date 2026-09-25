@@ -3,23 +3,28 @@
 The [README quickstart](./README.md#quickstart) is the common path. This operator
 guide owns setup prerequisites, boundaries, and deferred work. Agent System
 installs EMORI's declared identity and credentials, then runs the ordered setup
-steps in [`.agent-system/agent.yaml`](./.agent-system/agent.yaml). Only the
-verified green prefix is declared. Later concerns remain tracked in
-[issue #65](https://github.com/tanaabased/emori/issues/65) until each can pass
-independently; setup is not a museum for code that once looked plausible.
+steps in [`.agent-system/agent.yaml`](./.agent-system/agent.yaml). The complete
+audited inventory is declared only after every concern has passed independently;
+setup is not a museum for code that once looked plausible.
 
-## Current setup prefix
+## Audited setup inventory
 
-| ID                  | EMORI-owned effect                                                                                     |
-| ------------------- | ------------------------------------------------------------------------------------------------------ |
-| `brew-dependencies` | Reconciles [`Brewfile`](./Brewfile) and the platform-specific SQLite vector package.                   |
-| `canon-checkout`    | Clones Canon over managed SSH when absent and preserves every existing checkout.                       |
-| `canon-plugin`      | Links Canon as `tanaab`, exposes its shared skills, and removes redundant Canon `extraDirs` discovery. |
-| `codex-plugin`      | Installs the official Codex plugin from ClawHub and enables it.                                        |
-| `imessage-plugin`   | Installs and enables the official iMessage channel plugin without configuring accounts or routing.     |
-| `execution-policy`  | Sets EMORI's coding profile and automatic execution mode while preserving Agent System grants.         |
-| `messaging-policy`  | Grants EMORI the message tool, limits it to sends, and inherits OpenClaw's routing defaults.           |
-| `imessage-routing`  | Enables EMORI's named default iMessage account and routes that account to EMORI.                       |
+| ID                     | EMORI-owned effect                                                                                     |
+| ---------------------- | ------------------------------------------------------------------------------------------------------ |
+| `brew-dependencies`    | Reconciles [`Brewfile`](./Brewfile) and the platform-specific SQLite vector package.                   |
+| `canon-checkout`       | Clones Canon over managed SSH when absent and preserves every existing checkout.                       |
+| `canon-plugin`         | Links Canon as `tanaab`, exposes its shared skills, and removes redundant Canon `extraDirs` discovery. |
+| `codex-plugin`         | Installs the official Codex plugin from ClawHub and enables it.                                        |
+| `imessage-plugin`      | Installs and enables the official iMessage channel plugin without configuring accounts or routing.     |
+| `execution-policy`     | Sets EMORI's coding profile and automatic execution mode while preserving Agent System grants.         |
+| `messaging-policy`     | Grants EMORI the message tool, limits it to sends, and inherits OpenClaw's routing defaults.           |
+| `imessage-routing`     | Enables EMORI's named default iMessage account and routes that account to EMORI.                       |
+| `workshop-policy`      | Allows autonomous Workshop proposals without autonomous publication or application.                    |
+| `memory-vector-store`  | Enables EMORI's agent-scoped SQLite vector store with the installed platform extension.                |
+| `memory-recall`        | Enables private same-agent memory and session recall while disabling duplicate legacy ingestion.       |
+| `active-memory`        | Enables bounded recall escalation with logging and transcript persistence disabled.                    |
+| `memory-consolidation` | Enables bundled Memory Core dreaming without owning its cadence, model, storage mode, or thresholds.   |
+| `memory-storage`       | Creates ignored private memory files and directories only when absent, preserving existing state.      |
 
 Each concern has an explicit task entrypoint under [`scripts/`](./scripts) and
 focused implementation under [`lib/setup/`](./lib/setup). Homebrew receives only
@@ -67,19 +72,19 @@ other statuses mean a prerequisite or inspection is blocked. Applies are safe to
 repeat. `canon-checkout` creates only its owned checkout; declaring another local
 repository does not make its source a setup prerequisite.
 
-## Deferred setup concerns
+## Excluded or deferred setup concerns
 
-Workshop proposal mode and memory behavior are not yet declared setup steps.
-They will be added one concern at a time after the current prefix passes its
-first-run and unchanged-rerun CI evidence. Bundled plugin defaults, standalone
-skill and session policy, heartbeat automation, and browser-local state are
-intentionally excluded from EMORI's durable setup.
+Bundled plugin defaults, standalone skill and session policy, heartbeat
+automation, browser-local state, provider and model binding, authenticated
+indexing, and private continuity restoration are intentionally excluded from
+EMORI's durable setup. They remain runtime defaults, Agent System ownership,
+optional automation, host-local state, or separately authorized private work.
 
-The authoritative ordered inventory and current cutoff live in
-[issue #65](https://github.com/tanaabased/emori/issues/65). A manifest include
-system is deferred until repeated implementations establish a real need; the
-explicit sequence is cheaper than one speculative abstraction and its inevitable
-support group.
+The authoritative ordered inventory and completion evidence live in
+[issue #65](https://github.com/tanaabased/emori/issues/65) and its linked pull
+request. A manifest include system remains deferred until repeated implementations
+establish a real need; the explicit sequence is cheaper than one speculative
+abstraction and its inevitable support group.
 
 ## Manual onboarding
 
@@ -103,4 +108,10 @@ Setup does not restore private memory, import conversations, copy session histor
 publish learned Workshop skills, or force an index rebuild. Authenticated memory
 indexing, retrieval verification, and continuity restoration remain separate,
 explicitly authorized work after public setup converges. Never stage private
-continuity material in this repository. Karabast, `.gitignore` is not encryption.
+continuity material in this repository.
+
+`memory-storage` creates empty `MEMORY.md`, `DREAMS.md`, `memory/`, and
+`.private/` locations only when absent. New files use mode `0600`, new directories
+use `0700`, unsafe object types fail closed, and existing contents and modes remain
+untouched. The exact ignore rules prevent accidental Git tracking; they do not
+provide confidentiality. Karabast, `.gitignore` is not encryption.
