@@ -8,7 +8,11 @@ import {
   withoutCanonSkillDir,
 } from '../lib/setup/canon-plugin.js';
 import { codexPluginSource } from '../lib/setup/codex-plugin.js';
-import { executionPolicy, executionPolicyHealthy } from '../lib/setup/execution-policy.js';
+import {
+  executionPolicy,
+  executionPolicyHealthy,
+  executionPolicyValues,
+} from '../lib/setup/execution-policy.js';
 import {
   imessagePluginInspectionHealthy,
   imessagePluginSource,
@@ -182,5 +186,25 @@ describe('setup helper', () => {
     assert.equal(executionPolicyHealthy('full', executionPolicy.execMode), false);
     assert.equal(executionPolicyHealthy(executionPolicy.profile, 'ask'), false);
     assert.equal(executionPolicyHealthy(undefined, undefined), false);
+  });
+
+  it('should read only EMORI policy values from agent entries', () => {
+    assert.deepEqual(
+      executionPolicyValues({
+        emori: {
+          tools: {
+            profile: executionPolicy.profile,
+            alsoAllow: ['agent_system_git'],
+            exec: { mode: executionPolicy.execMode, pathPrepend: ['/managed/launchers'] },
+          },
+        },
+        main: { tools: { profile: 'minimal' } },
+      }),
+      executionPolicy,
+    );
+    assert.deepEqual(executionPolicyValues({ main: {} }), {
+      execMode: undefined,
+      profile: undefined,
+    });
   });
 });
