@@ -40,6 +40,14 @@ import {
   nextMessagingToolGrants,
 } from '../lib/setup/messaging-policy.js';
 import {
+  memoryConsolidationPolicy,
+  memoryConsolidationPolicyHealthy,
+  memoryCorePluginHealthy,
+  memoryDreamingJobContract,
+  memoryDreamingJobHealthy,
+  memorySlotCompatible,
+} from '../lib/setup/memory-consolidation.js';
+import {
   memoryRecallPolicy,
   memoryRecallPolicyHealthy,
   memoryRecallStatusHealthy,
@@ -517,5 +525,60 @@ describe('setup helper', () => {
       }),
       false,
     );
+  });
+
+  it('should enable bundled Memory Core dreaming without claiming its optional policy', () => {
+    assert.equal(memoryConsolidationPolicyHealthy(memoryConsolidationPolicy), true);
+    assert.equal(
+      memoryConsolidationPolicyHealthy({
+        ...memoryConsolidationPolicy,
+        dreamingEnabled: false,
+      }),
+      false,
+    );
+    assert.equal(
+      memoryCorePluginHealthy({
+        plugin: {
+          id: 'memory-core',
+          enabled: true,
+          origin: 'bundled',
+          status: 'loaded',
+          memorySlotSelected: true,
+        },
+      }),
+      true,
+    );
+    assert.equal(
+      memoryCorePluginHealthy({
+        plugin: {
+          id: 'memory-core',
+          enabled: true,
+          origin: 'bundled',
+          status: 'loaded',
+          memorySlotSelected: false,
+        },
+      }),
+      false,
+    );
+    assert.equal(memorySlotCompatible(undefined), true);
+    assert.equal(memorySlotCompatible('memory-core'), true);
+    assert.equal(memorySlotCompatible('other-memory'), false);
+
+    const job = {
+      declarationKey: memoryDreamingJobContract.declarationKey,
+      enabled: true,
+      schedule: { kind: 'cron', expr: '0 3 * * *' },
+      sessionTarget: 'isolated',
+      wakeMode: 'now',
+      payload: {
+        kind: 'agentTurn',
+        message: memoryDreamingJobContract.event,
+        lightContext: true,
+      },
+      delivery: { mode: 'none' },
+    };
+    assert.equal(memoryDreamingJobHealthy({ jobs: [job] }), true);
+    assert.equal(memoryDreamingJobHealthy({ jobs: [{ ...job, enabled: false }] }), false);
+    assert.equal(memoryDreamingJobHealthy({ jobs: [job, job] }), false);
   });
 });

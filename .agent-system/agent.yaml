@@ -163,3 +163,9 @@ setup:
         command: ./scripts/setup-active-memory-task.js
         args: [apply]
         timeout-seconds: 1800
+    - id: memory-consolidation
+      check: [./scripts/setup-memory-consolidation-task.js, check]
+      apply:
+        command: ./scripts/setup-memory-consolidation-task.js
+        args: [apply]
+        timeout-seconds: 1800

@@ -30,7 +30,7 @@ openclaw config set skills.load.extraDirs "[\"$HOME/tanaab/canon/skills\"]" --st
 # should run the verified setup prefix through Agent System
 openclaw agent-system validate
 openclaw agent-system install --json | tee "${TMPDIR}/setup-install.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing", "workshop-policy", "memory-vector-store", "memory-recall", "active-memory"]' "${TMPDIR}/setup-install.json"
+jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing", "workshop-policy", "memory-vector-store", "memory-recall", "active-memory", "memory-consolidation"]' "${TMPDIR}/setup-install.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "updated")' "${TMPDIR}/setup-install.json"
 
 # should satisfy EMORI's Brewfile dependencies
@@ -171,13 +171,47 @@ openclaw config get plugins.entries.active-memory --json | jq -e '
   (.config | has("allowedChatTypes") | not) and
   (.config | has("transcriptDir") | not)
 '
+
+# should enable bundled Memory Core dreaming without claiming optional global policy
+openclaw plugins inspect memory-core --json | jq -e '
+  .plugin.id == "memory-core" and
+  .plugin.origin == "bundled" and
+  .plugin.enabled == true and
+  .plugin.status != "error" and
+  .plugin.memorySlotSelected == true
+'
+openclaw config get plugins.entries.memory-core --json | jq -e '
+  .enabled == true and
+  .config.dreaming.enabled == true and
+  .config.dreaming.verboseLogging == true and
+  (.config.dreaming | has("frequency") | not) and
+  (.config.dreaming | has("model") | not) and
+  (.config.dreaming | has("timezone") | not) and
+  (.config.dreaming | has("storage") | not) and
+  (.config.dreaming | has("execution") | not) and
+  (.config.dreaming | has("phases") | not)
+'
+! openclaw config get plugins.slots.memory --json >/dev/null 2>&1
+openclaw cron list --json | jq -e '
+  [.jobs[] | select(.declarationKey == "memory-core:memory-dreaming-promotion")] as $jobs |
+  ($jobs | length) == 1 and
+  $jobs[0].enabled == true and
+  $jobs[0].schedule.kind == "cron" and
+  ($jobs[0].schedule.expr | length) > 0 and
+  $jobs[0].sessionTarget == "isolated" and
+  $jobs[0].wakeMode == "now" and
+  $jobs[0].payload.kind == "agentTurn" and
+  $jobs[0].payload.message == "__openclaw_memory_core_short_term_promotion_dream__" and
+  $jobs[0].payload.lightContext == true and
+  $jobs[0].delivery.mode == "none"
+'
 ```
 
 ```bash
 # should leave a converged setup unchanged on repeat installation
 cd "$GITHUB_WORKSPACE"
 openclaw agent-system install --json | tee "${TMPDIR}/setup-reinstall.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing", "workshop-policy", "memory-vector-store", "memory-recall", "active-memory"]' "${TMPDIR}/setup-reinstall.json"
+jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing", "workshop-policy", "memory-vector-store", "memory-recall", "active-memory", "memory-consolidation"]' "${TMPDIR}/setup-reinstall.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "unchanged")' "${TMPDIR}/setup-reinstall.json"
 
 # should preserve EMORI's clean checkout
