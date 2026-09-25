@@ -2,6 +2,21 @@
   "agents": {
     "entries": {
       "emori": {
+        "models": {
+          "openai/gpt-6-luna": {
+            "agentRuntime": {
+              "id": "codex"
+            }
+          },
+          "openai/gpt-6-sol": {
+            "agentRuntime": {
+              "id": "codex"
+            }
+          }
+        },
+        "modelPolicy": {
+          "allow": ["openai/gpt-6-luna", "openai/gpt-6-sol"]
+        },
         "tools": {
           "profile": "coding",
           "alsoAllow": ["message"],

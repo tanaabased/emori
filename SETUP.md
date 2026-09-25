@@ -9,14 +9,14 @@ setup is not a museum for code that once looked plausible.
 
 ## Audited setup inventory
 
-| ID                  | EMORI-owned effect                                                                                                 |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `brew-dependencies` | Reconciles [`Brewfile`](./Brewfile) and the platform-specific SQLite vector package.                               |
-| `canon-checkout`    | Clones Canon over managed SSH when absent and preserves every existing checkout.                                   |
-| `canon-plugin`      | Links Canon as `tanaab` and exposes its shared skills.                                                             |
-| `codex-plugin`      | Installs the official Codex plugin from ClawHub and enables it.                                                    |
-| `imessage-plugin`   | Installs and enables the official iMessage channel plugin without configuring accounts or routing.                 |
-| `openclaw-config`   | Atomically merges EMORI's execution, messaging, routing, Workshop, and memory policy after dependencies are ready. |
+| ID                  | EMORI-owned effect                                                                                                                  |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `brew-dependencies` | Reconciles [`Brewfile`](./Brewfile) and the platform-specific SQLite vector package.                                                |
+| `canon-checkout`    | Clones Canon over managed SSH when absent and preserves every existing checkout.                                                    |
+| `canon-plugin`      | Links Canon as `tanaab` and exposes its shared skills.                                                                              |
+| `codex-plugin`      | Installs the official Codex plugin from ClawHub and enables it.                                                                     |
+| `imessage-plugin`   | Installs and enables the official iMessage channel plugin without configuring accounts or routing.                                  |
+| `openclaw-config`   | Atomically merges EMORI's execution, model admission, messaging, routing, Workshop, and memory policy after dependencies are ready. |
 
 Each installation concern has an explicit task entrypoint under
 [`scripts/`](./scripts) and focused implementation under
@@ -32,16 +32,20 @@ replacement. Run it through `openclaw-config`; applying the raw file would
 replace shared arrays before the reconciler can preserve them. Apparently even
 declarative configuration needs a warning label when arrays are involved.
 
-Agent System continues to own identity, declared model routing, environment
+Agent System continues to own identity, task-model profile routing, environment
 credentials, Git and SSH signing, GitHub admission, and memory-provider binding.
-Those values do not belong in setup patches wearing fake moustaches.
+The setup patch admits the declared runtime model targets, but does not select a
+primary model or fallbacks. Those values do not belong in setup patches wearing
+fake moustaches.
 
 ## Prerequisites
 
 Before running setup:
 
 - Provision the macOS host and OpenClaw with Agentbox.
-- Install the exact OpenClaw version declared by `devDependencies.openclaw`.
+- Install at least the OpenClaw baseline declared by `devDependencies.openclaw`.
+  The exact dependency pins CI's tested baseline; verify later releases before
+  treating them as supported.
 - Install an Agent System build containing setup support, context-sensitive
   command routing, and Agent System-owned model/runtime binding. CI follows
   Agent System `main` and records the exact resolved commit for each run.
