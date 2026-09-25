@@ -22,10 +22,6 @@ git clone --no-local "$GITHUB_WORKSPACE" "$HOME/tanaab/emori"
 cd "$GITHUB_WORKSPACE"
 test ! -e "$HOME/tanaab/canon"
 test ! -e "$HOME/tanaab/openclaw-agent-system"
-test ! -e "$HOME/tanaab/emori/MEMORY.md"
-test ! -e "$HOME/tanaab/emori/DREAMS.md"
-test ! -e "$HOME/tanaab/emori/memory"
-test ! -e "$HOME/tanaab/emori/.private"
 ! openclaw plugins inspect tanaab --json >/dev/null 2>&1
 ! openclaw plugins inspect codex --json >/dev/null 2>&1
 ! openclaw plugins inspect imessage --json >/dev/null 2>&1
@@ -34,7 +30,7 @@ openclaw config set skills.load.extraDirs "[\"$HOME/tanaab/canon/skills\"]" --st
 # should run the verified setup prefix through Agent System
 openclaw agent-system validate
 openclaw agent-system install --json | tee "${TMPDIR}/setup-install.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing", "workshop-policy", "memory-vector-store", "memory-recall", "active-memory", "memory-consolidation", "memory-storage"]' "${TMPDIR}/setup-install.json"
+jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "openclaw-config"]' "${TMPDIR}/setup-install.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "updated")' "${TMPDIR}/setup-install.json"
 
 # should satisfy EMORI's Brewfile dependencies
@@ -79,7 +75,7 @@ openclaw plugins inspect imessage --json | jq -e '
   .install.resolvedName == "@openclaw/imessage"
 '
 
-# should configure only EMORI's coding and automatic execution policy
+# should atomically configure EMORI's execution and messaging policy
 openclaw config get agents.entries.emori.tools --json | jq -e '
   .profile == "coding" and
   .exec.mode == "auto" and
@@ -88,14 +84,13 @@ openclaw config get agents.entries.emori.tools --json | jq -e '
   (.exec.pathPrepend | length) > 0
 '
 
-# should allow only message sends and inherit OpenClaw routing and attribution defaults
 openclaw config get agents.entries.emori.tools --json | jq -e '
   (.alsoAllow | index("message")) != null and
   .message.actions.allow == ["send"] and
   (.message | has("crossContext") | not)
 '
 
-# should route EMORI's enabled default iMessage account without changing session scope
+# should configure EMORI's iMessage route without changing session scope
 openclaw config get channels.imessage --json | jq -e '
   .enabled == true and
   .defaultAccount == "emori" and
@@ -116,10 +111,10 @@ openclaw config get bindings --json | jq -e '
 '
 ! openclaw config get session.dmScope --json >/dev/null 2>&1
 
-# should allow Workshop to draft proposals without autonomous publication or application
+# should configure Workshop proposal policy
 openclaw config get skills.workshop.autonomous.mode --json | jq -e '. == "propose"'
 
-# should enable EMORI's agent-scoped SQLite vector store with the installed extension
+# should configure EMORI's memory policy with the installed vector extension
 case "$(uname -m)" in
   arm64) SQLITE_VECTOR_PACKAGE="sqlite-vec-darwin-arm64" ;;
   x86_64) SQLITE_VECTOR_PACKAGE="sqlite-vec-darwin-x64" ;;
@@ -137,7 +132,6 @@ openclaw memory status --agent emori --json | jq -e \
    .[0].status.vector.enabled == true and
    .[0].status.vector.extensionPath == $extension'
 
-# should enable private same-agent full-transcript recall without duplicate hook artifacts
 openclaw config get agents.entries.emori.memory.search.rememberAcrossConversations --json | jq -e '. == true'
 openclaw config get agents.entries.emori.memory.search.sources --json | jq -e '. == ["memory", "sessions"]'
 openclaw config get agents.entries.emori.memory.search.experimental.sessionMemory --json | jq -e '. == true'
@@ -154,74 +148,13 @@ openclaw hooks list --json | jq -e '
   .[0].disabled == true and
   .[0].enabledByConfig == false
 '
-
-# should enable bounded Active Memory without exporting private recall transcripts
-openclaw plugins inspect active-memory --json | jq -e '
-  .plugin.id == "active-memory" and
-  .plugin.origin == "bundled" and
-  .plugin.enabled == true and
-  .plugin.status != "error"
-'
-openclaw config get plugins.entries.active-memory --json | jq -e '
-  .enabled == true and
-  .config.enabled == true and
-  .config.mode == "escalate" and
-  .config.timeoutMs == 15000 and
-  .config.logging == true and
-  .config.persistTranscripts == false and
-  (.config | has("agents") | not) and
-  (.config | has("model") | not) and
-  (.config | has("modelFallback") | not) and
-  (.config | has("allowedChatTypes") | not) and
-  (.config | has("transcriptDir") | not)
-'
-
-# should enable bundled Memory Core dreaming without claiming optional global policy
-openclaw plugins inspect memory-core --json | jq -e '
-  .plugin.id == "memory-core" and
-  .plugin.origin == "bundled" and
-  .plugin.enabled == true and
-  .plugin.status != "error" and
-  .plugin.memorySlotSelected == true
-'
-openclaw config get plugins.entries.memory-core --json | jq -e '
-  .enabled == true and
-  .config.dreaming.enabled == true and
-  .config.dreaming.verboseLogging == true and
-  (.config.dreaming | has("frequency") | not) and
-  (.config.dreaming | has("model") | not) and
-  (.config.dreaming | has("timezone") | not) and
-  (.config.dreaming | has("storage") | not) and
-  (.config.dreaming | has("execution") | not) and
-  (.config.dreaming | has("phases") | not)
-'
-! openclaw config get plugins.slots.memory --json >/dev/null 2>&1
-
-# should initialize ignored private memory storage without restoring any content
-memory_workspace="$(openclaw config get agents.entries.emori.workspace --json | jq -r '.')"
-if [[ "$memory_workspace" == "~/"* ]]; then
-  memory_workspace="$HOME/${memory_workspace:2}"
-fi
-[[ "$memory_workspace" == /* ]]
-test -f "$memory_workspace/MEMORY.md"
-test ! -s "$memory_workspace/MEMORY.md"
-test -f "$memory_workspace/DREAMS.md"
-test ! -s "$memory_workspace/DREAMS.md"
-test -d "$memory_workspace/memory"
-test -z "$(find "$memory_workspace/memory" -mindepth 1 -print -quit)"
-test -d "$memory_workspace/.private"
-test -z "$(find "$memory_workspace/.private" -mindepth 1 -print -quit)"
-git -C "$memory_workspace" check-ignore --quiet --no-index -- MEMORY.md
-git -C "$memory_workspace" check-ignore --quiet --no-index -- DREAMS.md
-git -C "$memory_workspace" check-ignore --quiet --no-index -- memory/.memory-storage-probe
-git -C "$memory_workspace" check-ignore --quiet --no-index -- .private/.memory-storage-probe
 ```
 
 ```bash
 # should leave a converged setup unchanged on repeat installation
 cd "$GITHUB_WORKSPACE"
 openclaw agent-system install --json | tee "${TMPDIR}/setup-reinstall.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing", "workshop-policy", "memory-vector-store", "memory-recall", "active-memory", "memory-consolidation", "memory-storage"]' "${TMPDIR}/setup-reinstall.json"
+jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "openclaw-config"]' "${TMPDIR}/setup-reinstall.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "unchanged")' "${TMPDIR}/setup-reinstall.json"
 
 # should preserve EMORI's clean checkout

@@ -1,0 +1,79 @@
+{
+  "agents": {
+    "entries": {
+      "emori": {
+        "tools": {
+          "profile": "coding",
+          "alsoAllow": ["message"],
+          "exec": {
+            "mode": "auto"
+          },
+          "message": {
+            "actions": {
+              "allow": ["send"]
+            },
+            "crossContext": null
+          }
+        },
+        "memory": {
+          "search": {
+            "rememberAcrossConversations": true,
+            "sources": ["memory", "sessions"],
+            "experimental": {
+              "sessionMemory": true
+            },
+            "store": {
+              "vector": {
+                "enabled": true
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "bindings": [
+    {
+      "type": "route",
+      "agentId": "emori",
+      "match": {
+        "channel": "imessage",
+        "accountId": "emori"
+      }
+    }
+  ],
+  "channels": {
+    "imessage": {
+      "enabled": true,
+      "defaultAccount": "emori",
+      "dmPolicy": "pairing",
+      "groupPolicy": "allowlist",
+      "accounts": {
+        "emori": {
+          "enabled": true
+        }
+      }
+    }
+  },
+  "hooks": {
+    "internal": {
+      "entries": {
+        "session-memory": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  "skills": {
+    "workshop": {
+      "autonomous": {
+        "mode": "propose"
+      }
+    }
+  },
+  "tools": {
+    "sessions": {
+      "visibility": "agent"
+    }
+  }
+}

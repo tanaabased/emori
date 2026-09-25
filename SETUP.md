@@ -9,27 +9,28 @@ setup is not a museum for code that once looked plausible.
 
 ## Audited setup inventory
 
-| ID                     | EMORI-owned effect                                                                                     |
-| ---------------------- | ------------------------------------------------------------------------------------------------------ |
-| `brew-dependencies`    | Reconciles [`Brewfile`](./Brewfile) and the platform-specific SQLite vector package.                   |
-| `canon-checkout`       | Clones Canon over managed SSH when absent and preserves every existing checkout.                       |
-| `canon-plugin`         | Links Canon as `tanaab`, exposes its shared skills, and removes redundant Canon `extraDirs` discovery. |
-| `codex-plugin`         | Installs the official Codex plugin from ClawHub and enables it.                                        |
-| `imessage-plugin`      | Installs and enables the official iMessage channel plugin without configuring accounts or routing.     |
-| `execution-policy`     | Sets EMORI's coding profile and automatic execution mode while preserving Agent System grants.         |
-| `messaging-policy`     | Grants EMORI the message tool, limits it to sends, and inherits OpenClaw's routing defaults.           |
-| `imessage-routing`     | Enables EMORI's named default iMessage account and routes that account to EMORI.                       |
-| `workshop-policy`      | Allows autonomous Workshop proposals without autonomous publication or application.                    |
-| `memory-vector-store`  | Enables EMORI's agent-scoped SQLite vector store with the installed platform extension.                |
-| `memory-recall`        | Enables private same-agent memory and session recall while disabling duplicate legacy ingestion.       |
-| `active-memory`        | Enables bounded recall escalation with logging and transcript persistence disabled.                    |
-| `memory-consolidation` | Enables bundled Memory Core dreaming without owning its cadence, model, storage mode, or thresholds.   |
-| `memory-storage`       | Creates ignored private memory files and directories only when absent, preserving existing state.      |
+| ID                  | EMORI-owned effect                                                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `brew-dependencies` | Reconciles [`Brewfile`](./Brewfile) and the platform-specific SQLite vector package.                               |
+| `canon-checkout`    | Clones Canon over managed SSH when absent and preserves every existing checkout.                                   |
+| `canon-plugin`      | Links Canon as `tanaab` and exposes its shared skills.                                                             |
+| `codex-plugin`      | Installs the official Codex plugin from ClawHub and enables it.                                                    |
+| `imessage-plugin`   | Installs and enables the official iMessage channel plugin without configuring accounts or routing.                 |
+| `openclaw-config`   | Atomically merges EMORI's execution, messaging, routing, Workshop, and memory policy after dependencies are ready. |
 
-Each concern has an explicit task entrypoint under [`scripts/`](./scripts) and
-focused implementation under [`lib/setup/`](./lib/setup). Homebrew receives only
-`HOMEBREW_NO_AUTO_UPDATE=1`; setup does not strip Agent System authority or edit
-the inherited `PATH`.
+Each installation concern has an explicit task entrypoint under
+[`scripts/`](./scripts) and focused implementation under
+[`lib/setup/`](./lib/setup). The final configuration step reads the reviewed
+[`openclaw.patch.json`](./openclaw.patch.json) fragment, preserves unrelated
+shared arrays and host-private channel values, injects the installed SQLite
+extension path, validates the computed patch, and writes it once. Homebrew
+receives only `HOMEBREW_NO_AUTO_UPDATE=1`; setup does not strip Agent System
+authority or edit the inherited `PATH`.
+
+The fragment is reviewable source, not a directly applicable whole-config
+replacement. Run it through `openclaw-config`; applying the raw file would
+replace shared arrays before the reconciler can preserve them. Apparently even
+declarative configuration needs a warning label when arrays are involved.
 
 Agent System continues to own identity, declared model routing, environment
 credentials, Git and SSH signing, GitHub admission, and memory-provider binding.
@@ -74,11 +75,12 @@ repository does not make its source a setup prerequisite.
 
 ## Excluded or deferred setup concerns
 
-Bundled plugin defaults, standalone skill and session policy, heartbeat
-automation, browser-local state, provider and model binding, authenticated
-indexing, and private continuity restoration are intentionally excluded from
-EMORI's durable setup. They remain runtime defaults, Agent System ownership,
-optional automation, host-local state, or separately authorized private work.
+Bundled Active Memory and Memory Core defaults, standalone skill policy,
+heartbeat automation, browser-local state, provider and model binding,
+authenticated indexing, empty memory placeholders, and private continuity
+restoration are intentionally excluded from EMORI's durable setup. They remain
+runtime defaults, Agent System ownership, optional automation, host-local state,
+or separately authorized private work.
 
 The authoritative ordered inventory and completion evidence live in
 [issue #65](https://github.com/tanaabased/emori/issues/65) and its linked pull
@@ -110,8 +112,7 @@ indexing, retrieval verification, and continuity restoration remain separate,
 explicitly authorized work after public setup converges. Never stage private
 continuity material in this repository.
 
-`memory-storage` creates empty `MEMORY.md`, `DREAMS.md`, `memory/`, and
-`.private/` locations only when absent. New files use mode `0600`, new directories
-use `0700`, unsafe object types fail closed, and existing contents and modes remain
-untouched. The exact ignore rules prevent accidental Git tracking; they do not
+The exact ignore rules for `MEMORY.md`, `DREAMS.md`, `memory/`, and `.private/`
+prevent accidental Git tracking without manufacturing empty placeholders. The
+runtime creates optional storage when it needs it. Ignore rules still do not
 provide confidentiality. Karabast, `.gitignore` is not encryption.

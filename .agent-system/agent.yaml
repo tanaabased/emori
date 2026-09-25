@@ -121,57 +121,9 @@ setup:
         command: ./scripts/setup-imessage-plugin-task.js
         args: [apply]
         timeout-seconds: 1800
-    - id: execution-policy
-      check: [./scripts/setup-execution-policy-task.js, check]
+    - id: openclaw-config
+      check: [./scripts/setup-openclaw-config-task.js, check]
       apply:
-        command: ./scripts/setup-execution-policy-task.js
-        args: [apply]
-        timeout-seconds: 1800
-    - id: messaging-policy
-      check: [./scripts/setup-messaging-policy-task.js, check]
-      apply:
-        command: ./scripts/setup-messaging-policy-task.js
-        args: [apply]
-        timeout-seconds: 1800
-    - id: imessage-routing
-      check: [./scripts/setup-imessage-routing-task.js, check]
-      apply:
-        command: ./scripts/setup-imessage-routing-task.js
-        args: [apply]
-        timeout-seconds: 1800
-    - id: workshop-policy
-      check: [./scripts/setup-workshop-policy-task.js, check]
-      apply:
-        command: ./scripts/setup-workshop-policy-task.js
-        args: [apply]
-        timeout-seconds: 1800
-    - id: memory-vector-store
-      check: [./scripts/setup-memory-vector-store-task.js, check]
-      apply:
-        command: ./scripts/setup-memory-vector-store-task.js
-        args: [apply]
-        timeout-seconds: 1800
-    - id: memory-recall
-      check: [./scripts/setup-memory-recall-task.js, check]
-      apply:
-        command: ./scripts/setup-memory-recall-task.js
-        args: [apply]
-        timeout-seconds: 1800
-    - id: active-memory
-      check: [./scripts/setup-active-memory-task.js, check]
-      apply:
-        command: ./scripts/setup-active-memory-task.js
-        args: [apply]
-        timeout-seconds: 1800
-    - id: memory-consolidation
-      check: [./scripts/setup-memory-consolidation-task.js, check]
-      apply:
-        command: ./scripts/setup-memory-consolidation-task.js
-        args: [apply]
-        timeout-seconds: 1800
-    - id: memory-storage
-      check: [./scripts/setup-memory-storage-task.js, check]
-      apply:
-        command: ./scripts/setup-memory-storage-task.js
+        command: ./scripts/setup-openclaw-config-task.js
         args: [apply]
         timeout-seconds: 1800
