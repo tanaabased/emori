@@ -101,9 +101,11 @@ describe('lib/setup/openclaw-config', () => {
 
   it('should carry every owned static policy through one patch', () => {
     const patch = buildPatch();
+    assert.equal(patch.agents.entries.emori.models['openai/gpt-6-astra'].agentRuntime.id, 'codex');
     assert.equal(patch.agents.entries.emori.models['openai/gpt-6-luna'].agentRuntime.id, 'codex');
     assert.equal(patch.agents.entries.emori.models['openai/gpt-6-sol'].agentRuntime.id, 'codex');
     assert.deepEqual(patch.agents.entries.emori.modelPolicy.allow, [
+      'openai/gpt-6-astra',
       'openai/gpt-6-luna',
       'openai/gpt-6-sol',
     ]);
