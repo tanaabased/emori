@@ -31,7 +31,7 @@ describe('lib/setup/openclaw-config', () => {
     );
   });
 
-  it('should preserve shared grants and reconcile one EMORI iMessage route', () => {
+  it('should preserve shared grants and model admission while reconciling one EMORI iMessage route', () => {
     const unrelatedBinding = {
       type: 'route',
       agentId: 'other',
@@ -42,6 +42,7 @@ describe('lib/setup/openclaw-config', () => {
         entries: {
           emori: {
             tools: { alsoAllow: ['agent_system_git', 'agent_system_github'] },
+            modelPolicy: { allow: ['openai/gpt-6-astra', 'openai/gpt-5.6-sol'] },
           },
         },
       },
@@ -66,6 +67,12 @@ describe('lib/setup/openclaw-config', () => {
       'agent_system_git',
       'agent_system_github',
       'message',
+    ]);
+    assert.deepEqual(patch.agents.entries.emori.modelPolicy.allow, [
+      'openai/gpt-6-astra',
+      'openai/gpt-5.6-sol',
+      'openai/gpt-6-luna',
+      'openai/gpt-6-sol',
     ]);
     assert.deepEqual(patch.bindings, [
       {
@@ -94,6 +101,14 @@ describe('lib/setup/openclaw-config', () => {
 
   it('should carry every owned static policy through one patch', () => {
     const patch = buildPatch();
+    assert.equal(patch.agents.entries.emori.models['openai/gpt-6-astra'].agentRuntime.id, 'codex');
+    assert.equal(patch.agents.entries.emori.models['openai/gpt-6-luna'].agentRuntime.id, 'codex');
+    assert.equal(patch.agents.entries.emori.models['openai/gpt-6-sol'].agentRuntime.id, 'codex');
+    assert.deepEqual(patch.agents.entries.emori.modelPolicy.allow, [
+      'openai/gpt-6-astra',
+      'openai/gpt-6-luna',
+      'openai/gpt-6-sol',
+    ]);
     assert.equal(patch.agents.entries.emori.tools.profile, 'coding');
     assert.equal(patch.agents.entries.emori.tools.exec.mode, 'auto');
     assert.deepEqual(patch.agents.entries.emori.tools.message.actions.allow, ['send']);
@@ -158,6 +173,10 @@ describe('lib/setup/openclaw-config', () => {
     assert.throws(
       () => buildPatch({ skills: { load: { extraDirs: [42] } } }),
       /extra skill directories must be an array of strings/u,
+    );
+    assert.throws(
+      () => buildPatch({ agents: { entries: { emori: { modelPolicy: { allow: 'all' } } } } }),
+      /model allowlist must be an array of strings/u,
     );
   });
 

@@ -34,9 +34,11 @@ identity, tool credentials, and GitHub work intake.
 
 - Set up an [Agentbox](https://github.com/tanaabased/agentbox#quickstart), which
   provisions EMORI's managed macOS host and OpenClaw.
-- Use the OpenClaw version declared by
-  [`devDependencies.openclaw`](./package.json). That package declaration is the
-  compatibility and CI source of truth.
+- EMORI's supported OpenClaw baseline is
+  [`devDependencies.openclaw`](./package.json), currently 2026.9.6. The exact
+  dependency pins CI's baseline; it is neither a report of the installed host
+  runtime nor a ceiling on later versions. Verify newer releases before claiming
+  support.
 - Install an Agent System build containing
   [operator-run setup support](https://github.com/tanaabased/openclaw-agent-system/pull/137)
   using its [installation guide](https://github.com/tanaabased/openclaw-agent-system#installation).

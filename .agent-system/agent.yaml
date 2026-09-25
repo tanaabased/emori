@@ -14,10 +14,10 @@ models:
     model: openai/gpt-6-astra
     effort: high
   low:
-    model: openai/gpt-5.6-terra
+    model: openai/gpt-6-luna
     effort: medium
   medium:
-    model: openai/gpt-5.6-sol
+    model: openai/gpt-6-sol
     effort: high
   high:
     model: openai/gpt-6-astra
@@ -87,7 +87,7 @@ github:
       - login: lando
         node-id: MDEyOk9yZ2FuaXphdGlvbjMxNjA1NTg0
   policy:
-    releases: deny
+    releases: allow
 
 setup:
   steps:
