@@ -18,7 +18,7 @@ independently; setup is not a museum for code that once looked plausible.
 | `codex-plugin`      | Installs the official Codex plugin from ClawHub and enables it.                                        |
 | `imessage-plugin`   | Installs and enables the official iMessage channel plugin without configuring accounts or routing.     |
 | `execution-policy`  | Sets EMORI's coding profile and automatic execution mode while preserving Agent System grants.         |
-| `messaging-policy`  | Limits EMORI's message tool to sends and inherits OpenClaw's routing and attribution defaults.         |
+| `messaging-policy`  | Grants EMORI the message tool, limits it to sends, and inherits OpenClaw's routing defaults.           |
 
 Each concern has an explicit task entrypoint under [`scripts/`](./scripts) and
 focused implementation under [`lib/setup/`](./lib/setup). Homebrew receives only

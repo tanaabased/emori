@@ -21,8 +21,9 @@ import {
 import {
   messagingPolicy,
   messagingPolicyHealthy,
-  messagingPolicyValue,
+  messagingPolicyValues,
   nextMessagingPolicy,
+  nextMessagingToolGrants,
 } from '../lib/setup/messaging-policy.js';
 import { pluginInspectionHealthy } from '../lib/setup/plugin.js';
 
@@ -226,22 +227,30 @@ describe('setup helper', () => {
   });
 
   it('should require only the send message action and inherited routing defaults', () => {
-    assert.equal(messagingPolicyHealthy(messagingPolicy), true);
-    assert.equal(messagingPolicyHealthy({ actions: { allow: ['send', 'read'] } }), false);
+    assert.equal(messagingPolicyHealthy(messagingPolicy, ['message']), true);
+    assert.equal(messagingPolicyHealthy(messagingPolicy, ['agent_system_git']), false);
     assert.equal(
-      messagingPolicyHealthy({
-        ...messagingPolicy,
-        crossContext: { allowAcrossProviders: true },
-      }),
+      messagingPolicyHealthy({ actions: { allow: ['send', 'read'] } }, ['message']),
       false,
     );
-    assert.equal(messagingPolicyHealthy(undefined), false);
+    assert.equal(
+      messagingPolicyHealthy(
+        {
+          ...messagingPolicy,
+          crossContext: { allowAcrossProviders: true },
+        },
+        ['message'],
+      ),
+      false,
+    );
+    assert.equal(messagingPolicyHealthy(undefined, ['message']), false);
   });
 
-  it('should preserve unrelated EMORI message settings while removing redundant defaults', () => {
-    const current = messagingPolicyValue({
+  it('should preserve unrelated EMORI grants and message settings while removing defaults', () => {
+    const current = messagingPolicyValues({
       emori: {
         tools: {
+          alsoAllow: ['agent_system_git', 'agent_system_github'],
           message: {
             actions: { allow: ['send', 'read'] },
             broadcast: { enabled: false },
@@ -255,10 +264,18 @@ describe('setup helper', () => {
       main: { tools: { message: { actions: { allow: ['read'] } } } },
     });
 
-    assert.deepEqual(nextMessagingPolicy(current), {
+    assert.deepEqual(nextMessagingToolGrants(current.alsoAllow), [
+      'agent_system_git',
+      'agent_system_github',
+      'message',
+    ]);
+    assert.deepEqual(nextMessagingPolicy(current.message), {
       actions: { allow: ['send'] },
       broadcast: { enabled: false },
     });
-    assert.equal(messagingPolicyValue({ main: {} }), undefined);
+    assert.deepEqual(messagingPolicyValues({ main: {} }), {
+      alsoAllow: undefined,
+      message: undefined,
+    });
   });
 });
