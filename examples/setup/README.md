@@ -22,6 +22,10 @@ git clone --no-local "$GITHUB_WORKSPACE" "$HOME/tanaab/emori"
 cd "$GITHUB_WORKSPACE"
 test ! -e "$HOME/tanaab/canon"
 test ! -e "$HOME/tanaab/openclaw-agent-system"
+test ! -e "$HOME/tanaab/emori/MEMORY.md"
+test ! -e "$HOME/tanaab/emori/DREAMS.md"
+test ! -e "$HOME/tanaab/emori/memory"
+test ! -e "$HOME/tanaab/emori/.private"
 ! openclaw plugins inspect tanaab --json >/dev/null 2>&1
 ! openclaw plugins inspect codex --json >/dev/null 2>&1
 ! openclaw plugins inspect imessage --json >/dev/null 2>&1
@@ -30,7 +34,7 @@ openclaw config set skills.load.extraDirs "[\"$HOME/tanaab/canon/skills\"]" --st
 # should run the verified setup prefix through Agent System
 openclaw agent-system validate
 openclaw agent-system install --json | tee "${TMPDIR}/setup-install.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing", "workshop-policy", "memory-vector-store", "memory-recall", "active-memory", "memory-consolidation"]' "${TMPDIR}/setup-install.json"
+jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing", "workshop-policy", "memory-vector-store", "memory-recall", "active-memory", "memory-consolidation", "memory-storage"]' "${TMPDIR}/setup-install.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "updated")' "${TMPDIR}/setup-install.json"
 
 # should satisfy EMORI's Brewfile dependencies
@@ -192,15 +196,30 @@ openclaw config get plugins.entries.memory-core --json | jq -e '
   (.config.dreaming | has("phases") | not)
 '
 ! openclaw config get plugins.slots.memory --json >/dev/null 2>&1
+
+# should initialize ignored private memory storage without restoring any content
+test -f "$HOME/tanaab/emori/MEMORY.md"
+test ! -s "$HOME/tanaab/emori/MEMORY.md"
+test -f "$HOME/tanaab/emori/DREAMS.md"
+test ! -s "$HOME/tanaab/emori/DREAMS.md"
+test -d "$HOME/tanaab/emori/memory"
+test -z "$(find "$HOME/tanaab/emori/memory" -mindepth 1 -print -quit)"
+test -d "$HOME/tanaab/emori/.private"
+test -z "$(find "$HOME/tanaab/emori/.private" -mindepth 1 -print -quit)"
+git -C "$HOME/tanaab/emori" check-ignore --quiet --no-index -- MEMORY.md
+git -C "$HOME/tanaab/emori" check-ignore --quiet --no-index -- DREAMS.md
+git -C "$HOME/tanaab/emori" check-ignore --quiet --no-index -- memory/.memory-storage-probe
+git -C "$HOME/tanaab/emori" check-ignore --quiet --no-index -- .private/.memory-storage-probe
 ```
 
 ```bash
 # should leave a converged setup unchanged on repeat installation
 cd "$GITHUB_WORKSPACE"
 openclaw agent-system install --json | tee "${TMPDIR}/setup-reinstall.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing", "workshop-policy", "memory-vector-store", "memory-recall", "active-memory", "memory-consolidation"]' "${TMPDIR}/setup-reinstall.json"
+jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing", "workshop-policy", "memory-vector-store", "memory-recall", "active-memory", "memory-consolidation", "memory-storage"]' "${TMPDIR}/setup-reinstall.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "unchanged")' "${TMPDIR}/setup-reinstall.json"
 
 # should preserve EMORI's clean checkout
 test -z "$(git -C "$GITHUB_WORKSPACE" status --short --untracked-files=all)"
+test -z "$(git -C "$HOME/tanaab/emori" status --short --untracked-files=all)"
 ```

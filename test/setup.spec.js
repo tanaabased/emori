@@ -1,5 +1,18 @@
 import assert from 'node:assert/strict';
-import { readdirSync, statSync } from 'node:fs';
+import {
+  lstatSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import {
   activeMemoryPluginHealthy,
@@ -45,6 +58,12 @@ import {
   memoryCorePluginHealthy,
   memorySlotCompatible,
 } from '../lib/setup/memory-consolidation.js';
+import {
+  applyMemoryStorage,
+  checkMemoryStorage,
+  memoryStorageEntriesHealthy,
+  memoryStoragePathsIgnored,
+} from '../lib/setup/memory-storage.js';
 import {
   memoryRecallPolicy,
   memoryRecallPolicyHealthy,
@@ -561,5 +580,64 @@ describe('setup helper', () => {
     assert.equal(memorySlotCompatible(undefined), true);
     assert.equal(memorySlotCompatible('memory-core'), true);
     assert.equal(memorySlotCompatible('other-memory'), false);
+  });
+
+  it('should create private memory storage once without overwriting existing state', () => {
+    const workspaceDir = mkdtempSync(join(tmpdir(), 'emori-memory-storage-'));
+    try {
+      writeFileSync(join(workspaceDir, 'MEMORY.md'), 'preserve me\n', { mode: 0o640 });
+      mkdirSync(join(workspaceDir, 'memory'), { mode: 0o750 });
+      writeFileSync(join(workspaceDir, 'memory', 'existing.md'), 'private\n');
+      const existingMemoryFileMode = statSync(join(workspaceDir, 'MEMORY.md')).mode & 0o777;
+      const existingMemoryDirectoryMode = statSync(join(workspaceDir, 'memory')).mode & 0o777;
+
+      applyMemoryStorage({ pathsIgnored: () => true, workspaceDir });
+      applyMemoryStorage({ pathsIgnored: () => true, workspaceDir });
+
+      assert.equal(checkMemoryStorage({ pathsIgnored: () => true, workspaceDir }), true);
+      assert.equal(readFileSync(join(workspaceDir, 'MEMORY.md'), 'utf8'), 'preserve me\n');
+      assert.equal(readFileSync(join(workspaceDir, 'memory', 'existing.md'), 'utf8'), 'private\n');
+      assert.equal(statSync(join(workspaceDir, 'MEMORY.md')).mode & 0o777, existingMemoryFileMode);
+      assert.equal(
+        statSync(join(workspaceDir, 'memory')).mode & 0o777,
+        existingMemoryDirectoryMode,
+      );
+      assert.equal(statSync(join(workspaceDir, 'DREAMS.md')).mode & 0o777, 0o600);
+      assert.equal(statSync(join(workspaceDir, '.private')).mode & 0o777, 0o700);
+    } finally {
+      rmSync(workspaceDir, { force: true, recursive: true });
+    }
+  });
+
+  it('should reject unignored, symlinked, or wrong-type private memory storage', () => {
+    assert.equal(memoryStoragePathsIgnored(fileURLToPath(new URL('../', import.meta.url))), true);
+    assert.equal(
+      memoryStorageEntriesHealthy({
+        '.private': 'directory',
+        'DREAMS.md': 'file',
+        'MEMORY.md': 'file',
+        memory: 'directory',
+      }),
+      true,
+    );
+
+    const workspaceDir = mkdtempSync(join(tmpdir(), 'emori-memory-storage-'));
+    try {
+      assert.throws(
+        () => applyMemoryStorage({ pathsIgnored: () => false, workspaceDir }),
+        /must remain ignored/u,
+      );
+      assert.equal(readdirSync(workspaceDir).length, 0);
+
+      symlinkSync('elsewhere', join(workspaceDir, 'MEMORY.md'));
+      mkdirSync(join(workspaceDir, 'DREAMS.md'));
+      assert.throws(
+        () => applyMemoryStorage({ pathsIgnored: () => true, workspaceDir }),
+        /MEMORY\.md exists as symlink/u,
+      );
+      assert.equal(lstatSync(join(workspaceDir, 'MEMORY.md')).isSymbolicLink(), true);
+    } finally {
+      rmSync(workspaceDir, { force: true, recursive: true });
+    }
   });
 });
