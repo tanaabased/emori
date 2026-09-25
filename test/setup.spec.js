@@ -35,6 +35,12 @@ import {
   nextMessagingToolGrants,
 } from '../lib/setup/messaging-policy.js';
 import {
+  memoryRecallPolicy,
+  memoryRecallPolicyHealthy,
+  memoryRecallStatusHealthy,
+  sessionMemoryHookHealthy,
+} from '../lib/setup/memory-recall.js';
+import {
   memoryVectorStatusHealthy,
   memoryVectorStoreHealthy,
   memoryVectorStorePolicy,
@@ -432,6 +438,46 @@ describe('setup helper', () => {
     );
     assert.equal(
       memoryVectorStatusHealthy([{ agentId: 'other', status: { vector: expected } }], expected),
+      false,
+    );
+  });
+
+  it('should require private same-agent full-transcript recall without the legacy hook', () => {
+    assert.equal(memoryRecallPolicyHealthy(memoryRecallPolicy), true);
+    assert.equal(
+      memoryRecallPolicyHealthy({ ...memoryRecallPolicy, sources: ['sessions', 'memory'] }),
+      false,
+    );
+    assert.equal(
+      memoryRecallPolicyHealthy({ ...memoryRecallPolicy, sessionVisibility: 'all' }),
+      false,
+    );
+    assert.equal(
+      memoryRecallPolicyHealthy({ ...memoryRecallPolicy, sessionMemoryHook: true }),
+      false,
+    );
+    assert.equal(
+      memoryRecallStatusHealthy([
+        { agentId: 'emori', status: { sources: memoryRecallPolicy.sources } },
+      ]),
+      true,
+    );
+    assert.equal(
+      memoryRecallStatusHealthy([
+        { agentId: 'other', status: { sources: memoryRecallPolicy.sources } },
+      ]),
+      false,
+    );
+    assert.equal(
+      sessionMemoryHookHealthy({
+        hooks: [{ name: 'session-memory', disabled: true, enabledByConfig: false }],
+      }),
+      true,
+    );
+    assert.equal(
+      sessionMemoryHookHealthy({
+        hooks: [{ name: 'session-memory', disabled: false, enabledByConfig: true }],
+      }),
       false,
     );
   });

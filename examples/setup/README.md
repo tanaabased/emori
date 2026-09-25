@@ -30,7 +30,7 @@ openclaw config set skills.load.extraDirs "[\"$HOME/tanaab/canon/skills\"]" --st
 # should run the verified setup prefix through Agent System
 openclaw agent-system validate
 openclaw agent-system install --json | tee "${TMPDIR}/setup-install.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing", "workshop-policy", "memory-vector-store"]' "${TMPDIR}/setup-install.json"
+jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing", "workshop-policy", "memory-vector-store", "memory-recall"]' "${TMPDIR}/setup-install.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "updated")' "${TMPDIR}/setup-install.json"
 
 # should satisfy EMORI's Brewfile dependencies
@@ -132,13 +132,31 @@ openclaw memory status --agent emori --json | jq -e \
    length == 1 and
    .[0].status.vector.enabled == true and
    .[0].status.vector.extensionPath == $extension'
+
+# should enable private same-agent full-transcript recall without duplicate hook artifacts
+openclaw config get agents.entries.emori.memory.search.rememberAcrossConversations --json | jq -e '. == true'
+openclaw config get agents.entries.emori.memory.search.sources --json | jq -e '. == ["memory", "sessions"]'
+openclaw config get agents.entries.emori.memory.search.experimental.sessionMemory --json | jq -e '. == true'
+openclaw config get tools.sessions.visibility --json | jq -e '. == "agent"'
+openclaw config get hooks.internal.entries.session-memory.enabled --json | jq -e '. == false'
+openclaw memory status --agent emori --json | jq -e '
+  map(select(.agentId == "emori")) |
+  length == 1 and
+  .[0].status.sources == ["memory", "sessions"]
+'
+openclaw hooks list --json | jq -e '
+  [.hooks[] | select(.name == "session-memory")] |
+  length == 1 and
+  .[0].disabled == true and
+  .[0].enabledByConfig == false
+'
 ```
 
 ```bash
 # should leave a converged setup unchanged on repeat installation
 cd "$GITHUB_WORKSPACE"
 openclaw agent-system install --json | tee "${TMPDIR}/setup-reinstall.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing", "workshop-policy", "memory-vector-store"]' "${TMPDIR}/setup-reinstall.json"
+jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing", "workshop-policy", "memory-vector-store", "memory-recall"]' "${TMPDIR}/setup-reinstall.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "unchanged")' "${TMPDIR}/setup-reinstall.json"
 
 # should preserve EMORI's clean checkout

@@ -151,3 +151,9 @@ setup:
         command: ./scripts/setup-memory-vector-store-task.js
         args: [apply]
         timeout-seconds: 1800
+    - id: memory-recall
+      check: [./scripts/setup-memory-recall-task.js, check]
+      apply:
+        command: ./scripts/setup-memory-recall-task.js
+        args: [apply]
+        timeout-seconds: 1800
