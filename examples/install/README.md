@@ -15,8 +15,8 @@ openclaw agent-system credentials set op --from-env
 mkdir -p "$HOME/tanaab"
 git clone --no-local "$GITHUB_WORKSPACE" "$HOME/tanaab/emori"
 cd "$GITHUB_WORKSPACE"
-openclaw agent-system tool git -- clone git@github.com:tanaabased/canon.git "$HOME/tanaab/canon"
-openclaw agent-system tool git -- clone git@github.com:tanaabased/openclaw-agent-system.git "$HOME/tanaab/openclaw-agent-system"
+openclaw agent-system tool git --agent emori -- clone git@github.com:tanaabased/canon.git "$HOME/tanaab/canon"
+openclaw agent-system tool git --agent emori -- clone git@github.com:tanaabased/openclaw-agent-system.git "$HOME/tanaab/openclaw-agent-system"
 test -d "$HOME/tanaab/canon/.git"
 test -d "$HOME/tanaab/openclaw-agent-system/.git"
 ```
@@ -34,7 +34,7 @@ openclaw agents list --json | grep -F '"id": "emori"'
 
 # should admit the declared Canon checkout with EMORI's managed Git identity
 cd "$HOME/tanaab/canon"
-openclaw agent-system tool git -- var GIT_AUTHOR_IDENT | grep -F 'EMORI <emori@tanaab.dev>'
+openclaw agent-system tool git --agent emori -- var GIT_AUTHOR_IDENT | grep -F 'EMORI <emori@tanaab.dev>'
 ```
 
 ```bash
