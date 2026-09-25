@@ -19,6 +19,15 @@ import {
   imessagePluginSource,
 } from '../lib/setup/imessage-plugin.js';
 import {
+  imessageBindingsHealthy,
+  imessageChannelHealthy,
+  imessageRouting,
+  imessageRoutingHealthy,
+  imessageRoutingValues,
+  nextImessageBindings,
+  nextImessageChannel,
+} from '../lib/setup/imessage-routing.js';
+import {
   messagingPolicy,
   messagingPolicyHealthy,
   messagingPolicyValues,
@@ -197,6 +206,111 @@ describe('setup helper', () => {
       }),
       false,
     );
+  });
+
+  it("should require EMORI's enabled default iMessage account and account route", () => {
+    const channel = {
+      enabled: true,
+      defaultAccount: imessageRouting.accountId,
+      accounts: { [imessageRouting.accountId]: { enabled: true } },
+    };
+    const bindings = [
+      {
+        type: 'route',
+        agentId: imessageRouting.agentId,
+        match: {
+          channel: imessageRouting.channelId,
+          accountId: imessageRouting.accountId,
+        },
+      },
+    ];
+    assert.equal(imessageChannelHealthy(channel), true);
+    assert.equal(imessageBindingsHealthy(bindings), true);
+    assert.equal(imessageRoutingHealthy(channel, bindings), true);
+    assert.equal(imessageChannelHealthy({ ...channel, enabled: false }), false);
+    assert.equal(
+      imessageBindingsHealthy([{ ...bindings[0], session: { dmScope: 'main' } }]),
+      false,
+    );
+    assert.equal(imessageRoutingHealthy(undefined, []), false);
+  });
+
+  it('should preserve iMessage policy and private settings while enabling EMORI', () => {
+    assert.deepEqual(
+      nextImessageChannel({
+        dmPolicy: 'allowlist',
+        groupPolicy: 'disabled',
+        defaultTo: 'private-target',
+        accounts: {
+          emori: { dbPath: '/private/messages.db', includeAttachments: true },
+          other: { enabled: false },
+        },
+      }),
+      {
+        dmPolicy: 'allowlist',
+        groupPolicy: 'disabled',
+        enabled: true,
+        defaultAccount: 'emori',
+        defaultTo: 'private-target',
+        accounts: {
+          emori: {
+            enabled: true,
+            dbPath: '/private/messages.db',
+            includeAttachments: true,
+          },
+          other: { enabled: false },
+        },
+      },
+    );
+    assert.deepEqual(nextImessageChannel(), {
+      dmPolicy: 'pairing',
+      groupPolicy: 'allowlist',
+      enabled: true,
+      defaultAccount: 'emori',
+      accounts: { emori: { enabled: true } },
+    });
+  });
+
+  it('should preserve unrelated bindings and converge one sessionless EMORI route', () => {
+    const current = [
+      {
+        type: 'route',
+        agentId: 'other',
+        comment: 'owned route',
+        match: { channel: 'imessage', accountId: 'emori' },
+        session: { dmScope: 'per-account-channel-peer' },
+      },
+      {
+        type: 'route',
+        agentId: 'duplicate',
+        match: { channel: 'imessage', accountId: 'emori' },
+      },
+      {
+        type: 'route',
+        agentId: 'emori',
+        match: { channel: 'imessage', accountId: 'default' },
+      },
+      {
+        type: 'route',
+        agentId: 'other',
+        match: { channel: 'telegram', accountId: 'ops' },
+      },
+    ];
+
+    assert.deepEqual(nextImessageBindings(current), [
+      {
+        type: 'route',
+        agentId: 'emori',
+        comment: 'owned route',
+        match: { channel: 'imessage', accountId: 'emori' },
+      },
+      current[2],
+      current[3],
+    ]);
+    assert.deepEqual(imessageRoutingValues(undefined, undefined), {
+      bindings: undefined,
+      channel: undefined,
+    });
   });
 
   it('should require both EMORI execution policy values', () => {

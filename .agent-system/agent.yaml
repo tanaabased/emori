@@ -133,3 +133,9 @@ setup:
         command: ./scripts/setup-messaging-policy-task.js
         args: [apply]
         timeout-seconds: 1800
+    - id: imessage-routing
+      check: [./scripts/setup-imessage-routing-task.js, check]
+      apply:
+        command: ./scripts/setup-imessage-routing-task.js
+        args: [apply]
+        timeout-seconds: 1800

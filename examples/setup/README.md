@@ -30,7 +30,7 @@ openclaw config set skills.load.extraDirs "[\"$HOME/tanaab/canon/skills\"]" --st
 # should run the verified setup prefix through Agent System
 openclaw agent-system validate
 openclaw agent-system install --json | tee "${TMPDIR}/setup-install.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy"]' "${TMPDIR}/setup-install.json"
+jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing"]' "${TMPDIR}/setup-install.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "updated")' "${TMPDIR}/setup-install.json"
 
 # should satisfy EMORI's Brewfile dependencies
@@ -90,13 +90,34 @@ openclaw config get agents.entries.emori.tools --json | jq -e '
   .message.actions.allow == ["send"] and
   (.message | has("crossContext") | not)
 '
+
+# should route EMORI's enabled default iMessage account without changing session scope
+openclaw config get channels.imessage --json | jq -e '
+  .enabled == true and
+  .defaultAccount == "emori" and
+  .dmPolicy == "pairing" and
+  .groupPolicy == "allowlist" and
+  .accounts.emori == {"enabled": true} and
+  (has("defaultTo") | not) and
+  (has("allowFrom") | not) and
+  (.accounts.emori | has("cliPath") | not) and
+  (.accounts.emori | has("dbPath") | not)
+'
+openclaw config get bindings --json | jq -e '
+  [.[] | select(.type == "route" and .match.channel == "imessage" and .match.accountId == "emori")] == [{
+    "type": "route",
+    "agentId": "emori",
+    "match": {"channel": "imessage", "accountId": "emori"}
+  }]
+'
+! openclaw config get session.dmScope --json >/dev/null 2>&1
 ```
 
 ```bash
 # should leave a converged setup unchanged on repeat installation
 cd "$GITHUB_WORKSPACE"
 openclaw agent-system install --json | tee "${TMPDIR}/setup-reinstall.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy"]' "${TMPDIR}/setup-reinstall.json"
+jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing"]' "${TMPDIR}/setup-reinstall.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "unchanged")' "${TMPDIR}/setup-reinstall.json"
 
 # should preserve EMORI's clean checkout
