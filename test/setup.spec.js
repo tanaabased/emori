@@ -63,6 +63,7 @@ import {
   checkMemoryStorage,
   memoryStorageEntriesHealthy,
   memoryStoragePathsIgnored,
+  resolveMemoryStorageWorkspace,
 } from '../lib/setup/memory-storage.js';
 import {
   memoryRecallPolicy,
@@ -607,6 +608,16 @@ describe('setup helper', () => {
     } finally {
       rmSync(workspaceDir, { force: true, recursive: true });
     }
+  });
+
+  it("should resolve only EMORI's configured absolute or home-relative workspace", () => {
+    assert.equal(resolveMemoryStorageWorkspace('/srv/emori'), '/srv/emori');
+    assert.equal(
+      resolveMemoryStorageWorkspace('~/tanaab/emori', '/Users/emori'),
+      '/Users/emori/tanaab/emori',
+    );
+    assert.throws(() => resolveMemoryStorageWorkspace('relative/emori'), /must be absolute/u);
+    assert.throws(() => resolveMemoryStorageWorkspace(undefined), /workspace is unavailable/u);
   });
 
   it('should reject unignored, symlinked, or wrong-type private memory storage', () => {
