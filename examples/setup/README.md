@@ -84,6 +84,7 @@ openclaw config get agents.entries.emori.tools --json | jq -e '
   (.exec.pathPrepend | length) > 0
 '
 
+# should preserve Agent System grants while allowing only message sends
 openclaw config get agents.entries.emori.tools --json | jq -e '
   (.alsoAllow | index("message")) != null and
   .message.actions.allow == ["send"] and
@@ -132,6 +133,7 @@ openclaw memory status --agent emori --json | jq -e \
    .[0].status.vector.enabled == true and
    .[0].status.vector.extensionPath == $extension'
 
+# should enable private same-agent recall without the legacy memory hook
 openclaw config get agents.entries.emori.memory.search.rememberAcrossConversations --json | jq -e '. == true'
 openclaw config get agents.entries.emori.memory.search.sources --json | jq -e '. == ["memory", "sessions"]'
 openclaw config get agents.entries.emori.memory.search.experimental.sessionMemory --json | jq -e '. == true'
