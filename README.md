@@ -75,10 +75,12 @@ Run Agent System commands here so they find EMORI's manifest. `install` register
 her, applies the declared configuration, and converges the currently verified
 setup prefix: Homebrew dependencies, the Canon checkout and `tanaab` plugin, the
 official Codex and iMessage plugins, and EMORI's agent-scoped execution policy.
-Canon is cloned with EMORI's managed SSH identity only when its checkout is
-absent; the Agent System source checkout remains optional. Run `install` again
-when that state changes. `doctor` checks whether the installed state still
-matches. Use `install --skip-setup` only for installation-only automation.
+The prefix also limits EMORI's message tool to sends while inheriting OpenClaw's
+cross-provider routing and attribution defaults. Canon is cloned with EMORI's
+managed SSH identity only when its checkout is absent; the Agent System source
+checkout remains optional. Run `install` again when that state changes. `doctor`
+checks whether the installed state still matches. Use `install --skip-setup`
+only for installation-only automation.
 
 See [EMORI Setup](./SETUP.md) for ownership boundaries, manual iMessage and Codex
 onboarding, optional capabilities, and the separate private continuity path.

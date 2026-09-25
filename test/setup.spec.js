@@ -18,6 +18,12 @@ import {
   imessagePluginInspectionHealthy,
   imessagePluginSource,
 } from '../lib/setup/imessage-plugin.js';
+import {
+  messagingPolicy,
+  messagingPolicyHealthy,
+  messagingPolicyValue,
+  nextMessagingPolicy,
+} from '../lib/setup/messaging-policy.js';
 import { pluginInspectionHealthy } from '../lib/setup/plugin.js';
 
 describe('setup helper', () => {
@@ -217,5 +223,42 @@ describe('setup helper', () => {
       execMode: undefined,
       profile: undefined,
     });
+  });
+
+  it('should require only the send message action and inherited routing defaults', () => {
+    assert.equal(messagingPolicyHealthy(messagingPolicy), true);
+    assert.equal(messagingPolicyHealthy({ actions: { allow: ['send', 'read'] } }), false);
+    assert.equal(
+      messagingPolicyHealthy({
+        ...messagingPolicy,
+        crossContext: { allowAcrossProviders: true },
+      }),
+      false,
+    );
+    assert.equal(messagingPolicyHealthy(undefined), false);
+  });
+
+  it('should preserve unrelated EMORI message settings while removing redundant defaults', () => {
+    const current = messagingPolicyValue({
+      emori: {
+        tools: {
+          message: {
+            actions: { allow: ['send', 'read'] },
+            broadcast: { enabled: false },
+            crossContext: {
+              allowAcrossProviders: true,
+              marker: { enabled: true, prefix: '[from {channel}] ' },
+            },
+          },
+        },
+      },
+      main: { tools: { message: { actions: { allow: ['read'] } } } },
+    });
+
+    assert.deepEqual(nextMessagingPolicy(current), {
+      actions: { allow: ['send'] },
+      broadcast: { enabled: false },
+    });
+    assert.equal(messagingPolicyValue({ main: {} }), undefined);
   });
 });

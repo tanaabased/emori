@@ -26,11 +26,12 @@ test ! -e "$HOME/tanaab/openclaw-agent-system"
 ! openclaw plugins inspect codex --json >/dev/null 2>&1
 ! openclaw plugins inspect imessage --json >/dev/null 2>&1
 openclaw config set skills.load.extraDirs "[\"$HOME/tanaab/canon/skills\"]" --strict-json
+openclaw config set agents.entries.emori.tools.message.crossContext '{"allowAcrossProviders":true,"marker":{"enabled":true,"prefix":"[from {channel}] "}}' --strict-json
 
 # should run the verified setup prefix through Agent System
 openclaw agent-system validate
 openclaw agent-system install --json | tee "${TMPDIR}/setup-install.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy"]' "${TMPDIR}/setup-install.json"
+jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy"]' "${TMPDIR}/setup-install.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "updated")' "${TMPDIR}/setup-install.json"
 
 # should satisfy EMORI's Brewfile dependencies
@@ -83,13 +84,20 @@ openclaw config get agents.entries.emori.tools --json | jq -e '
   (.alsoAllow | index("agent_system_github")) != null and
   (.exec.pathPrepend | length) > 0
 '
+
+# should allow only message sends and inherit OpenClaw routing and attribution defaults
+openclaw config get agents.entries.emori.tools --json | jq -e '
+  (.alsoAllow | index("message")) != null and
+  .message.actions.allow == ["send"] and
+  (.message | has("crossContext") | not)
+'
 ```
 
 ```bash
 # should leave a converged setup unchanged on repeat installation
 cd "$GITHUB_WORKSPACE"
 openclaw agent-system install --json | tee "${TMPDIR}/setup-reinstall.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy"]' "${TMPDIR}/setup-reinstall.json"
+jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy"]' "${TMPDIR}/setup-reinstall.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "unchanged")' "${TMPDIR}/setup-reinstall.json"
 
 # should preserve EMORI's clean checkout

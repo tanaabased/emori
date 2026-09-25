@@ -127,3 +127,9 @@ setup:
         command: ./scripts/setup-execution-policy-task.js
         args: [apply]
         timeout-seconds: 1800
+    - id: messaging-policy
+      check: [./scripts/setup-messaging-policy-task.js, check]
+      apply:
+        command: ./scripts/setup-messaging-policy-task.js
+        args: [apply]
+        timeout-seconds: 1800
