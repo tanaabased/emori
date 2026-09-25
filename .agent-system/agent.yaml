@@ -97,6 +97,12 @@ setup:
         command: ./scripts/setup-brew-dependencies-task.js
         args: [apply]
         timeout-seconds: 1800
+    - id: canon-checkout
+      check: [./scripts/setup-canon-checkout-task.js, check]
+      apply:
+        command: ./scripts/setup-canon-checkout-task.js
+        args: [apply]
+        timeout-seconds: 1800
     - id: canon-plugin
       check: [./scripts/setup-canon-plugin-task.js, check]
       apply:
