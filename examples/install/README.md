@@ -11,13 +11,9 @@ credentials while explicitly skipping operator-run setup.
 test -n "${OP_SERVICE_ACCOUNT_TOKEN:-}"
 openclaw agent-system credentials set op --from-env
 
-# should prepare every declared local repository before Agent System installation
+# should prepare EMORI's checked-out workspace
 mkdir -p "$HOME/tanaab"
 git clone --no-local "$GITHUB_WORKSPACE" "$HOME/tanaab/emori"
-git clone https://github.com/tanaabased/canon.git "$HOME/tanaab/canon"
-git clone https://github.com/tanaabased/openclaw-agent-system.git "$HOME/tanaab/openclaw-agent-system"
-test -d "$HOME/tanaab/canon/.git"
-test -d "$HOME/tanaab/openclaw-agent-system/.git"
 ```
 
 ## Testing
@@ -25,15 +21,15 @@ test -d "$HOME/tanaab/openclaw-agent-system/.git"
 ```bash
 # should validate and install EMORI without running setup
 cd "$GITHUB_WORKSPACE"
+test ! -e "$HOME/tanaab/canon"
+test ! -e "$HOME/tanaab/openclaw-agent-system"
 openclaw agent-system validate
 openclaw agent-system install --skip-setup --json | tee "${TMPDIR}/install.json"
 jq -e '.outcomes | any(.component == "agent" and .status == "created")' "${TMPDIR}/install.json"
 jq -e '.outcomes | all(.component != "setup")' "${TMPDIR}/install.json"
 openclaw agents list --json | grep -F '"id": "emori"'
-
-# should admit the declared Canon checkout with EMORI's managed Git identity
-cd "$HOME/tanaab/canon"
-openclaw agent-system tool git --agent emori -- var GIT_AUTHOR_IDENT | grep -F 'EMORI <emori@tanaab.dev>'
+test ! -e "$HOME/tanaab/canon"
+test ! -e "$HOME/tanaab/openclaw-agent-system"
 ```
 
 ```bash
