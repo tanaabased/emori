@@ -121,3 +121,9 @@ setup:
         command: ./scripts/setup-imessage-plugin-task.js
         args: [apply]
         timeout-seconds: 1800
+    - id: execution-policy
+      check: [./scripts/setup-execution-policy-task.js, check]
+      apply:
+        command: ./scripts/setup-execution-policy-task.js
+        args: [apply]
+        timeout-seconds: 1800

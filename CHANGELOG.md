@@ -1,6 +1,6 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
-- Added ordered Agent System setup for Homebrew, Canon checkout and plugin skills, and the official Codex and iMessage plugins. [#65](https://github.com/tanaabased/emori/issues/65)
+- Added ordered Agent System setup for dependencies, shared plugins, and EMORI's agent-scoped execution policy. [#65](https://github.com/tanaabased/emori/issues/65)
 - Made Appalled EMORI's default voice across human-facing output and added approved examples to the voice skill. [#60](https://github.com/tanaabased/emori/issues/60)
 
 ## v1.0.0-beta.11 - [September 13, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.11)

@@ -17,6 +17,7 @@ independently; setup is not a museum for code that once looked plausible.
 | `canon-plugin`      | Links Canon as `tanaab`, exposes its shared skills, and removes redundant Canon `extraDirs` discovery. |
 | `codex-plugin`      | Installs the official Codex plugin from ClawHub and enables it.                                        |
 | `imessage-plugin`   | Installs and enables the official iMessage channel plugin without configuring accounts or routing.     |
+| `execution-policy`  | Sets EMORI's coding profile and automatic execution mode while preserving Agent System grants.         |
 
 Each concern has an explicit task entrypoint under [`scripts/`](./scripts) and
 focused implementation under [`lib/setup/`](./lib/setup). Homebrew receives only
@@ -66,12 +67,12 @@ repository does not make its source a setup prerequisite.
 
 ## Deferred setup concerns
 
-Agent-scoped execution and messaging policy, iMessage routing, Workshop proposal
-mode, and memory behavior are not yet declared setup steps. They will be added
-one concern at a time after the current prefix passes its first-run and
-unchanged-rerun CI evidence. Bundled plugin defaults, standalone skill and
-session policy, heartbeat automation, and browser-local state are intentionally
-excluded from EMORI's durable setup.
+Agent-scoped messaging policy, iMessage routing, Workshop proposal mode, and
+memory behavior are not yet declared setup steps. They will be added one concern
+at a time after the current prefix passes its first-run and unchanged-rerun CI
+evidence. Bundled plugin defaults, standalone skill and session policy, heartbeat
+automation, and browser-local state are intentionally excluded from EMORI's
+durable setup.
 
 The authoritative ordered inventory and current cutoff live in
 [issue #65](https://github.com/tanaabased/emori/issues/65). A manifest include
