@@ -8,6 +8,10 @@ import {
   withoutCanonSkillDir,
 } from '../lib/setup/canon-plugin.js';
 import { codexPluginSource } from '../lib/setup/codex-plugin.js';
+import {
+  imessagePluginInspectionHealthy,
+  imessagePluginSource,
+} from '../lib/setup/imessage-plugin.js';
 import { pluginInspectionHealthy } from '../lib/setup/plugin.js';
 
 describe('setup helper', () => {
@@ -140,5 +144,35 @@ describe('setup helper', () => {
 
   it('should install Codex from the official ClawHub source', () => {
     assert.equal(codexPluginSource, 'clawhub:@openclaw/codex');
+  });
+
+  it('should require the official iMessage channel plugin', () => {
+    assert.equal(imessagePluginSource, '@openclaw/imessage');
+    assert.equal(
+      imessagePluginInspectionHealthy({
+        plugin: {
+          id: 'imessage',
+          enabled: true,
+          status: 'loaded',
+          packageName: '@openclaw/imessage',
+          channelIds: ['imessage'],
+        },
+        install: { resolvedName: '@openclaw/imessage' },
+      }),
+      true,
+    );
+    assert.equal(
+      imessagePluginInspectionHealthy({
+        plugin: {
+          id: 'imessage',
+          enabled: true,
+          status: 'loaded',
+          packageName: '@other/imessage',
+          channelIds: ['imessage'],
+        },
+        install: { resolvedName: '@other/imessage' },
+      }),
+      false,
+    );
   });
 });

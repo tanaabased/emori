@@ -115,3 +115,9 @@ setup:
         command: ./scripts/setup-codex-plugin-task.js
         args: [apply]
         timeout-seconds: 1800
+    - id: imessage-plugin
+      check: [./scripts/setup-imessage-plugin-task.js, check]
+      apply:
+        command: ./scripts/setup-imessage-plugin-task.js
+        args: [apply]
+        timeout-seconds: 1800
