@@ -34,6 +34,12 @@ import {
   nextMessagingPolicy,
   nextMessagingToolGrants,
 } from '../lib/setup/messaging-policy.js';
+import {
+  memoryVectorStatusHealthy,
+  memoryVectorStoreHealthy,
+  memoryVectorStorePolicy,
+  sqliteVectorExtensionPath,
+} from '../lib/setup/memory-vector-store.js';
 import { pluginInspectionHealthy } from '../lib/setup/plugin.js';
 import { workshopPolicy, workshopPolicyHealthy } from '../lib/setup/workshop-policy.js';
 
@@ -400,5 +406,33 @@ describe('setup helper', () => {
     assert.equal(workshopPolicyHealthy('off'), false);
     assert.equal(workshopPolicyHealthy('apply'), false);
     assert.equal(workshopPolicyHealthy(undefined), false);
+  });
+
+  it("should derive and require EMORI's agent-scoped SQLite vector store", () => {
+    const extensionPath = sqliteVectorExtensionPath(
+      '/opt/homebrew/lib/node_modules\n',
+      'darwin',
+      'arm64',
+    );
+    const expected = memoryVectorStorePolicy(extensionPath);
+
+    assert.equal(
+      extensionPath,
+      '/opt/homebrew/lib/node_modules/sqlite-vec-darwin-arm64/vec0.dylib',
+    );
+    assert.equal(memoryVectorStoreHealthy(expected, expected), true);
+    assert.equal(memoryVectorStoreHealthy({ extensionPath }, expected), false);
+    assert.equal(
+      memoryVectorStoreHealthy({ ...expected, extensionPath: '/tmp/vec0.dylib' }, expected),
+      false,
+    );
+    assert.equal(
+      memoryVectorStatusHealthy([{ agentId: 'emori', status: { vector: expected } }], expected),
+      true,
+    );
+    assert.equal(
+      memoryVectorStatusHealthy([{ agentId: 'other', status: { vector: expected } }], expected),
+      false,
+    );
   });
 });

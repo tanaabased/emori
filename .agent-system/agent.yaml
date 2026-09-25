@@ -145,3 +145,9 @@ setup:
         command: ./scripts/setup-workshop-policy-task.js
         args: [apply]
         timeout-seconds: 1800
+    - id: memory-vector-store
+      check: [./scripts/setup-memory-vector-store-task.js, check]
+      apply:
+        command: ./scripts/setup-memory-vector-store-task.js
+        args: [apply]
+        timeout-seconds: 1800

@@ -30,7 +30,7 @@ openclaw config set skills.load.extraDirs "[\"$HOME/tanaab/canon/skills\"]" --st
 # should run the verified setup prefix through Agent System
 openclaw agent-system validate
 openclaw agent-system install --json | tee "${TMPDIR}/setup-install.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing", "workshop-policy"]' "${TMPDIR}/setup-install.json"
+jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing", "workshop-policy", "memory-vector-store"]' "${TMPDIR}/setup-install.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "updated")' "${TMPDIR}/setup-install.json"
 
 # should satisfy EMORI's Brewfile dependencies
@@ -114,13 +114,31 @@ openclaw config get bindings --json | jq -e '
 
 # should allow Workshop to draft proposals without autonomous publication or application
 openclaw config get skills.workshop.autonomous.mode --json | jq -e '. == "propose"'
+
+# should enable EMORI's agent-scoped SQLite vector store with the installed extension
+case "$(uname -m)" in
+  arm64) SQLITE_VECTOR_PACKAGE="sqlite-vec-darwin-arm64" ;;
+  x86_64) SQLITE_VECTOR_PACKAGE="sqlite-vec-darwin-x64" ;;
+  *) exit 1 ;;
+esac
+EXPECTED_VECTOR_EXTENSION="$(npm root --global)/${SQLITE_VECTOR_PACKAGE}/vec0.dylib"
+test -f "$EXPECTED_VECTOR_EXTENSION"
+openclaw config get agents.entries.emori.memory.search.store.vector --json | jq -e \
+  --arg extension "$EXPECTED_VECTOR_EXTENSION" \
+  '.enabled == true and .extensionPath == $extension'
+openclaw memory status --agent emori --json | jq -e \
+  --arg extension "$EXPECTED_VECTOR_EXTENSION" \
+  'map(select(.agentId == "emori")) |
+   length == 1 and
+   .[0].status.vector.enabled == true and
+   .[0].status.vector.extensionPath == $extension'
 ```
 
 ```bash
 # should leave a converged setup unchanged on repeat installation
 cd "$GITHUB_WORKSPACE"
 openclaw agent-system install --json | tee "${TMPDIR}/setup-reinstall.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing", "workshop-policy"]' "${TMPDIR}/setup-reinstall.json"
+jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "execution-policy", "messaging-policy", "imessage-routing", "workshop-policy", "memory-vector-store"]' "${TMPDIR}/setup-reinstall.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "unchanged")' "${TMPDIR}/setup-reinstall.json"
 
 # should preserve EMORI's clean checkout
