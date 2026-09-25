@@ -26,7 +26,6 @@ test ! -e "$HOME/tanaab/openclaw-agent-system"
 ! openclaw plugins inspect codex --json >/dev/null 2>&1
 ! openclaw plugins inspect imessage --json >/dev/null 2>&1
 openclaw config set skills.load.extraDirs "[\"$HOME/tanaab/canon/skills\"]" --strict-json
-openclaw config set agents.entries.emori.tools.message.crossContext '{"allowAcrossProviders":true,"marker":{"enabled":true,"prefix":"[from {channel}] "}}' --strict-json
 
 # should run the verified setup prefix through Agent System
 openclaw agent-system validate
