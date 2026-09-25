@@ -63,10 +63,6 @@ git remote set-url origin git@github.com:tanaabased/emori.git
 # store the 1Password service account token at the masked prompt.
 openclaw agent-system credentials set op
 
-# bootstrap the declared local repositories with EMORI's managed Git identity.
-openclaw agent-system tool git -- clone git@github.com:tanaabased/canon.git ~/tanaab/canon
-openclaw agent-system tool git -- clone git@github.com:tanaabased/openclaw-agent-system.git ~/tanaab/openclaw-agent-system
-
 openclaw agent-system validate
 openclaw agent-system install
 openclaw agent-system doctor
@@ -77,10 +73,12 @@ openclaw agent-system tool gh -- api user --jq .login
 
 Run Agent System commands here so they find EMORI's manifest. `install` registers
 her, applies the declared configuration, and converges the currently verified
-setup prefix: Homebrew dependencies, the Canon `tanaab` plugin, and the official
-Codex plugin. Run it again when that state changes. `doctor` checks whether the
-installed state still matches. Use `install --skip-setup` only for
-installation-only automation.
+setup prefix: Homebrew dependencies, the Canon checkout and `tanaab` plugin, and
+the official Codex plugin. Canon is cloned with EMORI's managed SSH identity only
+when its checkout is absent; the Agent System source checkout remains optional.
+Run `install` again when that state changes. `doctor` checks whether the installed
+state still matches. Use `install --skip-setup` only for installation-only
+automation.
 
 See [EMORI Setup](./SETUP.md) for ownership boundaries, manual iMessage and Codex
 onboarding, optional capabilities, and the separate private continuity path.

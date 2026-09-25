@@ -1,8 +1,10 @@
 # EMORI Setup
 
-Agent System installs EMORI's declared identity and credentials, then runs the
-ordered setup steps in [`.agent-system/agent.yaml`](./.agent-system/agent.yaml).
-Only the verified green prefix is declared. Later concerns remain tracked in
+The [README quickstart](./README.md#quickstart) is the common path. This operator
+guide owns setup prerequisites, boundaries, and deferred work. Agent System
+installs EMORI's declared identity and credentials, then runs the ordered setup
+steps in [`.agent-system/agent.yaml`](./.agent-system/agent.yaml). Only the
+verified green prefix is declared. Later concerns remain tracked in
 [issue #65](https://github.com/tanaabased/emori/issues/65) until each can pass
 independently; setup is not a museum for code that once looked plausible.
 
@@ -11,7 +13,8 @@ independently; setup is not a museum for code that once looked plausible.
 | ID                  | EMORI-owned effect                                                                                     |
 | ------------------- | ------------------------------------------------------------------------------------------------------ |
 | `brew-dependencies` | Reconciles [`Brewfile`](./Brewfile) and the platform-specific SQLite vector package.                   |
-| `canon-plugin`      | Links the declared Canon checkout as the `tanaab` plugin and enables it without changing skill policy. |
+| `canon-checkout`    | Clones Canon over managed SSH when absent and preserves every existing checkout.                       |
+| `canon-plugin`      | Links Canon as `tanaab`, exposes its shared skills, and removes redundant Canon `extraDirs` discovery. |
 | `codex-plugin`      | Installs the official Codex plugin from ClawHub and enables it.                                        |
 
 Each concern has an explicit task entrypoint under [`scripts/`](./scripts) and
@@ -36,16 +39,14 @@ Before running setup:
   environment and SSH key.
 - Install Node.js 24 and Bun 1.3. OpenClaw and Agent System are host
   prerequisites; setup does not recursively install its own floorboards.
-- Clone every path declared by `git.worktrees.repositories.local` before
-  installation. Agent System treats those mappings as existing repository
-  prerequisites, then admits managed Git operations from inside them.
+- Start from EMORI's checkout. Canon may be absent; its setup step creates the
+  declared checkout with EMORI's managed SSH identity. Other declared local
+  repositories remain optional until their source is needed.
 
 Run the full install from EMORI's checkout:
 
 ```sh
 openclaw agent-system credentials set op
-openclaw agent-system tool git -- clone git@github.com:tanaabased/canon.git ~/tanaab/canon
-openclaw agent-system tool git -- clone git@github.com:tanaabased/openclaw-agent-system.git ~/tanaab/openclaw-agent-system
 openclaw agent-system validate
 openclaw agent-system install
 openclaw agent-system doctor
@@ -59,21 +60,22 @@ openclaw agent-system install --skip-setup
 
 Checks are read-only. Exit `0` means healthy, `1` means actionable drift, and
 other statuses mean a prerequisite or inspection is blocked. Applies are safe to
-repeat. Repository bootstrap remains explicit because declared local repositories
-must exist before Agent System can reconcile setup prerequisites.
+repeat. `canon-checkout` creates only its owned checkout; declaring another local
+repository does not make its source a setup prerequisite.
 
 ## Deferred setup concerns
 
-The iMessage and bundled plugins plus skill policy, execution policy, messaging,
-iMessage routing, session policy, heartbeat, Workshop, browser defaults, and
-memory behavior are not yet declared setup steps. They will be added one concern
-at a time after the current prefix passes its first-run and unchanged-rerun CI
-evidence.
+The iMessage plugin, agent-scoped execution and messaging policy, iMessage
+routing, Workshop proposal mode, and memory behavior are not yet declared setup
+steps. They will be added one concern at a time after the current prefix passes
+its first-run and unchanged-rerun CI evidence. Bundled plugin defaults,
+standalone skill and session policy, heartbeat automation, and browser-local
+state are intentionally excluded from EMORI's durable setup.
 
 The authoritative ordered inventory and current cutoff live in
 [issue #65](https://github.com/tanaabased/emori/issues/65). A manifest include
-system is deferred until repeated implementations establish a real need; nineteen
-explicit lines are cheaper than one speculative abstraction and its inevitable
+system is deferred until repeated implementations establish a real need; the
+explicit sequence is cheaper than one speculative abstraction and its inevitable
 support group.
 
 ## Manual onboarding

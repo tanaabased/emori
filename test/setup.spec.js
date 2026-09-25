@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 
 import { homebrewEnvironment, sqliteVectorPackage } from '../lib/setup/brew-dependencies.js';
+import {
+  canonPluginInspectionHealthy,
+  canonSkillInspectionHealthy,
+  configPathUnset,
+  withoutCanonSkillDir,
+} from '../lib/setup/canon-plugin.js';
 import { codexPluginSource } from '../lib/setup/codex-plugin.js';
 import { pluginInspectionHealthy } from '../lib/setup/plugin.js';
 
@@ -46,6 +52,89 @@ describe('setup helper', () => {
         'tanaab',
       ),
       false,
+    );
+  });
+
+  it('should require Canon to be linked with its accepted skill surface', () => {
+    const canon = '/Users/emori/tanaab/canon';
+    assert.equal(
+      canonPluginInspectionHealthy(
+        {
+          plugin: { id: 'tanaab', enabled: true, status: 'loaded', rootDir: canon },
+          install: {
+            source: 'path',
+            sourcePath: canon,
+            acceptedSurface: { skills: ['./skills'] },
+          },
+        },
+        canon,
+      ),
+      true,
+    );
+    assert.equal(
+      canonPluginInspectionHealthy(
+        {
+          plugin: { id: 'tanaab', enabled: true, status: 'loaded', rootDir: canon },
+          install: { source: 'path', sourcePath: canon, acceptedSurface: { skills: [] } },
+        },
+        canon,
+      ),
+      false,
+    );
+  });
+
+  it('should require representative Canon skills from the plugin-managed index', () => {
+    assert.equal(
+      canonSkillInspectionHealthy({
+        name: 'tanaab-project-optimizer',
+        eligible: true,
+        disabled: false,
+        filePath: '/tmp/openclaw/plugin-skills/project-optimizer/SKILL.md',
+      }),
+      true,
+    );
+    assert.equal(
+      canonSkillInspectionHealthy({
+        name: 'tanaab-project-optimizer',
+        eligible: true,
+        disabled: false,
+        filePath: '/Users/emori/tanaab/canon/skills/project-optimizer/SKILL.md',
+      }),
+      false,
+    );
+  });
+
+  it('should recognize only an explicitly unset config path', () => {
+    assert.equal(
+      configPathUnset(
+        {
+          status: 1,
+          stdout: JSON.stringify({
+            ok: false,
+            error: {
+              message:
+                'Config path is valid but unset: skills.load.extraDirs. The runtime default applies.',
+            },
+          }),
+        },
+        'skills.load.extraDirs',
+      ),
+      true,
+    );
+    assert.equal(
+      configPathUnset({ status: 1, stdout: '{"ok":false}' }, 'skills.load.extraDirs'),
+      false,
+    );
+  });
+
+  it('should remove only Canon from extra skill directories', () => {
+    assert.deepEqual(
+      withoutCanonSkillDir(
+        ['~/tanaab/canon/skills', '/opt/shared-skills'],
+        '/Users/emori/tanaab/canon',
+        '/Users/emori',
+      ),
+      ['/opt/shared-skills'],
     );
   });
 
