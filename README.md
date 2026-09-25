@@ -34,9 +34,11 @@ identity, tool credentials, and GitHub work intake.
 
 - Set up an [Agentbox](https://github.com/tanaabased/agentbox#quickstart), which
   provisions EMORI's managed macOS host and OpenClaw.
-- Update [OpenClaw](https://docs.openclaw.ai/install/updating) to **2026.9.2 or
-  newer**. EMORI targets **2026.9.3**.
-- Install [Agent System v0.6.0](https://github.com/tanaabased/openclaw-agent-system/releases/tag/v0.6.0)
+- Use the OpenClaw version declared by
+  [`devDependencies.openclaw`](./package.json). That package declaration is the
+  compatibility and CI source of truth.
+- Install an Agent System build containing
+  [operator-run setup support](https://github.com/tanaabased/openclaw-agent-system/pull/137)
   using its [installation guide](https://github.com/tanaabased/openclaw-agent-system#installation).
   For older OpenClaw versions, see its
   [compatibility table](https://github.com/tanaabased/openclaw-agent-system/blob/main/ADVANCED.md#version-compatibility).
@@ -60,6 +62,7 @@ git remote set-url origin git@github.com:tanaabased/emori.git
 
 # store the 1Password service account token at the masked prompt.
 openclaw agent-system credentials set op
+
 openclaw agent-system validate
 openclaw agent-system install
 openclaw agent-system doctor
@@ -69,20 +72,33 @@ openclaw agent-system tool gh -- api user --jq .login
 ```
 
 Run Agent System commands here so they find EMORI's manifest. `install` registers
-her and applies the declared configuration; run it again when that configuration
-changes. `doctor` checks whether the installed state still matches.
+her, applies the declared configuration, and converges the currently verified
+setup prefix: Homebrew dependencies, the Canon checkout and `tanaab` plugin, the
+official Codex and iMessage plugins, and EMORI's agent-scoped execution policy.
+The prefix also grants EMORI the message tool, limits it to sends, and inherits
+OpenClaw's cross-provider routing and attribution defaults. It enables EMORI's
+named default iMessage account and routes that account to EMORI without changing
+session scope or embedding private channel state. Canon is cloned with EMORI's
+managed SSH identity only when its checkout is absent; the Agent System source
+checkout remains optional. Run `install` again when that state changes. `doctor`
+checks whether the installed state still matches. Use `install --skip-setup`
+only for installation-only automation.
+
+See [EMORI Setup](./SETUP.md) for ownership boundaries, manual iMessage and Codex
+onboarding, optional capabilities, and the separate private continuity path.
 
 ## Configuration
 
-| File                                                     | Purpose                                                                                                     |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| [`.agent-system/agent.yaml`](./.agent-system/agent.yaml) | Identity, model and effort profiles, environment sources, managed Git and GitHub, and assignment admission. |
-| [`IDENTITY.md`](./IDENTITY.md)                           | Public identity metadata.                                                                                   |
-| [`SOUL.md`](./SOUL.md)                                   | Mission, character, voice, and Covenant.                                                                    |
-| [`AGENTS.md`](./AGENTS.md)                               | Operating and execution guidance.                                                                           |
-| [`GOALS.md`](./GOALS.md)                                 | Reviewed goals, priorities, and success conditions.                                                         |
-| [`USER.md`](./USER.md)                                   | Context about EMORI's human partner.                                                                        |
-| [`HEARTBEAT.md`](./HEARTBEAT.md)                         | Periodic stewardship of assignments, pull requests, and goals.                                              |
+| File                                                     | Purpose                                                                                                                    |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| [`.agent-system/agent.yaml`](./.agent-system/agent.yaml) | Identity, model and effort profiles, environment sources, managed Git and GitHub, assignment admission, and ordered setup. |
+| [`SETUP.md`](./SETUP.md)                                 | Operator prerequisites, setup ownership, manual onboarding, and private continuity boundaries.                             |
+| [`IDENTITY.md`](./IDENTITY.md)                           | Public identity metadata.                                                                                                  |
+| [`SOUL.md`](./SOUL.md)                                   | Mission, character, voice, and Covenant.                                                                                   |
+| [`AGENTS.md`](./AGENTS.md)                               | Operating and execution guidance.                                                                                          |
+| [`GOALS.md`](./GOALS.md)                                 | Reviewed goals, priorities, and success conditions.                                                                        |
+| [`USER.md`](./USER.md)                                   | Context about EMORI's human partner.                                                                                       |
+| [`HEARTBEAT.md`](./HEARTBEAT.md)                         | Periodic stewardship of assignments, pull requests, and goals.                                                             |
 
 See Agent System's
 [configuration reference](https://github.com/tanaabased/openclaw-agent-system/blob/main/ADVANCED.md#configuration)
