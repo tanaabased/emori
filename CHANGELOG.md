@@ -1,5 +1,7 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
+## v1.0.0-beta.12 - [September 26, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.12)
+
 ### Features
 
 - Added OpenAI memory search with `text-embedding-3-small` and the required `EMORI_MEMORY_BINDER` credential. [#55](https://github.com/tanaabased/emori/issues/55) [#56](https://github.com/tanaabased/emori/pull/56)
