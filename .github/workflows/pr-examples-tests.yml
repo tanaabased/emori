@@ -10,6 +10,8 @@ jobs:
   examples:
     name: ${{ matrix.example }}
     runs-on: macos-26
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: '1'
     strategy:
       fail-fast: false
       matrix:
@@ -28,6 +30,10 @@ jobs:
         uses: tanaabased/actions/setup-bun@v1
       - name: Install dependencies
         run: bun install --frozen-lockfile --ignore-scripts
+      - name: Refresh Homebrew when needed
+        if: matrix.example == 'setup'
+        shell: bash
+        run: HOMEBREW_NO_AUTO_UPDATE= brew update-if-needed
       - name: Run Leia-backed example
         shell: bash
         env:
