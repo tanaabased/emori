@@ -68,7 +68,7 @@ openclaw agent-system tool gh -- api user --jq .login
 ```
 
 Installation registers EMORI and runs the ordered setup in
-[`.agent-system/agent.yaml`](./.agent-system/agent.yaml#L92):
+[`.agent-system/setup.yaml`](./.agent-system/setup.yaml):
 
 | Step                | Effect                                                                          |
 | ------------------- | ------------------------------------------------------------------------------- |
@@ -86,16 +86,17 @@ account-consent steps. For later changes, see
 
 ## Configuration
 
-| File                                                     | Purpose                                                                                                                    |
-| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| [`.agent-system/agent.yaml`](./.agent-system/agent.yaml) | Identity, model and effort profiles, environment sources, managed Git and GitHub, assignment admission, and ordered setup. |
-| [`ADVANCED.md`](./ADVANCED.md)                           | Manual onboarding, reconciliation, configuration ownership, and private continuity.                                        |
-| [`IDENTITY.md`](./IDENTITY.md)                           | Public identity metadata.                                                                                                  |
-| [`SOUL.md`](./SOUL.md)                                   | Mission, character, voice, and Covenant.                                                                                   |
-| [`AGENTS.md`](./AGENTS.md)                               | Operating and execution guidance.                                                                                          |
-| [`GOALS.md`](./GOALS.md)                                 | Reviewed goals, priorities, and success conditions.                                                                        |
-| [`USER.md`](./USER.md)                                   | Context about EMORI's human partner.                                                                                       |
-| [`HEARTBEAT.md`](./HEARTBEAT.md)                         | Inactive heartbeat instructions; no recurring chores.                                                                      |
+| File                                                     | Purpose                                                                                                                      |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| [`.agent-system/agent.yaml`](./.agent-system/agent.yaml) | Identity, model and effort profiles, environment sources, managed Git and GitHub, assignment admission, and setup reference. |
+| [`.agent-system/setup.yaml`](./.agent-system/setup.yaml) | Ordered setup checks and apply commands.                                                                                     |
+| [`ADVANCED.md`](./ADVANCED.md)                           | Manual onboarding, reconciliation, configuration ownership, and private continuity.                                          |
+| [`IDENTITY.md`](./IDENTITY.md)                           | Public identity metadata.                                                                                                    |
+| [`SOUL.md`](./SOUL.md)                                   | Mission, character, voice, and Covenant.                                                                                     |
+| [`AGENTS.md`](./AGENTS.md)                               | Operating and execution guidance.                                                                                            |
+| [`GOALS.md`](./GOALS.md)                                 | Reviewed goals, priorities, and success conditions.                                                                          |
+| [`USER.md`](./USER.md)                                   | Context about EMORI's human partner.                                                                                         |
+| [`HEARTBEAT.md`](./HEARTBEAT.md)                         | Inactive heartbeat instructions; no recurring chores.                                                                        |
 
 See Agent System's
 [manifest reference](https://github.com/tanaabased/openclaw-agent-system/blob/main/MANIFEST.md)
