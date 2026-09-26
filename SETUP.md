@@ -38,6 +38,10 @@ The setup patch admits the declared runtime model targets, but does not select a
 primary model or fallbacks. Those values do not belong in setup patches wearing
 fake moustaches.
 
+Messaging permits sends only and inherits OpenClaw's cross-provider routing and
+attribution defaults. Setup enables EMORI's named default iMessage account and
+routes it to her without changing session scope or embedding private channel state.
+
 ## Prerequisites
 
 Before running setup:
@@ -57,16 +61,8 @@ Before running setup:
   declared checkout with EMORI's managed SSH identity. Other declared local
   repositories remain optional until their source is needed.
 
-Run the full install from EMORI's checkout:
-
-```sh
-openclaw agent-system credentials set op
-openclaw agent-system validate
-openclaw agent-system install
-openclaw agent-system doctor
-```
-
-For installation-only automation, skip every setup step explicitly:
+Follow the [README quickstart](./README.md#quickstart) for a full install.
+Installation-only automation skips every setup step explicitly:
 
 ```sh
 openclaw agent-system install --skip-setup

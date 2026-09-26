@@ -44,8 +44,8 @@ identity, tool credentials, and GitHub work intake.
   using its [installation guide](https://github.com/tanaabased/openclaw-agent-system#installation).
   For older OpenClaw versions, see its
   [compatibility table](https://github.com/tanaabased/openclaw-agent-system/blob/main/ADVANCED.md#version-compatibility).
-- Give EMORI's 1Password service account access to the environment and SSH key
-  referenced by the manifest: `EMAIL`, `GH_TOKEN`, and `EMORI_SSH_KEY`.
+- Give EMORI's 1Password service account access to the manifest's required
+  `EMAIL`, `GH_TOKEN`, `EMORI_SSH_KEY`, and `EMORI_MEMORY_BINDER` values.
 
 [`Brewfile`](./Brewfile) lists EMORI's additional requirements.
 
@@ -74,17 +74,10 @@ openclaw agent-system tool gh -- api user --jq .login
 ```
 
 Run Agent System commands here so they find EMORI's manifest. `install` registers
-her, applies the declared configuration, and converges the currently verified
-setup prefix: Homebrew dependencies, the Canon checkout and `tanaab` plugin, the
-official Codex and iMessage plugins, and EMORI's agent-scoped execution policy.
-The prefix also grants EMORI the message tool, limits it to sends, and inherits
-OpenClaw's cross-provider routing and attribution defaults. It enables EMORI's
-named default iMessage account and routes that account to EMORI without changing
-session scope or embedding private channel state. Canon is cloned with EMORI's
-managed SSH identity only when its checkout is absent; the Agent System source
-checkout remains optional. Run `install` again when that state changes. `doctor`
-checks whether the installed state still matches. Use `install --skip-setup`
-only for installation-only automation.
+her and reconciles the [declared setup](./SETUP.md#audited-setup-inventory):
+dependencies, Canon, plugins, and execution, messaging, and memory policy.
+Repeat `install` to reconcile drift; `doctor` checks the installed state.
+Use `install --skip-setup` only for installation-only automation.
 
 See [EMORI Setup](./SETUP.md) for ownership boundaries, manual iMessage and Codex
 onboarding, optional capabilities, and the separate private continuity path.

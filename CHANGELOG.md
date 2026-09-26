@@ -1,7 +1,10 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
-- Added ordered Agent System setup for dependencies, shared plugins, EMORI's agent-scoped tool policies, and iMessage routing. [#65](https://github.com/tanaabased/emori/issues/65)
+- Added OpenAI memory search with `text-embedding-3-small` and the `EMORI_MEMORY_BINDER` credential binding. [#55](https://github.com/tanaabased/emori/issues/55) [#56](https://github.com/tanaabased/emori/pull/56)
+- Added ordered Agent System setup for dependencies, shared plugins, EMORI's agent-scoped tool policies, and iMessage routing. [#65](https://github.com/tanaabased/emori/issues/65) [#66](https://github.com/tanaabased/emori/pull/66)
+- Fixed setup to block plugin installation when inspection fails instead of treating the failure as a missing plugin.
 - Made Appalled EMORI's default voice across human-facing output and added approved examples to the voice skill. [#60](https://github.com/tanaabased/emori/issues/60)
+- Updated low and medium task profiles to GPT-6 Luna and Sol, with matching model admission and Codex runtime bindings. [#70](https://github.com/tanaabased/emori/pull/70)
 
 ## v1.0.0-beta.11 - [September 13, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.11)
 
