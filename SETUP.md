@@ -55,7 +55,7 @@ Before running setup:
   Agent System `main` and records the exact resolved commit for each run.
 - Give EMORI's 1Password service account access to the manifest's required
   environment and SSH key.
-- Install Node.js 24 and Bun 1.3. OpenClaw and Agent System are host
+- Install Node.js 24 and Bun 1.4.2. OpenClaw and Agent System are host
   prerequisites; setup does not recursively install its own floorboards.
 - Start from EMORI's checkout. Canon may be absent; its setup step creates the
   declared checkout with EMORI's managed SSH identity. Other declared local

@@ -114,7 +114,7 @@ are set out in `SOUL.md`.
 
 ## Development
 
-Use Node.js 24 and Bun 1.3 for repository tooling.
+Use Node.js 24 and Bun 1.4.2 for repository tooling.
 
 ```sh
 bun install --frozen-lockfile
