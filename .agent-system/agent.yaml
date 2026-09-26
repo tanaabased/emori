@@ -86,6 +86,10 @@ github:
         node-id: MDQ6VXNlcjcxMzQyNA==
       - login: lando
         node-id: MDEyOk9yZ2FuaXphdGlvbjMxNjA1NTg0
+    pull-request:
+      reviewers:
+        - login: pirog
+          node-id: MDQ6VXNlcjcxMzQyNA==
   policy:
     releases: allow
 
