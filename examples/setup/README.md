@@ -1,7 +1,7 @@
 # Setup
 
 This scenario installs EMORI from her checked-out workspace in an isolated
-OpenClaw profile and runs the currently verified setup prefix.
+OpenClaw profile and runs every declared setup step.
 
 ## Setup
 
@@ -27,7 +27,7 @@ test ! -e "$HOME/tanaab/openclaw-agent-system"
 ! openclaw plugins inspect imessage --json >/dev/null 2>&1
 openclaw config set skills.load.extraDirs "[\"$HOME/tanaab/canon/skills\"]" --strict-json
 
-# should run the verified setup prefix through Agent System
+# should run the declared setup through Agent System
 openclaw agent-system validate
 openclaw agent-system install --json | tee "${TMPDIR}/setup-install.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "openclaw-config"]' "${TMPDIR}/setup-install.json"
