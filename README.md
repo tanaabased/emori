@@ -105,7 +105,8 @@ repository.
 
 - [`emori-skill-author`](./skills/skill-author/SKILL.md) creates and checks
   EMORI-local skills.
-- [`emori-voice`](./skills/voice/SKILL.md) gives her prose its deadpan register.
+- [`emori-voice`](./skills/voice/SKILL.md) gives her prose its Belter cadence,
+  Drummer-like resolve, and well-placed fictional profanity.
   Strong opinions still owe the reader an explanation.
 
 Shared `tanaab-*` workflows come from the
