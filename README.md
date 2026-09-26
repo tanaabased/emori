@@ -26,33 +26,26 @@ identity, tool credentials, and GitHub work intake.
   fellowship.
 - GitHub assignments run under her own agent identity, in managed Git worktrees.
   Who did the work should be easy to establish.
-- [Heartbeat guidance](./HEARTBEAT.md) tracks assignments, pull requests, goal
-  reviews, and reminders already sent. Even a useful reminder can wear out its
-  welcome.
 
 ## Prerequisites
 
-- Set up an [Agentbox](https://github.com/tanaabased/agentbox#quickstart), which
-  provisions EMORI's managed macOS host and OpenClaw.
-- EMORI's supported OpenClaw baseline is
-  [`devDependencies.openclaw`](./package.json), currently 2026.9.6. The exact
-  dependency pins CI's baseline; it is neither a report of the installed host
-  runtime nor a ceiling on later versions. Verify newer releases before claiming
-  support.
-- Install an Agent System build containing
-  [operator-run setup support](https://github.com/tanaabased/openclaw-agent-system/pull/137)
-  using its [installation guide](https://github.com/tanaabased/openclaw-agent-system#installation).
-  For older OpenClaw versions, see its
-  [compatibility table](https://github.com/tanaabased/openclaw-agent-system/blob/main/ADVANCED.md#version-compatibility).
-- Give EMORI's 1Password service account access to the manifest's required
-  `EMAIL`, `GH_TOKEN`, `EMORI_SSH_KEY`, and `EMORI_MEMORY_BINDER` values.
+1. Provision the Mac with [Agentbox](https://github.com/tanaabased/agentbox#quickstart).
+2. Update OpenClaw to the version declared in
+   [`devDependencies.openclaw`](./package.json). Agentbox's bundled version may
+   be older than EMORI's tested baseline.
+3. Install [Agent System](https://github.com/tanaabased/openclaw-agent-system#installation)
+   into that OpenClaw environment; Agentbox does not install it yet.
+4. Give EMORI's 1Password service account access to the manifest's required
+   `EMAIL`, `GH_TOKEN`, `EMORI_SSH_KEY`, and `EMORI_MEMORY_BINDER` values.
 
-[`Brewfile`](./Brewfile) lists EMORI's additional requirements.
+Homebrew and Node/npm must be available to the runtime user. EMORI's install
+handles her additional [`Brewfile`](./Brewfile) dependencies automatically.
 
 ## Quickstart
 
-After meeting the prerequisites, have EMORI's 1Password service account token
-ready and set up a new checkout:
+Run as the OpenClaw runtime user on the Agentbox Mac, with EMORI's 1Password
+service account token ready. Keep Agent System commands in this checkout so
+that they find her manifest.
 
 ```sh
 mkdir -p ~/tanaab
@@ -65,38 +58,47 @@ git remote set-url origin git@github.com:tanaabased/emori.git
 # store the 1Password service account token at the masked prompt.
 openclaw agent-system credentials set op
 
+# validate the manifest, then accept and run its declared setup.
 openclaw agent-system validate
-openclaw agent-system install
-openclaw agent-system doctor
+openclaw agent-system install --yes
 
-# confirm the managed GitHub identity is emoriwan.
+# check installed state and confirm the managed GitHub identity is emoriwan.
+openclaw agent-system doctor
 openclaw agent-system tool gh -- api user --jq .login
 ```
 
-Run Agent System commands here so they find EMORI's manifest. `install` registers
-her and reconciles the [declared setup](./SETUP.md#audited-setup-inventory):
-dependencies, Canon, plugins, and execution, messaging, and memory policy.
-Repeat `install` to reconcile drift; `doctor` checks the installed state.
-Use `install --skip-setup` only for installation-only automation.
+Installation registers EMORI and runs the ordered setup in
+[`.agent-system/agent.yaml`](./.agent-system/agent.yaml#L92):
 
-See [EMORI Setup](./SETUP.md) for ownership boundaries, manual iMessage and Codex
-onboarding, optional capabilities, and the separate private continuity path.
+| Step                | Effect                                                                          |
+| ------------------- | ------------------------------------------------------------------------------- |
+| `brew-dependencies` | Installs Brewfile dependencies and the platform-specific SQLite vector package. |
+| `canon-checkout`    | Clones Canon when absent and preserves existing checkouts.                      |
+| `canon-plugin`      | Links Canon's `tanaab` plugin and exposes its shared skills.                    |
+| `codex-plugin`      | Installs and enables the official Codex plugin.                                 |
+| `imessage-plugin`   | Installs and enables the official iMessage plugin.                              |
+| `openclaw-config`   | Reconciles execution, model admission, messaging, Workshop, and memory policy.  |
+
+Finish [manual onboarding](./ADVANCED.md#manual-onboarding) for Codex/OpenAI
+sign-in, Messages permissions, and pairing. Installation does not complete those
+account-consent steps. For later changes, see
+[reconciliation](./ADVANCED.md#reconciliation).
 
 ## Configuration
 
 | File                                                     | Purpose                                                                                                                    |
 | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | [`.agent-system/agent.yaml`](./.agent-system/agent.yaml) | Identity, model and effort profiles, environment sources, managed Git and GitHub, assignment admission, and ordered setup. |
-| [`SETUP.md`](./SETUP.md)                                 | Operator prerequisites, setup ownership, manual onboarding, and private continuity boundaries.                             |
+| [`ADVANCED.md`](./ADVANCED.md)                           | Manual onboarding, reconciliation, configuration ownership, and private continuity.                                        |
 | [`IDENTITY.md`](./IDENTITY.md)                           | Public identity metadata.                                                                                                  |
 | [`SOUL.md`](./SOUL.md)                                   | Mission, character, voice, and Covenant.                                                                                   |
 | [`AGENTS.md`](./AGENTS.md)                               | Operating and execution guidance.                                                                                          |
 | [`GOALS.md`](./GOALS.md)                                 | Reviewed goals, priorities, and success conditions.                                                                        |
 | [`USER.md`](./USER.md)                                   | Context about EMORI's human partner.                                                                                       |
-| [`HEARTBEAT.md`](./HEARTBEAT.md)                         | Periodic stewardship of assignments, pull requests, and goals.                                                             |
+| [`HEARTBEAT.md`](./HEARTBEAT.md)                         | Inactive heartbeat instructions; no recurring chores.                                                                      |
 
 See Agent System's
-[configuration reference](https://github.com/tanaabased/openclaw-agent-system/blob/main/ADVANCED.md#configuration)
+[manifest reference](https://github.com/tanaabased/openclaw-agent-system/blob/main/MANIFEST.md)
 for manifest options. Private memory stays in ignored workspace files; machine
 configuration, credentials, channel state, and transcripts stay outside this
 repository.

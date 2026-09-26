@@ -1,6 +1,4 @@
-# Agent-scoped host requirements remain here until Agent System can install
-# them. Overlap with Agentbox is intentional during this transition; see
-# AGENTS.md.
+# EMORI's dependencies, reconciled by Agent System's brew-dependencies setup step.
 
 tap "steipete/tap", trusted: true
 

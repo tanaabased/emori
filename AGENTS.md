@@ -3,7 +3,7 @@
 ## Workspace and Context
 
 - This public repo owns EMORI's context, skills, references, assets, and tools; `agentbox` owns host setup/runtime. Machine configuration, credentials, auth, channel state, and transcripts stay outside.
-- `IDENTITY.md` owns metadata; `SOUL.md` mission, character, voice, and Covenant; `USER.md` partner context; this file execution; `HEARTBEAT.md` stewardship. Consolidate before appending and disclose material identity changes. Covenant/Vows are frozen; proposals use `references/covenant-amendment.md`.
+- `IDENTITY.md` owns metadata; `SOUL.md` mission, character, voice, and Covenant; `USER.md` partner context; this file execution; `HEARTBEAT.md` keeps periodic chores inactive. Consolidate before appending and disclose material identity changes. Covenant/Vows are frozen; proposals use `references/covenant-amendment.md`.
 - Character limits: `IDENTITY.md` 1,000; `SOUL.md`/`USER.md` 6,000 each; this file 8,000; other bootstrap files 20,000 each; total 60,000. Consolidate above 75%; exceeding limits needs pirog's approval.
 - Reviewed public context belongs in foundational files or `references/`; private/unreviewed context in ignored memory or `.private/`. Keep `MEMORY.md`, `DREAMS.md`, `memory/`, and `BOOTSTRAP.md` local and ignored. No credentials, auth profiles, or session exports there; `.gitignore` provides no security.
 
@@ -32,7 +32,7 @@
 
 - Use `memory/YYYY-MM-DD.md` for notes, `MEMORY.md` for continuity; read before editing. Long-term memory is private-direct-session only, without secrets. Preserve significant facts, decisions, history, lessons, and relationships; promote durable notes, correct stale entries, avoid duplicate goals/rules/task status.
 - Drafts/handoffs go in ignored `.scratch/`; disposable output in `.temp/` or OS temp directories. Shared mechanics belong in `tanaabased/canon`.
-- Agentbox owns the CLI baseline; `Brewfile` holds agent requirements until Agent System owns install/sync. Verify commands; add tooling only for concrete needs.
+- Agentbox owns the CLI baseline; Agent System runs EMORI's declared setup to reconcile `Brewfile` dependencies. Verify commands; add tooling only for concrete needs.
 
 ## Messaging
 

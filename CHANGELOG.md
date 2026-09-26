@@ -1,10 +1,33 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
-- Added OpenAI memory search with `text-embedding-3-small` and the `EMORI_MEMORY_BINDER` credential binding. [#55](https://github.com/tanaabased/emori/issues/55) [#56](https://github.com/tanaabased/emori/pull/56)
-- Added ordered Agent System setup for dependencies, shared plugins, EMORI's agent-scoped tool policies, and iMessage routing. [#65](https://github.com/tanaabased/emori/issues/65) [#66](https://github.com/tanaabased/emori/pull/66)
-- Fixed setup to block plugin installation when inspection fails instead of treating the failure as a missing plugin.
-- Made Appalled EMORI's default voice across human-facing output and added approved examples to the voice skill. [#60](https://github.com/tanaabased/emori/issues/60)
+### Features
+
+- Added OpenAI memory search with `text-embedding-3-small` and the required `EMORI_MEMORY_BINDER` credential. [#55](https://github.com/tanaabased/emori/issues/55) [#56](https://github.com/tanaabased/emori/pull/56)
+- Added ordered, repeatable Agent System setup for dependencies, Canon, Codex, iMessage, and EMORI's OpenClaw policy. [#65](https://github.com/tanaabased/emori/issues/65) [#66](https://github.com/tanaabased/emori/pull/66)
+- Added setup for EMORI's named iMessage account and routing, with send-only messaging tools. [#65](https://github.com/tanaabased/emori/issues/65) [#66](https://github.com/tanaabased/emori/pull/66)
+- Extended SQLite vector dependency support to Intel Macs alongside Apple Silicon. [#65](https://github.com/tanaabased/emori/issues/65) [#66](https://github.com/tanaabased/emori/pull/66)
+
+### Bug Fixes
+
+- Fixed setup to stop on failed or malformed plugin inspection instead of treating it as permission to install. [#65](https://github.com/tanaabased/emori/issues/65) [#71](https://github.com/tanaabased/emori/pull/71)
+
+### Improvements
+
+- Added a 50-entry fictional vocabulary and phrase palette, with meaning-first selection and loose frequency guidance. [#71](https://github.com/tanaabased/emori/pull/71)
+- Configured Workshop to propose skills and restricted session visibility to the active agent. [#65](https://github.com/tanaabased/emori/issues/65) [#66](https://github.com/tanaabased/emori/pull/66)
+- Configured vector-backed memory search across memory files and sessions, and disabled the legacy `session-memory` hook. [#65](https://github.com/tanaabased/emori/issues/65) [#66](https://github.com/tanaabased/emori/pull/66)
+- Consolidated installation guidance into `README.md` and `ADVANCED.md`, including prerequisites and `install --yes`. [#71](https://github.com/tanaabased/emori/pull/71)
+- Enabled release operations in EMORI's Agent System GitHub policy. [#70](https://github.com/tanaabased/emori/pull/70)
+- Removed recurring heartbeat checks, reminders, and goal-task creation; left runtime wake-up scheduling unchanged. [#71](https://github.com/tanaabased/emori/pull/71)
+- Updated EMORI's default voice to Belter Creole and Camina Drummer's cadence across private, public, and tool-sent prose. [#60](https://github.com/tanaabased/emori/issues/60) [#61](https://github.com/tanaabased/emori/pull/61) [#71](https://github.com/tanaabased/emori/pull/71)
 - Updated low and medium task profiles to GPT-6 Luna and Sol, with matching model admission and Codex runtime bindings. [#70](https://github.com/tanaabased/emori/pull/70)
+
+### Developer Notes
+
+- Added isolated installation and full-setup scenarios, plus regression tests for plugin inspection and configuration preservation. [#62](https://github.com/tanaabased/emori/issues/62) [#63](https://github.com/tanaabased/emori/pull/63) [#65](https://github.com/tanaabased/emori/issues/65) [#66](https://github.com/tanaabased/emori/pull/66) [#71](https://github.com/tanaabased/emori/pull/71)
+- Updated Bun tooling to `1.4.2` and pinned the OpenClaw test baseline to `2026.9.6`; retained Node.js 24. [#65](https://github.com/tanaabased/emori/issues/65) [#66](https://github.com/tanaabased/emori/pull/66) [#71](https://github.com/tanaabased/emori/pull/71)
+- Updated Leia to `2.0.0` and ran its CLI through Bun. [#58](https://github.com/tanaabased/emori/pull/58) [#68](https://github.com/tanaabased/emori/pull/68)
+- Updated release automation to validate the triggering commit and publish through shared Tanaab Actions. [#62](https://github.com/tanaabased/emori/issues/62) [#63](https://github.com/tanaabased/emori/pull/63)
 
 ## v1.0.0-beta.11 - [September 13, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.11)
 
