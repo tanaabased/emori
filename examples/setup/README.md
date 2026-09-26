@@ -35,6 +35,7 @@ jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "updat
 
 # should satisfy EMORI's Brewfile dependencies
 HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --verbose --file "$GITHUB_WORKSPACE/Brewfile"
+gog --version
 
 # should clone Canon over SSH and admit it with EMORI's managed Git identity
 test -d "$HOME/tanaab/canon/.git"
