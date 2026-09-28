@@ -27,9 +27,10 @@ test ! -e "$HOME/tanaab/openclaw-agent-system"
 ! openclaw plugins inspect imessage --json >/dev/null 2>&1
 openclaw config set skills.load.extraDirs "[\"$HOME/tanaab/canon/skills\"]" --strict-json
 
-# should run the declared setup through Agent System
+# should run host setup before agent setup through Agent System
 openclaw agent-system validate
 openclaw agent-system install --json | tee "${TMPDIR}/setup-install.json"
+jq -e '.outcomes[0].component == "setup" and .outcomes[0].stepId == "brew-dependencies"' "${TMPDIR}/setup-install.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "openclaw-config"]' "${TMPDIR}/setup-install.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "updated")' "${TMPDIR}/setup-install.json"
 

@@ -1,0 +1,9 @@
+steps:
+  - id: brew-dependencies
+    check:
+      command: ./scripts/setup-brew-dependencies-task.js
+      args: [check]
+    apply:
+      command: ./scripts/setup-brew-dependencies-task.js
+      args: [apply]
+      timeout-seconds: 1800
