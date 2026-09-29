@@ -35,11 +35,8 @@ identity, tool credentials, and GitHub work intake.
    be older than EMORI's tested baseline.
 3. Install [Agent System](https://github.com/tanaabased/openclaw-agent-system#installation)
    into that OpenClaw environment; Agentbox does not install it yet.
-4. Give EMORI's 1Password service account access to the manifest's required
-   `EMAIL`, `GH_TOKEN`, `EMORI_SSH_KEY`, `EMORI_MEMORY_BINDER`,
-   `GOG_CREDENTIALS_JSON`, `GOG_TOKEN_JSON`, and `GOG_KEYRING_PASSWORD` values.
-   The two Google JSON values are Base64-encoded; `EMAIL` identifies the Google
-   account authorized by the token.
+4. Give EMORI's 1Password service account access to the
+   [required environment values](./.agent-system/agent.yaml) in her manifest.
 
 Homebrew and Node/npm must be available to the runtime user. EMORI's install
 handles her additional [`Brewfile`](./Brewfile) dependencies automatically.
