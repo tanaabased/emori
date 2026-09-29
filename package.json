@@ -10,7 +10,7 @@
   "packageManager": "bun@1.4.2",
   "engines": {
     "bun": ">=1.4.2 <1.5.0",
-    "node": ">=24.15.0 <25.0.0"
+    "node": ">=24.15.0 <25.0.0 || >=26.9.0 <27.0.0"
   },
   "private": true,
   "type": "module",

@@ -121,7 +121,8 @@ are set out in `SOUL.md`.
 
 ## Development
 
-Use Node.js 24 and Bun 1.4.2 for repository tooling.
+Use Node.js 26.9.0 (selected by [`.node-version`](./.node-version)) and Bun 1.4.2
+for repository tooling. Node.js 24.15.0 and later 24.x releases remain supported.
 
 ```sh
 bun install --frozen-lockfile
