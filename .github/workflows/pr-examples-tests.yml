@@ -27,8 +27,6 @@ jobs:
         uses: tanaabased/actions/setup-openclaw@v1
         with:
           agent-system: github:tanaabased/openclaw-agent-system#main
-      - name: Set up Node.js
-        uses: tanaabased/actions/setup-node@v1
       - name: Set up Bun
         uses: tanaabased/actions/setup-bun@v1
       - name: Install dependencies
