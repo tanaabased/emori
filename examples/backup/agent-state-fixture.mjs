@@ -64,8 +64,8 @@ if (mode === 'seed') {
   `,
     )
     .run(embedding);
+  database.close();
   writeFileSync(path, `${opened.path}\n`, { mode: 0o600 });
-  setInterval(() => {}, 1000);
 } else {
   const database = new DatabaseSync(path, { readOnly: true });
   try {

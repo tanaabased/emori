@@ -30,26 +30,17 @@ jq -e '.agentId == "emori"' "$TMPDIR/agent.json" >/dev/null
 ## Testing
 
 ```bash
-# should back up, verify, and restore EMORI's private continuity and agent database
+# should create a backup containing EMORI's private continuity and agent database
 set -euo pipefail
 workspace="$TMPDIR/emori-workspace"
-node "$GITHUB_WORKSPACE/examples/backup/agent-state-fixture.mjs" seed "$TMPDIR/agent-ready" &
-fixture_pid=$!
-trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
-for attempt in 1 2 3 4 5 6 7 8 9 10; do
-  if test -f "$TMPDIR/agent-ready"; then break; fi
-  sleep 1
-done
-test -f "$TMPDIR/agent-ready"
-database="$(cat "$TMPDIR/agent-ready")"
-test -s "$database-wal"
+node "$GITHUB_WORKSPACE/examples/backup/agent-state-fixture.mjs" seed "$TMPDIR/agent-database-path"
+database="$(cat "$TMPDIR/agent-database-path")"
 node "$GITHUB_WORKSPACE/examples/backup/agent-state-fixture.mjs" verify "$database"
-shasum -a 256 "$database" "$database-wal" > "$TMPDIR/source-before.sha"
+shasum -a 256 "$database" > "$TMPDIR/source-before.sha"
 openclaw agents list --json > "$TMPDIR/agents-before.json"
 for file in AGENTS.md IDENTITY.md .agent-system/agent.yaml MEMORY.md DREAMS.md memory/recovery.md .private/recovery.txt; do
   shasum -a 256 "$workspace/$file"
 done > "$TMPDIR/files-before.sha"
-
 cd "$workspace"
 openclaw agent-system backup create --agent emori --json > "$TMPDIR/create.json"
 jq -e '
@@ -71,10 +62,23 @@ jq -e '
 archive="$(jq -er .archive "$TMPDIR/create.json")"
 test -f "$archive"
 git check-ignore -q "$archive"
+```
+
+```bash
+# should verify the created archive and its captured agent database
+set -euo pipefail
+archive="$(jq -er .archive "$TMPDIR/create.json")"
 openclaw agent-system backup verify "$archive" --agent emori --json > "$TMPDIR/verify.json"
 jq -e '.status == "verified" and .coverage.openclawState == "captured" and
   .snapshot.manifest.database.agentId == "emori"' "$TMPDIR/verify.json" >/dev/null
+```
 
+```bash
+# should restore into staging without changing source data or activating a runtime
+set -euo pipefail
+workspace="$TMPDIR/emori-workspace"
+database="$(cat "$TMPDIR/agent-database-path")"
+archive="$(jq -er .archive "$TMPDIR/create.json")"
 restore="$TMPDIR/recovered"
 openclaw agent-system backup restore "$archive" --target "$restore" --agent emori --json > "$TMPDIR/restore.json"
 jq -e --arg workspace "$restore/workspace" --arg database "$restore/openclaw-state/openclaw-agent.sqlite" '
@@ -96,7 +100,7 @@ for file in AGENTS.md IDENTITY.md .agent-system/agent.yaml MEMORY.md DREAMS.md m
   shasum -a 256 "$workspace/$file"
 done > "$TMPDIR/files-after.sha"
 cmp -s "$TMPDIR/files-before.sha" "$TMPDIR/files-after.sha"
-shasum -a 256 "$database" "$database-wal" > "$TMPDIR/source-after.sha"
+shasum -a 256 "$database" > "$TMPDIR/source-after.sha"
 cmp -s "$TMPDIR/source-before.sha" "$TMPDIR/source-after.sha"
 openclaw agents list --json > "$TMPDIR/agents-after.json"
 cmp -s "$TMPDIR/agents-before.json" "$TMPDIR/agents-after.json"
