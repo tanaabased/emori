@@ -1,5 +1,7 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
+## v1.0.0-beta.13 - [September 29, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.13)
+
 - Added backup defaults for private continuity files and required OpenClaw agent state, with archives ignored by Git. [#80](https://github.com/tanaabased/emori/issues/80) [#81](https://github.com/tanaabased/emori/pull/81)
 - Added Google Workspace credential bindings through Agent System and `gog`. [#73](https://github.com/tanaabased/emori/issues/73) [#79](https://github.com/tanaabased/emori/pull/79)
 - Added Leia coverage for backup creation, verification, and staged recovery of private files and the agent database. [#80](https://github.com/tanaabased/emori/issues/80) [#81](https://github.com/tanaabased/emori/pull/81)
