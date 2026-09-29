@@ -1,5 +1,13 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
+- Added backup defaults for private continuity files and required OpenClaw agent state, with archives ignored by Git. [#80](https://github.com/tanaabased/emori/issues/80) [#81](https://github.com/tanaabased/emori/pull/81)
+- Added Google Workspace credential bindings through Agent System and `gog`. [#73](https://github.com/tanaabased/emori/issues/73) [#79](https://github.com/tanaabased/emori/pull/79)
+- Added Leia coverage for backup creation, verification, and staged recovery of private files and the agent database. [#80](https://github.com/tanaabased/emori/issues/80) [#81](https://github.com/tanaabased/emori/pull/81)
+- Configured `pirog` as EMORI's pinned pull-request reviewer. [#72](https://github.com/tanaabased/emori/issues/72) [#75](https://github.com/tanaabased/emori/pull/75)
+- Included `openclaw/tap/gogcli` in `Brewfile` so setup installs the Google CLI dependency. [#77](https://github.com/tanaabased/emori/issues/77) [#78](https://github.com/tanaabased/emori/pull/78)
+- Moved setup into explicit host and agent YAML files, installing host dependencies before managed-tool reconciliation. [#74](https://github.com/tanaabased/emori/issues/74) [#76](https://github.com/tanaabased/emori/pull/76) [#73](https://github.com/tanaabased/emori/issues/73) [#79](https://github.com/tanaabased/emori/pull/79)
+- Updated installation coverage to use `--skip-setup-agent`, checking host dependencies and repeat-install convergence. [#73](https://github.com/tanaabased/emori/issues/73) [#79](https://github.com/tanaabased/emori/pull/79)
+
 ## v1.0.0-beta.12 - [September 26, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.12)
 
 ### Features
