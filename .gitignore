@@ -10,6 +10,7 @@
 /.private/
 /.scratch/
 /.worktrees/
+/.agent-system/backups/
 /.agent-system/repositories/
 /.agent-system/worktrees/
 

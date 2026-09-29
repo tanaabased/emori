@@ -19,6 +19,7 @@ jobs:
           - workspace
           - install
           - setup
+          - backup
     steps:
       - name: Checkout code
         uses: actions/checkout@v7

@@ -29,6 +29,15 @@ memory:
     model: text-embedding-3-small
     api-key: EMORI_MEMORY_BINDER
 
+backup:
+  output: .agent-system/backups
+  git-ignore: true
+  openclaw-state: required
+  include:
+    - '{MEMORY,DREAMS,BOOTSTRAP}.md'
+    - memory/**
+    - .private/**
+
 environment:
   op: jp5zhxuc67n7uk3wfjgn5t4yam
   set:
