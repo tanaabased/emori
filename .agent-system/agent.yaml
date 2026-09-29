@@ -39,6 +39,15 @@ environment:
     - GH_TOKEN
     - EMORI_SSH_KEY
     - EMORI_MEMORY_BINDER
+    - GOG_CREDENTIALS_JSON
+    - GOG_TOKEN_JSON
+    - GOG_KEYRING_PASSWORD
+
+google:
+  credential-encoding: base64
+  oauth-client: GOG_CREDENTIALS_JSON
+  oauth-token: GOG_TOKEN_JSON
+  keyring-password: GOG_KEYRING_PASSWORD
 
 git:
   worktrees:
@@ -93,5 +102,7 @@ github:
   policy:
     releases: allow
 
-setup:
-  file: ./setup.yaml
+setup-host:
+  file: ./setup-host.yaml
+setup-agent:
+  file: ./setup-agent.yaml

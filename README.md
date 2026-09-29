@@ -35,8 +35,8 @@ identity, tool credentials, and GitHub work intake.
    be older than EMORI's tested baseline.
 3. Install [Agent System](https://github.com/tanaabased/openclaw-agent-system#installation)
    into that OpenClaw environment; Agentbox does not install it yet.
-4. Give EMORI's 1Password service account access to the manifest's required
-   `EMAIL`, `GH_TOKEN`, `EMORI_SSH_KEY`, and `EMORI_MEMORY_BINDER` values.
+4. Give EMORI's 1Password service account access to the
+   [required environment values](./.agent-system/agent.yaml) in her manifest.
 
 Homebrew and Node/npm must be available to the runtime user. EMORI's install
 handles her additional [`Brewfile`](./Brewfile) dependencies automatically.
@@ -67,8 +67,10 @@ openclaw agent-system doctor
 openclaw agent-system tool gh -- api user --jq .login
 ```
 
-Installation registers EMORI and runs the ordered setup in
-[`.agent-system/setup.yaml`](./.agent-system/setup.yaml):
+Installation runs the host setup in
+[`.agent-system/setup-host.yaml`](./.agent-system/setup-host.yaml) before
+reconciling managed tools, then runs the agent setup in
+[`.agent-system/setup-agent.yaml`](./.agent-system/setup-agent.yaml):
 
 | Step                | Effect                                                                          |
 | ------------------- | ------------------------------------------------------------------------------- |
@@ -86,17 +88,18 @@ account-consent steps. For later changes, see
 
 ## Configuration
 
-| File                                                     | Purpose                                                                                                                      |
-| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| [`.agent-system/agent.yaml`](./.agent-system/agent.yaml) | Identity, model and effort profiles, environment sources, managed Git and GitHub, assignment admission, and setup reference. |
-| [`.agent-system/setup.yaml`](./.agent-system/setup.yaml) | Ordered setup checks and apply commands.                                                                                     |
-| [`ADVANCED.md`](./ADVANCED.md)                           | Manual onboarding, reconciliation, configuration ownership, and private continuity.                                          |
-| [`IDENTITY.md`](./IDENTITY.md)                           | Public identity metadata.                                                                                                    |
-| [`SOUL.md`](./SOUL.md)                                   | Mission, character, voice, and Covenant.                                                                                     |
-| [`AGENTS.md`](./AGENTS.md)                               | Operating and execution guidance.                                                                                            |
-| [`GOALS.md`](./GOALS.md)                                 | Reviewed goals, priorities, and success conditions.                                                                          |
-| [`USER.md`](./USER.md)                                   | Context about EMORI's human partner.                                                                                         |
-| [`HEARTBEAT.md`](./HEARTBEAT.md)                         | Inactive heartbeat instructions; no recurring chores.                                                                        |
+| File                                                                 | Purpose                                                                                                                                |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| [`.agent-system/agent.yaml`](./.agent-system/agent.yaml)             | Identity, model and effort profiles, environment sources, managed Git, GitHub, and Google, assignment admission, and setup references. |
+| [`.agent-system/setup-host.yaml`](./.agent-system/setup-host.yaml)   | Host dependency check and apply command, run before managed-tool reconciliation.                                                       |
+| [`.agent-system/setup-agent.yaml`](./.agent-system/setup-agent.yaml) | Ordered agent-aware setup checks and apply commands.                                                                                   |
+| [`ADVANCED.md`](./ADVANCED.md)                                       | Manual onboarding, reconciliation, configuration ownership, and private continuity.                                                    |
+| [`IDENTITY.md`](./IDENTITY.md)                                       | Public identity metadata.                                                                                                              |
+| [`SOUL.md`](./SOUL.md)                                               | Mission, character, voice, and Covenant.                                                                                               |
+| [`AGENTS.md`](./AGENTS.md)                                           | Operating and execution guidance.                                                                                                      |
+| [`GOALS.md`](./GOALS.md)                                             | Reviewed goals, priorities, and success conditions.                                                                                    |
+| [`USER.md`](./USER.md)                                               | Context about EMORI's human partner.                                                                                                   |
+| [`HEARTBEAT.md`](./HEARTBEAT.md)                                     | Inactive heartbeat instructions; no recurring chores.                                                                                  |
 
 See Agent System's
 [manifest reference](https://github.com/tanaabased/openclaw-agent-system/blob/main/MANIFEST.md)
