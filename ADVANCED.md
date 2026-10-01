@@ -38,6 +38,21 @@ values. Make policy changes in that fragment and rerun installation; do not
 apply the raw fragment directly, which would bypass the merge logic and replace
 shared arrays. Primary model and fallback selection remain Agent System's job.
 
+For EMORI's runtime model allowlist, setup owns the admissions in the fragment
+and the retired IDs recorded in `lib/setup/openclaw-config.js`. Keep an ID in
+that inventory when removing it from the fragment, so reconciliation can revoke
+the old admission. Agent System selects model/effort profiles but does not own
+runtime allowlist entries; other agents' model policies are untouched.
+
+An additional admission for EMORI must be explicitly classified as operator-owned
+with `EMORI_OPERATOR_MODEL_ADMISSIONS`, a JSON array of model IDs supplied to the
+setup process (for example, `["openai/operator-model"]`). Setup retains those
+entries and unrelated managed tool grants. An unclassified live admission, or
+an ID claimed by both the workspace and operator, fails setup with an ownership
+diagnostic; it is not reported as ready and no patch is applied. Review the ID
+before classifying it. If it was formerly workspace-owned, add it to the
+inventory instead of treating it as operator policy.
+
 ## Private continuity
 
 Setup does not restore private memory, import conversations, or force an index
