@@ -99,6 +99,45 @@ describe('lib/setup/openclaw-config', () => {
     assert.deepEqual(withoutCanonSkillDir(['~/tanaab/canon/skills'], canonPath, home), []);
   });
 
+  it('should preserve a shared iMessage default, other account, and route', () => {
+    const otherAccount = { enabled: true, name: 'operator account' };
+    const otherRoute = {
+      type: 'route',
+      agentId: 'operator',
+      match: { channel: 'imessage', accountId: 'operator' },
+    };
+    const current = {
+      channels: {
+        imessage: {
+          enabled: true,
+          defaultAccount: 'operator',
+          accounts: { operator: otherAccount },
+        },
+      },
+      bindings: [otherRoute],
+    };
+
+    const patch = buildPatch(current);
+
+    assert.equal(patch.channels.imessage.defaultAccount, undefined);
+    assert.deepEqual(patch.channels.imessage.accounts, { emori: { enabled: true } });
+    assert.equal(current.channels.imessage.defaultAccount, 'operator');
+    assert.deepEqual(current.channels.imessage.accounts.operator, otherAccount);
+    assert.deepEqual(patch.bindings, [otherRoute, loadOpenClawConfigFragment().bindings[0]]);
+  });
+
+  it('should establish the iMessage default on a fresh profile and converge on repeat', () => {
+    const initialPatch = buildPatch();
+    assert.equal(initialPatch.channels.imessage.defaultAccount, 'emori');
+
+    const repeatedPatch = buildPatch(initialPatch);
+    assert.equal(repeatedPatch.channels.imessage.defaultAccount, undefined);
+    assert.equal(
+      configPatchSatisfied(initialPatch.channels.imessage, repeatedPatch.channels.imessage),
+      true,
+    );
+  });
+
   it('should carry every owned static policy through one patch', () => {
     const patch = buildPatch();
     assert.equal(patch.agents.entries.emori.models['openai/gpt-6-astra'].agentRuntime.id, 'codex');
