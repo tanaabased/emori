@@ -63,6 +63,11 @@ openclaw agent-system credentials set op
 openclaw agent-system validate
 openclaw agent-system install --yes
 
+# authorize EMORI to use OpenAI with device-code login.
+# NOTE: Adapt this Tanaab OpenAI example to your provider/account and model configuration.
+openclaw models auth login --provider openai --device-code --agent emori --profile-id openai:emori
+openclaw models auth order set --agent emori openai:emori
+
 # check installed state and confirm the managed GitHub identity is emoriwan.
 openclaw agent-system doctor
 openclaw agent-system tool gh -- api user --jq .login
