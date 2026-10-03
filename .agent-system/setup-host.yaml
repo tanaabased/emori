@@ -7,3 +7,10 @@ steps:
       command: ./scripts/setup-brew-dependencies-task.js
       args: [apply]
       timeout-seconds: 1800
+  - id: workspace-memory
+    check:
+      command: ./scripts/setup-workspace-memory-task.js
+      args: [check]
+    apply:
+      command: ./scripts/setup-workspace-memory-task.js
+      args: [apply]

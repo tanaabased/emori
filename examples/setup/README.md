@@ -38,8 +38,13 @@ openclaw config set skills.load.extraDirs "[\"$HOME/tanaab/canon/skills\"]" --st
 openclaw agent-system validate
 openclaw agent-system install --json | tee "${TMPDIR}/setup-install.json"
 jq -e '.outcomes[0].component == "codex-plugin" and .outcomes[0].code == "codex-plugin-installed" and .outcomes[0].status == "created" and .outcomes[1].stepId == "brew-dependencies"' "${TMPDIR}/setup-install.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "imessage-plugin", "openclaw-config"]' "${TMPDIR}/setup-install.json"
-jq -e --arg brew "$(cat "${TMPDIR}/brew-expected-status")" '[.outcomes[] | select(.component == "setup") | .status] == [$brew, "updated", "updated", "updated", "updated"]' "${TMPDIR}/setup-install.json"
+jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "workspace-memory", "canon-checkout", "canon-plugin", "imessage-plugin", "openclaw-config"]' "${TMPDIR}/setup-install.json"
+jq -e --arg brew "$(cat "${TMPDIR}/brew-expected-status")" '[.outcomes[] | select(.component == "setup") | .status] == [$brew, "updated", "updated", "updated", "updated", "updated"]' "${TMPDIR}/setup-install.json"
+test -d "$GITHUB_WORKSPACE/memory"
+test -f "$GITHUB_WORKSPACE/MEMORY.md"
+grep -Fx '# Memory' "$GITHUB_WORKSPACE/MEMORY.md"
+printf '\nPreserved setup example note.\n' >> "$GITHUB_WORKSPACE/MEMORY.md"
+cp "$GITHUB_WORKSPACE/MEMORY.md" "${TMPDIR}/memory-before-repeat.md"
 
 # should satisfy EMORI's Brewfile dependencies
 HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --verbose --file "$GITHUB_WORKSPACE/Brewfile"
@@ -177,8 +182,9 @@ openclaw hooks list --json | jq -e '
 cd "$GITHUB_WORKSPACE"
 openclaw agent-system install --json | tee "${TMPDIR}/setup-reinstall.json"
 jq -e '.outcomes[0].component == "codex-plugin" and .outcomes[0].code == "codex-plugin-unchanged" and .outcomes[0].status == "unchanged"' "${TMPDIR}/setup-reinstall.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "imessage-plugin", "openclaw-config"]' "${TMPDIR}/setup-reinstall.json"
+jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "workspace-memory", "canon-checkout", "canon-plugin", "imessage-plugin", "openclaw-config"]' "${TMPDIR}/setup-reinstall.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "unchanged")' "${TMPDIR}/setup-reinstall.json"
+cmp "${TMPDIR}/memory-before-repeat.md" "$GITHUB_WORKSPACE/MEMORY.md"
 
 # should preserve the shared plugin receipt and configuration after repeat setup
 openclaw plugins inspect codex --json | jq -S .install > "${TMPDIR}/codex-receipt-repeat.json"
