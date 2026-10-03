@@ -7,7 +7,6 @@ import {
   canonSkillInspectionHealthy,
   configPathUnset,
 } from '../lib/setup/canon-plugin.js';
-import { codexPluginSource } from '../lib/setup/codex-plugin.js';
 import {
   imessagePluginInspectionHealthy,
   imessagePluginSource,
@@ -139,10 +138,6 @@ describe('setup helper', () => {
       configPathUnset({ status: 1, stdout: '{"ok":false}' }, 'skills.load.extraDirs'),
       false,
     );
-  });
-
-  it('should install Codex from the official ClawHub source', () => {
-    assert.equal(codexPluginSource, 'clawhub:@openclaw/codex');
   });
 
   it('should require the official iMessage channel plugin', () => {

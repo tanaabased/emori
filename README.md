@@ -34,7 +34,8 @@ identity, tool credentials, and GitHub work intake.
    [`devDependencies.openclaw`](./package.json). Agentbox's bundled version may
    be older than EMORI's tested baseline.
 3. Install [Agent System](https://github.com/tanaabased/openclaw-agent-system#installation)
-   into that OpenClaw environment; Agentbox does not install it yet.
+   with shared Codex prerequisite support into that OpenClaw environment;
+   Agentbox does not install it yet.
 4. Give EMORI's 1Password service account access to the
    [required environment values](./.agent-system/agent.yaml) in her manifest.
 
@@ -77,7 +78,6 @@ reconciling managed tools, then runs the agent setup in
 | `brew-dependencies` | Installs Brewfile dependencies and the platform-specific SQLite vector package. |
 | `canon-checkout`    | Clones Canon when absent and preserves existing checkouts.                      |
 | `canon-plugin`      | Links Canon's `tanaab` plugin and exposes its shared skills.                    |
-| `codex-plugin`      | Installs and enables the official Codex plugin.                                 |
 | `imessage-plugin`   | Installs and enables the official iMessage plugin.                              |
 | `openclaw-config`   | Reconciles execution, model admission, messaging, Workshop, and memory policy.  |
 

@@ -15,14 +15,6 @@ steps:
       command: ./scripts/setup-canon-plugin-task.js
       args: [apply]
       timeout-seconds: 1800
-  - id: codex-plugin
-    check:
-      command: ./scripts/setup-codex-plugin-task.js
-      args: [check]
-    apply:
-      command: ./scripts/setup-codex-plugin-task.js
-      args: [apply]
-      timeout-seconds: 1800
   - id: imessage-plugin
     check:
       command: ./scripts/setup-imessage-plugin-task.js
