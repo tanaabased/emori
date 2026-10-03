@@ -67,7 +67,14 @@ openclaw agent-system doctor
 openclaw agent-system tool gh -- api user --jq .login
 ```
 
-Installation runs the host setup in
+Agent System owns the shared Codex prerequisite and reconciles it before host
+setup. EMORI retains her model-to-runtime bindings and model admissions. This
+migration requires Agent System's merged shared-prerequisite support; the latest
+published release, `v0.8.0`, does not contain it. CI retains
+`github:tanaabased/openclaw-agent-system#main`; release-based users need a
+containing release before adopting this migration.
+
+Installation then runs the host setup in
 [`.agent-system/setup-host.yaml`](./.agent-system/setup-host.yaml) before
 reconciling managed tools, then runs the agent setup in
 [`.agent-system/setup-agent.yaml`](./.agent-system/setup-agent.yaml):
@@ -77,7 +84,6 @@ reconciling managed tools, then runs the agent setup in
 | `brew-dependencies` | Installs Brewfile dependencies and the platform-specific SQLite vector package. |
 | `canon-checkout`    | Clones Canon when absent and preserves existing checkouts.                      |
 | `canon-plugin`      | Links Canon's `tanaab` plugin and exposes its shared skills.                    |
-| `codex-plugin`      | Installs and enables the official Codex plugin.                                 |
 | `imessage-plugin`   | Installs and enables the official iMessage plugin.                              |
 | `openclaw-config`   | Reconciles execution, model admission, messaging, Workshop, and memory policy.  |
 

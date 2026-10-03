@@ -1,0 +1,8 @@
+schema-version: 1
+agent:
+  id: shared-peer
+  name: Shared Peer
+models:
+  default:
+    model: openai/gpt-6-luna
+    effort: medium

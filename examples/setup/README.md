@@ -1,7 +1,8 @@
 # Setup
 
 This scenario installs EMORI from her checked-out workspace in an isolated
-OpenClaw profile and runs every declared setup step.
+OpenClaw profile with an already-provisioned shared Codex plugin. It runs every
+declared setup step and verifies reuse without changing the co-resident agent.
 
 ## Setup
 
@@ -18,21 +19,39 @@ git clone --no-local "$GITHUB_WORKSPACE" "$HOME/tanaab/emori"
 ## Testing
 
 ```bash
-# should start without setup effects and converge every declared concern
+# should provision the shared prerequisite for a co-resident agent
+mkdir -p "${TMPDIR}/shared-peer"
+cp "$GITHUB_WORKSPACE/examples/setup/shared-agent.yaml" "${TMPDIR}/shared-peer/agent.yaml"
+cd "${TMPDIR}/shared-peer"
+openclaw agent-system install --skip-setup --json | jq -e '
+  .outcomes[0].component == "codex-plugin" and
+  .outcomes[0].code == "codex-plugin-installed" and
+  .outcomes[0].status == "created"
+'
+openclaw config get agents.entries.shared-peer --json | jq -S . > "${TMPDIR}/shared-peer-before.json"
+openclaw plugins inspect codex --json | jq -S .install > "${TMPDIR}/codex-receipt-before.json"
+openclaw config get plugins.entries.codex --json | jq -S . > "${TMPDIR}/codex-config-before.json"
+
+# should start without EMORI setup effects and record host dependency readiness
 cd "$GITHUB_WORKSPACE"
 test ! -e "$HOME/tanaab/canon"
 test ! -e "$HOME/tanaab/openclaw-agent-system"
 ! openclaw plugins inspect tanaab --json >/dev/null 2>&1
-! openclaw plugins inspect codex --json >/dev/null 2>&1
 ! openclaw plugins inspect imessage --json >/dev/null 2>&1
+if node scripts/setup-brew-dependencies-task.js check; then
+  printf unchanged > "${TMPDIR}/brew-expected-status"
+else
+  test "$?" -eq 1
+  printf updated > "${TMPDIR}/brew-expected-status"
+fi
 openclaw config set skills.load.extraDirs "[\"$HOME/tanaab/canon/skills\"]" --strict-json
 
-# should run host setup before agent setup through Agent System
+# should reuse Codex before host setup and then reconcile agent setup
 openclaw agent-system validate
 openclaw agent-system install --json | tee "${TMPDIR}/setup-install.json"
-jq -e '.outcomes[0].component == "setup" and .outcomes[0].stepId == "brew-dependencies"' "${TMPDIR}/setup-install.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "openclaw-config"]' "${TMPDIR}/setup-install.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "updated")' "${TMPDIR}/setup-install.json"
+jq -e '.outcomes[0].component == "codex-plugin" and .outcomes[0].code == "codex-plugin-unchanged" and .outcomes[0].status == "unchanged" and .outcomes[1].stepId == "brew-dependencies"' "${TMPDIR}/setup-install.json"
+jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "imessage-plugin", "openclaw-config"]' "${TMPDIR}/setup-install.json"
+jq -e --arg brew "$(cat "${TMPDIR}/brew-expected-status")" '[.outcomes[] | select(.component == "setup") | .status] == [$brew, "updated", "updated", "updated", "updated"]' "${TMPDIR}/setup-install.json"
 
 # should satisfy EMORI's Brewfile dependencies
 HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --verbose --file "$GITHUB_WORKSPACE/Brewfile"
@@ -64,8 +83,23 @@ openclaw skills info tanaab-project-optimizer --agent emori --json | jq -e '
 '
 ! openclaw config get skills.load.extraDirs --json >/dev/null 2>&1
 
-# should install the Codex plugin
-openclaw plugins inspect codex --json | jq -e '.plugin.id == "codex"'
+# should retain the shared Codex install and its co-resident agent
+openclaw plugins inspect codex --json | jq -e '.plugin.id == "codex" and .plugin.enabled == true and .plugin.status != "error"'
+openclaw plugins inspect codex --json | jq -S .install > "${TMPDIR}/codex-receipt-after.json"
+cmp "${TMPDIR}/codex-receipt-before.json" "${TMPDIR}/codex-receipt-after.json"
+openclaw config get plugins.entries.codex --json | jq -S . > "${TMPDIR}/codex-config-after.json"
+cmp "${TMPDIR}/codex-config-before.json" "${TMPDIR}/codex-config-after.json"
+openclaw config get agents.entries.shared-peer --json | jq -S . > "${TMPDIR}/shared-peer-after.json"
+cmp "${TMPDIR}/shared-peer-before.json" "${TMPDIR}/shared-peer-after.json"
+
+# should retain EMORI's Codex runtime bindings and model admission
+openclaw config get agents.entries.emori --json | jq -e '
+  . as $agent |
+  ["openai/gpt-6-astra", "openai/gpt-6-luna", "openai/gpt-6-sol"] |
+  all(.[]; . as $model |
+    $agent.models[$model].agentRuntime.id == "codex" and
+    ($agent.modelPolicy.allow | index($model)) != null)
+'
 
 # should install the official iMessage channel plugin without configuring the channel
 openclaw plugins inspect imessage --json | jq -e '
@@ -158,8 +192,17 @@ openclaw hooks list --json | jq -e '
 # should leave a converged setup unchanged on repeat installation
 cd "$GITHUB_WORKSPACE"
 openclaw agent-system install --json | tee "${TMPDIR}/setup-reinstall.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "codex-plugin", "imessage-plugin", "openclaw-config"]' "${TMPDIR}/setup-reinstall.json"
+jq -e '.outcomes[0].component == "codex-plugin" and .outcomes[0].code == "codex-plugin-unchanged" and .outcomes[0].status == "unchanged"' "${TMPDIR}/setup-reinstall.json"
+jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "canon-checkout", "canon-plugin", "imessage-plugin", "openclaw-config"]' "${TMPDIR}/setup-reinstall.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "unchanged")' "${TMPDIR}/setup-reinstall.json"
+
+# should preserve the shared receipt and co-resident state after repeat setup
+openclaw plugins inspect codex --json | jq -S .install > "${TMPDIR}/codex-receipt-repeat.json"
+cmp "${TMPDIR}/codex-receipt-before.json" "${TMPDIR}/codex-receipt-repeat.json"
+openclaw config get plugins.entries.codex --json | jq -S . > "${TMPDIR}/codex-config-repeat.json"
+cmp "${TMPDIR}/codex-config-before.json" "${TMPDIR}/codex-config-repeat.json"
+openclaw config get agents.entries.shared-peer --json | jq -S . > "${TMPDIR}/shared-peer-repeat.json"
+cmp "${TMPDIR}/shared-peer-before.json" "${TMPDIR}/shared-peer-repeat.json"
 
 # should preserve EMORI's clean checkout
 test -z "$(git -C "$GITHUB_WORKSPACE" status --short --untracked-files=all)"
