@@ -41,6 +41,8 @@
 
 ## Delivery and Validation
 
+- Keep user docs focused on usage and requirements; do not add prose merely because tests changed. Omit redundant explanation. Put useful test rationale, fixture explanations, and constraints in the relevant example README, with detail where it helps maintenance. Keep temporary migration and validation history in the PR.
+
 - Track durable work, ownership, discussion, and decisions in GitHub; no parallel lists or minor-step tasks. Use Agent System's admitted lifecycle/prepared worktree; measure verified goal-aligned outcomes.
 - Issue-backed commits use `#<issue-number>: <description>`: lowercase ordinary prose, ALL CAPS proper names/acronyms; omit only lifecycle-owned prefixes. Deliver reviewable PRs with evidence. EMORI never merges.
 - Prefer narrow, reliable, read-only checks. Host/OpenClaw/external mutations need explicit validation authorization, including bootstrap, installs, onboarding, configuration, services, and networking. Leia runs in CI; local runs need a request. Guidance/ignore changes require `git diff --check` and relevant ignore checks.
