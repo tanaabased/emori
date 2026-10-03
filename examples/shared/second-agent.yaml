@@ -1,7 +1,7 @@
 schema-version: 1
 agent:
-  id: shared-peer
-  name: Shared Peer
+  id: shared-second
+  name: Shared Second
 models:
   default:
     model: openai/gpt-6-luna
