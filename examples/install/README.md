@@ -28,7 +28,12 @@ openclaw agent-system validate
 openclaw agent-system install --skip-setup-agent --json | tee "${TMPDIR}/install.json"
 jq -e '.outcomes[0].component == "codex-plugin" and .outcomes[0].code == "codex-plugin-installed" and .outcomes[0].status == "created" and .outcomes[1].stepId == "brew-dependencies"' "${TMPDIR}/install.json"
 jq -e '.outcomes | any(.component == "agent" and .status == "created")' "${TMPDIR}/install.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies"]' "${TMPDIR}/install.json"
+jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "workspace-memory"]' "${TMPDIR}/install.json"
+test -d "$HOME/tanaab/emori/memory"
+test -f "$HOME/tanaab/emori/MEMORY.md"
+grep -Fx '# Memory' "$HOME/tanaab/emori/MEMORY.md"
+printf '\nPreserved setup example note.\n' >> "$HOME/tanaab/emori/MEMORY.md"
+cp "$HOME/tanaab/emori/MEMORY.md" "${TMPDIR}/memory-before-repeat.md"
 gog --version
 openclaw agents list --json | grep -F '"id": "emori"'
 test ! -e "$HOME/tanaab/canon"
@@ -41,8 +46,9 @@ cd "$GITHUB_WORKSPACE"
 openclaw agent-system install --skip-setup-agent --json | tee "${TMPDIR}/reinstall.json"
 jq -e '.outcomes[0].component == "codex-plugin" and .outcomes[0].code == "codex-plugin-unchanged" and .outcomes[0].status == "unchanged"' "${TMPDIR}/reinstall.json"
 jq -e '.outcomes | any(.component == "agent" and .status == "unchanged")' "${TMPDIR}/reinstall.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies"]' "${TMPDIR}/reinstall.json"
-jq -e '[.outcomes[] | select(.stepId == "brew-dependencies") | .status] == ["unchanged"]' "${TMPDIR}/reinstall.json"
+jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "workspace-memory"]' "${TMPDIR}/reinstall.json"
+jq -e '[.outcomes[] | select(.stepId == "brew-dependencies" or .stepId == "workspace-memory") | .status] == ["unchanged", "unchanged"]' "${TMPDIR}/reinstall.json"
+cmp "${TMPDIR}/memory-before-repeat.md" "$HOME/tanaab/emori/MEMORY.md"
 
 # should use EMORI's installed GitHub credential
 openclaw agent-system tool gh -- api user --jq .login | grep -Fx emoriwan
