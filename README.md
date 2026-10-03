@@ -34,7 +34,8 @@ identity, tool credentials, and GitHub work intake.
    [`devDependencies.openclaw`](./package.json). Agentbox's bundled version may
    be older than EMORI's tested baseline.
 3. Install [Agent System](https://github.com/tanaabased/openclaw-agent-system#installation)
-   into that OpenClaw environment; Agentbox does not install it yet.
+   with shared Codex prerequisite support into that OpenClaw environment;
+   Agentbox does not install it yet.
 4. Give EMORI's 1Password service account access to the
    [required environment values](./.agent-system/agent.yaml) in her manifest.
 
@@ -67,14 +68,7 @@ openclaw agent-system doctor
 openclaw agent-system tool gh -- api user --jq .login
 ```
 
-Agent System owns the shared Codex prerequisite and reconciles it before host
-setup. EMORI retains her model-to-runtime bindings and model admissions. This
-migration requires Agent System's merged shared-prerequisite support; the latest
-published release, `v0.8.0`, does not contain it. CI retains
-`github:tanaabased/openclaw-agent-system#main`; release-based users need a
-containing release before adopting this migration.
-
-Installation then runs the host setup in
+Installation runs the host setup in
 [`.agent-system/setup-host.yaml`](./.agent-system/setup-host.yaml) before
 reconciling managed tools, then runs the agent setup in
 [`.agent-system/setup-agent.yaml`](./.agent-system/setup-agent.yaml):
