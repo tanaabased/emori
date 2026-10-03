@@ -1,6 +1,12 @@
 # Shared
 
-This scenario verifies shared plugin reuse across two agents.
+The two small agent manifests are disposable fixtures in one isolated OpenClaw
+profile. The first install provisions Codex; the second must reuse it without
+changing its receipt, configuration, or the first agent. Repeating the second
+install checks convergence and preserves both agents.
+
+Workspace setup is skipped: this scenario needs no credentials or EMORI's host
+dependencies. Her full installation is covered by [setup](../setup/README.md).
 
 ## Setup
 

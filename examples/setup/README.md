@@ -1,6 +1,8 @@
 # Setup
 
-This scenario verifies EMORI's full setup and repeat convergence.
+This scenario verifies EMORI's full setup and repeat convergence. Keeping both
+runs together proves idempotence against the state the first run created.
+Cross-agent plugin reuse is covered separately by [shared](../shared/README.md).
 
 ## Setup
 
