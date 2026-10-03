@@ -5,12 +5,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const task = fileURLToPath(new URL('../scripts/setup-codex-plugin-task.js', import.meta.url));
+const task = fileURLToPath(new URL('../scripts/setup-imessage-plugin-task.js', import.meta.url));
 const missing = {
   ok: false,
   error: {
     type: 'cli_error',
-    message: 'Plugin not found: codex. Run `openclaw plugins list` to see installed plugins.',
+    message: 'Plugin not found: imessage. Run `openclaw plugins list` to see installed plugins.',
   },
 };
 
@@ -55,10 +55,17 @@ fi
 
   it('should report an inspected healthy plugin as converged', () => {
     const result = execute('check', 0, {
-      plugin: { id: 'codex', enabled: true, status: 'loaded' },
+      plugin: {
+        id: 'imessage',
+        enabled: true,
+        status: 'loaded',
+        packageName: '@openclaw/imessage',
+        channelIds: ['imessage'],
+      },
+      install: { resolvedName: '@openclaw/imessage' },
     });
     assert.equal(result.status, 0, result.stderr);
-    assert.deepEqual(result.calls, ['plugins inspect codex --json']);
+    assert.deepEqual(result.calls, ['plugins inspect imessage --json']);
   });
 
   it('should install only after an explicit missing-plugin response', () => {
@@ -66,9 +73,9 @@ fi
     const result = execute('apply', 1, missing);
     assert.equal(result.status, 0, result.stderr);
     assert.deepEqual(result.calls, [
-      'plugins inspect codex --json',
-      'plugins install clawhub:@openclaw/codex --accept-capabilities --acknowledge-install-policy-warning',
-      'plugins enable codex --accept-capabilities',
+      'plugins inspect imessage --json',
+      'plugins install @openclaw/imessage --force --accept-capabilities --acknowledge-install-policy-warning',
+      'plugins enable imessage --accept-capabilities',
     ]);
   });
 
@@ -89,8 +96,8 @@ fi
       for (const mode of ['check', 'apply']) {
         const result = execute(mode, status, response);
         assert.equal(result.status, 2, `${mode}: ${JSON.stringify(response)}\n${result.stderr}`);
-        assert.deepEqual(result.calls, ['plugins inspect codex --json']);
-        assert.match(result.stderr, /could not inspect plugin codex|returned invalid JSON/u);
+        assert.deepEqual(result.calls, ['plugins inspect imessage --json']);
+        assert.match(result.stderr, /could not inspect plugin imessage|returned invalid JSON/u);
       }
     }
   });

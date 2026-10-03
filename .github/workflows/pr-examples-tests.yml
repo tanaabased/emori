@@ -19,6 +19,7 @@ jobs:
           - workspace
           - install
           - setup
+          - shared
           - backup
     steps:
       - name: Checkout code
@@ -39,7 +40,7 @@ jobs:
         shell: bash
         env:
           NO_COLOR: '1'
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.EMORIKEY }}
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ matrix.example != 'shared' && secrets.EMORIKEY || '' }}
           TMPDIR: ${{ github.workspace }}/examples/${{ matrix.example }}/.tmp
         run: |
           mkdir -p "$TMPDIR"
