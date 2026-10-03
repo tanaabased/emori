@@ -15,11 +15,12 @@ const home = '/Users/emori';
 const canonPath = `${home}/tanaab/canon`;
 const vectorExtensionPath = '/opt/homebrew/lib/node_modules/sqlite-vec-darwin-arm64/vec0.dylib';
 
-function buildPatch(current = {}) {
+function buildPatch(current = {}, operatorModelAdmissions = []) {
   return buildOpenClawConfigPatch(loadOpenClawConfigFragment(), current, {
     canonPath,
     home,
     vectorExtensionPath,
+    operatorModelAdmissions,
   });
 }
 
@@ -37,31 +38,34 @@ describe('lib/setup/openclaw-config', () => {
       agentId: 'other',
       match: { channel: 'telegram', accountId: 'ops' },
     };
-    const patch = buildPatch({
-      agents: {
-        entries: {
-          emori: {
-            tools: { alsoAllow: ['agent_system_git', 'agent_system_github'] },
-            modelPolicy: { allow: ['openai/gpt-6-astra', 'openai/gpt-5.6-sol'] },
+    const patch = buildPatch(
+      {
+        agents: {
+          entries: {
+            emori: {
+              tools: { alsoAllow: ['agent_system_git', 'agent_system_github'] },
+              modelPolicy: { allow: ['openai/gpt-6-astra', 'openai/gpt-5.6-sol'] },
+            },
           },
         },
+        bindings: [
+          {
+            type: 'route',
+            agentId: 'other',
+            comment: 'preserve this metadata',
+            match: { channel: 'imessage', accountId: 'emori' },
+            session: { dmScope: 'main' },
+          },
+          {
+            type: 'route',
+            agentId: 'duplicate',
+            match: { channel: 'imessage', accountId: 'emori' },
+          },
+          unrelatedBinding,
+        ],
       },
-      bindings: [
-        {
-          type: 'route',
-          agentId: 'other',
-          comment: 'preserve this metadata',
-          match: { channel: 'imessage', accountId: 'emori' },
-          session: { dmScope: 'main' },
-        },
-        {
-          type: 'route',
-          agentId: 'duplicate',
-          match: { channel: 'imessage', accountId: 'emori' },
-        },
-        unrelatedBinding,
-      ],
-    });
+      ['openai/gpt-5.6-sol'],
+    );
 
     assert.deepEqual(patch.agents.entries.emori.tools.alsoAllow, [
       'agent_system_git',
@@ -69,8 +73,8 @@ describe('lib/setup/openclaw-config', () => {
       'message',
     ]);
     assert.deepEqual(patch.agents.entries.emori.modelPolicy.allow, [
-      'openai/gpt-6-astra',
       'openai/gpt-5.6-sol',
+      'openai/gpt-6-astra',
       'openai/gpt-6-luna',
       'openai/gpt-6-sol',
     ]);
@@ -160,6 +164,65 @@ describe('lib/setup/openclaw-config', () => {
     assert.equal(patch.hooks.internal.entries['session-memory'].enabled, false);
     assert.equal(patch.skills.workshop.autonomous.mode, 'propose');
     assert.equal(patch.tools.sessions.visibility, 'agent');
+  });
+
+  it('should remove retired workspace admissions while retaining operator and other-agent policy', () => {
+    const fragment = loadOpenClawConfigFragment();
+    fragment.agents.entries.emori.modelPolicy.allow = ['openai/gpt-6-astra'];
+    const current = {
+      agents: {
+        entries: {
+          emori: {
+            modelPolicy: {
+              allow: ['openai/gpt-6-astra', 'openai/gpt-6-sol', 'openai/gpt-5.6-sol'],
+            },
+            tools: { alsoAllow: ['agent_system_git'] },
+          },
+          other: { modelPolicy: { allow: ['openai/gpt-6-sol'] } },
+        },
+      },
+    };
+    const options = {
+      canonPath,
+      home,
+      vectorExtensionPath,
+      operatorModelAdmissions: ['openai/gpt-5.6-sol'],
+    };
+    const patch = buildOpenClawConfigPatch(fragment, current, options);
+
+    assert.deepEqual(patch.agents.entries.emori.modelPolicy.allow, [
+      'openai/gpt-5.6-sol',
+      'openai/gpt-6-astra',
+    ]);
+    assert.deepEqual(patch.agents.entries.emori.tools.alsoAllow, ['agent_system_git', 'message']);
+    assert.equal(patch.agents.entries.other, undefined);
+    assert.equal(configPatchSatisfied(current, patch), false);
+
+    const reconciled = structuredClone(patch);
+    reconciled.agents.entries.other = structuredClone(current.agents.entries.other);
+    delete reconciled.agents.entries.emori.tools.message.crossContext;
+    assert.equal(configPatchSatisfied(reconciled, patch), true);
+    const repeatedPatch = buildOpenClawConfigPatch(fragment, reconciled, options);
+    assert.deepEqual(
+      repeatedPatch.agents.entries.emori.modelPolicy.allow,
+      patch.agents.entries.emori.modelPolicy.allow,
+    );
+    assert.equal(configPatchSatisfied(reconciled, repeatedPatch), true);
+    assert.deepEqual(reconciled.agents.entries.other.modelPolicy.allow, ['openai/gpt-6-sol']);
+  });
+
+  it('should report unresolved or conflicting model admission ownership', () => {
+    const current = {
+      agents: { entries: { emori: { modelPolicy: { allow: ['openai/gpt-5.6-sol'] } } } },
+    };
+    assert.throws(
+      () => buildPatch(current),
+      /Unresolved model admission ownership: openai\/gpt-5\.6-sol/u,
+    );
+    assert.throws(
+      () => buildPatch(current, ['openai/gpt-6-sol']),
+      /Model admission ownership conflicts: openai\/gpt-6-sol/u,
+    );
   });
 
   it('should recognize a converged patch including deletions and exact arrays', () => {
