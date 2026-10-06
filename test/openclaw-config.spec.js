@@ -144,9 +144,10 @@ describe('lib/setup/openclaw-config', () => {
 
   it('should carry every owned static policy through one patch', () => {
     const patch = buildPatch();
-    assert.equal(patch.agents.entries.emori.models['openai/gpt-6-astra'].agentRuntime.id, 'codex');
-    assert.equal(patch.agents.entries.emori.models['openai/gpt-6-luna'].agentRuntime.id, 'codex');
-    assert.equal(patch.agents.entries.emori.models['openai/gpt-6.1-sol'].agentRuntime.id, 'codex');
+    assert.equal(patch.agents.entries.emori.models['openai/*'].agentRuntime.id, 'codex');
+    assert.equal(patch.agents.entries.emori.models['openai/gpt-6-astra'], undefined);
+    assert.equal(patch.agents.entries.emori.models['openai/gpt-6-luna'], undefined);
+    assert.equal(patch.agents.entries.emori.models['openai/gpt-6.1-sol'], undefined);
     assert.equal(patch.agents.entries.emori.models['openai/gpt-6-sol'], null);
     assert.deepEqual(patch.agents.entries.emori.modelPolicy.allow, [
       'openai/gpt-6-astra',
@@ -177,6 +178,89 @@ describe('lib/setup/openclaw-config', () => {
     assert.equal(patch.tools, undefined);
     assert.equal(current.tools.sessions.visibility, 'all');
     assert.equal(configPatchSatisfied(current, patch), true);
+  });
+
+  it('should preserve compatible exact Codex runtime policies and report conflicting runtimes', () => {
+    const patch = buildPatch({
+      agents: {
+        entries: {
+          emori: {
+            models: {
+              'openai/gpt-6-astra': {
+                agentRuntime: { id: 'codex' },
+                reasoning: { effort: 'high' },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    assert.equal(patch.agents.entries.emori.models['openai/gpt-6-astra'], undefined);
+    assert.throws(
+      () =>
+        buildPatch({
+          agents: {
+            entries: {
+              emori: {
+                models: { 'openai/custom-model': { agentRuntime: { id: 'custom' } } },
+              },
+            },
+          },
+        }),
+      /Exact OpenAI runtime override for openai\/custom-model \(custom\) takes precedence/u,
+    );
+  });
+
+  it('should converge with planner-created exact bindings without changing model settings', () => {
+    const current = buildPatch();
+    delete current.agents.entries.emori.models['openai/gpt-6-sol'];
+    delete current.agents.entries.emori.tools.message.crossContext;
+    const agent = current.agents.entries.emori;
+    agent.model = { primary: 'openai/gpt-6-astra', fallbacks: ['openai/gpt-6-luna'] };
+    agent.thinkingDefault = 'high';
+    for (const model of agent.modelPolicy.allow) {
+      agent.models[model] = {
+        agentRuntime: { id: 'codex' },
+        alias: model,
+        params: { reasoningEffort: 'medium' },
+      };
+    }
+    const before = structuredClone(current);
+    const patch = buildPatch(current);
+
+    assert.equal(configPatchSatisfied(current, patch), true);
+    assert.deepEqual(patch.agents.entries.emori.models, {
+      'openai/*': { agentRuntime: { id: 'codex' } },
+      'openai/gpt-6-sol': null,
+    });
+    assert.equal(patch.agents.entries.emori.model, undefined);
+    assert.equal(patch.agents.entries.emori.thinkingDefault, undefined);
+    assert.deepEqual(patch.agents.entries.emori.modelPolicy.allow, agent.modelPolicy.allow);
+    assert.deepEqual(current, before);
+  });
+
+  it('should leave model defaults, effort profiles, and other agent settings outside the patch', () => {
+    const current = {
+      agents: {
+        defaults: {
+          model: { primary: 'openai/gpt-6-luna' },
+          models: { 'openai/gpt-6-luna': { params: { reasoningEffort: 'medium' } } },
+        },
+        entries: { other: { models: { 'openai/custom': { agentRuntime: { id: 'custom' } } } } },
+      },
+    };
+    const before = structuredClone(current);
+    const patch = buildPatch(current);
+
+    assert.deepEqual(current, before);
+    assert.equal(patch.agents.defaults, undefined);
+    assert.equal(patch.agents.entries.other, undefined);
+    assert.deepEqual(patch.agents.entries.emori.modelPolicy.allow, [
+      'openai/gpt-6-astra',
+      'openai/gpt-6-luna',
+      'openai/gpt-6.1-sol',
+    ]);
   });
 
   it('should migrate the existing six-model allowlist to GPT-6.1 and converge', () => {
