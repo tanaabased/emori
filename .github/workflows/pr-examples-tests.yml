@@ -27,7 +27,7 @@ jobs:
       - name: Set up OpenClaw
         uses: tanaabased/actions/setup-openclaw@v1
         with:
-          agent-system: github:tanaabased/openclaw-agent-system#f63c5b7b6f3e236131b9220d8e10c1afd4ac4649
+          agent-system: github:tanaabased/openclaw-agent-system#main
       - name: Set up Bun
         uses: tanaabased/actions/setup-bun@v1
       - name: Install dependencies
