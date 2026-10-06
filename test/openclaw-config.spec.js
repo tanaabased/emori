@@ -76,7 +76,7 @@ describe('lib/setup/openclaw-config', () => {
       'operator/custom-model',
       'openai/gpt-6-astra',
       'openai/gpt-6-luna',
-      'openai/gpt-6-sol',
+      'openai/gpt-6.1-sol',
     ]);
     assert.deepEqual(patch.bindings, [
       {
@@ -146,11 +146,12 @@ describe('lib/setup/openclaw-config', () => {
     const patch = buildPatch();
     assert.equal(patch.agents.entries.emori.models['openai/gpt-6-astra'].agentRuntime.id, 'codex');
     assert.equal(patch.agents.entries.emori.models['openai/gpt-6-luna'].agentRuntime.id, 'codex');
-    assert.equal(patch.agents.entries.emori.models['openai/gpt-6-sol'].agentRuntime.id, 'codex');
+    assert.equal(patch.agents.entries.emori.models['openai/gpt-6.1-sol'].agentRuntime.id, 'codex');
+    assert.equal(patch.agents.entries.emori.models['openai/gpt-6-sol'], null);
     assert.deepEqual(patch.agents.entries.emori.modelPolicy.allow, [
       'openai/gpt-6-astra',
       'openai/gpt-6-luna',
-      'openai/gpt-6-sol',
+      'openai/gpt-6.1-sol',
     ]);
     assert.equal(patch.agents.entries.emori.tools.profile, 'coding');
     assert.equal(patch.agents.entries.emori.tools.exec.mode, 'auto');
@@ -166,7 +167,7 @@ describe('lib/setup/openclaw-config', () => {
     assert.equal(patch.tools.sessions.visibility, 'agent');
   });
 
-  it('should migrate the existing six-model allowlist to GPT-6 and converge', () => {
+  it('should migrate the existing six-model allowlist to GPT-6.1 and converge', () => {
     const current = {
       agents: {
         entries: {
@@ -189,11 +190,12 @@ describe('lib/setup/openclaw-config', () => {
     assert.deepEqual(patch.agents.entries.emori.modelPolicy.allow, [
       'openai/gpt-6-astra',
       'openai/gpt-6-luna',
-      'openai/gpt-6-sol',
+      'openai/gpt-6.1-sol',
     ]);
     assert.equal(configPatchSatisfied(current, patch), false);
 
     const reconciled = structuredClone(patch);
+    delete reconciled.agents.entries.emori.models['openai/gpt-6-sol'];
     delete reconciled.agents.entries.emori.tools.message.crossContext;
     assert.equal(configPatchSatisfied(reconciled, buildPatch(reconciled)), true);
     assert.equal(current.agents.entries.emori.modelPolicy.allow.length, 6);
@@ -206,6 +208,10 @@ describe('lib/setup/openclaw-config', () => {
       agents: {
         entries: {
           emori: {
+            models: {
+              'openai/gpt-6-sol': { agentRuntime: { id: 'codex' } },
+              'operator/custom-model': { agentRuntime: { id: 'custom' } },
+            },
             modelPolicy: {
               allow: ['openai/gpt-6-astra', 'openai/gpt-6-sol', 'operator/custom-model'],
             },
@@ -228,11 +234,16 @@ describe('lib/setup/openclaw-config', () => {
       'openai/gpt-6-astra',
     ]);
     assert.deepEqual(patch.agents.entries.emori.tools.alsoAllow, ['agent_system_git', 'message']);
+    assert.equal(patch.agents.entries.emori.models['openai/gpt-6-sol'], null);
     assert.equal(patch.agents.entries.other, undefined);
     assert.equal(configPatchSatisfied(current, patch), false);
 
     const reconciled = structuredClone(patch);
     reconciled.agents.entries.other = structuredClone(current.agents.entries.other);
+    delete reconciled.agents.entries.emori.models['openai/gpt-6-sol'];
+    reconciled.agents.entries.emori.models['operator/custom-model'] = structuredClone(
+      current.agents.entries.emori.models['operator/custom-model'],
+    );
     delete reconciled.agents.entries.emori.tools.message.crossContext;
     assert.equal(configPatchSatisfied(reconciled, patch), true);
     const repeatedPatch = buildOpenClawConfigPatch(fragment, reconciled, options);
@@ -242,6 +253,9 @@ describe('lib/setup/openclaw-config', () => {
     );
     assert.equal(configPatchSatisfied(reconciled, repeatedPatch), true);
     assert.deepEqual(reconciled.agents.entries.other.modelPolicy.allow, ['openai/gpt-6-sol']);
+    assert.deepEqual(reconciled.agents.entries.emori.models['operator/custom-model'], {
+      agentRuntime: { id: 'custom' },
+    });
   });
 
   it('should report unresolved or conflicting model admission ownership', () => {
@@ -261,6 +275,7 @@ describe('lib/setup/openclaw-config', () => {
   it('should recognize a converged patch including deletions and exact arrays', () => {
     const patch = buildPatch();
     const current = structuredClone(patch);
+    delete current.agents.entries.emori.models['openai/gpt-6-sol'];
     delete current.agents.entries.emori.tools.message.crossContext;
     assert.equal(configPatchSatisfied(current, patch), true);
 

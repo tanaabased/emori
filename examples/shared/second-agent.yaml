@@ -2,6 +2,7 @@ schema-version: 1
 agent:
   id: shared-second
   name: Shared Second
+  runtime: codex
 models:
   default:
     model: openai/gpt-6-luna
