@@ -97,6 +97,8 @@ github:
       - login: pirog
         node-id: MDQ6VXNlcjcxMzQyNA==
         operator-owner: true
+      - login: emoriwan
+        node-id: U_kgDOEUqvpg
     allowed-repository-owners:
       - login: tanaabased
         node-id: O_kgDODNGy1g
