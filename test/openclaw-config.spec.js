@@ -164,7 +164,19 @@ describe('lib/setup/openclaw-config', () => {
     assert.deepEqual(patch.agents.entries.emori.memory.search.sources, ['memory', 'sessions']);
     assert.equal(patch.hooks.internal.entries['session-memory'].enabled, false);
     assert.equal(patch.skills.workshop.autonomous.mode, 'propose');
-    assert.equal(patch.tools.sessions.visibility, 'agent');
+    assert.equal(patch.tools, undefined);
+  });
+
+  it('should leave collaboration-managed session visibility untouched and converge', () => {
+    const current = buildPatch();
+    delete current.agents.entries.emori.models['openai/gpt-6-sol'];
+    delete current.agents.entries.emori.tools.message.crossContext;
+    current.tools = { sessions: { visibility: 'all' } };
+    const patch = buildPatch(current);
+
+    assert.equal(patch.tools, undefined);
+    assert.equal(current.tools.sessions.visibility, 'all');
+    assert.equal(configPatchSatisfied(current, patch), true);
   });
 
   it('should migrate the existing six-model allowlist to GPT-6.1 and converge', () => {
