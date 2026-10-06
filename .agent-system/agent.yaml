@@ -6,6 +6,7 @@ agent:
   email:
     from-environment: EMAIL
   description: Tanaab co-founder and operating partner.
+  runtime: codex
   avatar: avatars/emori.png
   emoji: 🧙‍♀️
 
