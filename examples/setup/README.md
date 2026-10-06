@@ -84,10 +84,12 @@ openclaw config get plugins.entries.codex --json | jq -S . > "${TMPDIR}/codex-co
 # should retain EMORI's Codex runtime bindings and model admission
 openclaw config get agents.entries.emori --json | jq -e '
   . as $agent |
-  ["openai/gpt-6-astra", "openai/gpt-6-luna", "openai/gpt-6-sol"] |
+  ["openai/gpt-6-astra", "openai/gpt-6-luna", "openai/gpt-6.1-sol"] |
   all(.[]; . as $model |
     $agent.models[$model].agentRuntime.id == "codex" and
-    ($agent.modelPolicy.allow | index($model)) != null)
+    ($agent.modelPolicy.allow | index($model)) != null) and
+  ($agent.models | has("openai/gpt-6-sol") | not) and
+  ($agent.modelPolicy.allow | index("openai/gpt-6-sol")) == null
 '
 
 # should install the official iMessage channel plugin without configuring the channel
