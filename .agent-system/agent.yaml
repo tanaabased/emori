@@ -63,9 +63,10 @@ git:
   worktrees:
     repositories:
       local:
-        emori: ~/tanaab/emori
         canon: ~/tanaab/canon
+        emori: ~/tanaab/emori
         openclaw-agent-system: ~/tanaab/openclaw-agent-system
+        smutlord: ~/tanaab/smutlord
   ssh:
     private-keys:
       from-environment: EMORI_SSH_KEY
