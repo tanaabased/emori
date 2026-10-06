@@ -188,15 +188,16 @@ describe('lib/setup/openclaw-config', () => {
       agentRuntime: null,
     });
     assert.throws(
-      () => buildPatch({
-        agents: {
-          entries: {
-            emori: {
-              models: { 'openai/custom-model': { agentRuntime: { id: 'custom' } } },
+      () =>
+        buildPatch({
+          agents: {
+            entries: {
+              emori: {
+                models: { 'openai/custom-model': { agentRuntime: { id: 'custom' } } },
+              },
             },
           },
-        },
-      }),
+        }),
       /Exact OpenAI runtime override for openai\/custom-model \(custom\) takes precedence/u,
     );
   });

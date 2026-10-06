@@ -81,13 +81,15 @@ openclaw plugins inspect codex --json | tee "${TMPDIR}/codex-after-setup.json" |
 jq -S .install "${TMPDIR}/codex-after-setup.json" > "${TMPDIR}/codex-receipt-before.json"
 openclaw config get plugins.entries.codex --json | jq -S . > "${TMPDIR}/codex-config-before.json"
 
-# should retain EMORI's Codex runtime bindings and model admission
+# should route EMORI's admitted OpenAI models through the wildcard Codex binding
 openclaw config get agents.entries.emori --json | jq -e '
   . as $agent |
   ["openai/gpt-6-astra", "openai/gpt-6-luna", "openai/gpt-6.1-sol"] |
   all(.[]; . as $model |
-    $agent.models[$model].agentRuntime.id == "codex" and
+    ($agent.models[$model].agentRuntime.id == null) and
+    ($agent.models["openai/*"].agentRuntime.id == "codex") and
     ($agent.modelPolicy.allow | index($model)) != null) and
+  ($agent.models["openai/*"].agentRuntime.id == "codex") and
   ($agent.models | has("openai/gpt-6-sol") | not) and
   ($agent.modelPolicy.allow | index("openai/gpt-6-sol")) == null
 '
@@ -187,6 +189,16 @@ jq -e '.outcomes[0].component == "codex-plugin" and .outcomes[0].code == "codex-
 jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "workspace-memory", "canon-checkout", "canon-plugin", "imessage-plugin", "openclaw-config"]' "${TMPDIR}/setup-reinstall.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "unchanged")' "${TMPDIR}/setup-reinstall.json"
 cmp "${TMPDIR}/memory-before-repeat.md" "$GITHUB_WORKSPACE/MEMORY.md"
+
+# should retain the effective wildcard route and admissions after repeat setup
+openclaw config get agents.entries.emori --json | jq -e '
+  . as $agent |
+  $agent.models["openai/*"].agentRuntime.id == "codex" and
+  ["openai/gpt-6-astra", "openai/gpt-6-luna", "openai/gpt-6.1-sol"] |
+  all(.[]; . as $model |
+    $agent.models[$model].agentRuntime.id == null and
+    ($agent.modelPolicy.allow | index($model)) != null)
+'
 
 # should preserve the shared plugin receipt and configuration after repeat setup
 openclaw plugins inspect codex --json | jq -S .install > "${TMPDIR}/codex-receipt-repeat.json"
