@@ -6,6 +6,7 @@ agent:
   email:
     from-environment: EMAIL
   description: Tanaab co-founder and operating partner.
+  runtime: codex
   avatar: avatars/emori.png
   emoji: 🧙‍♀️
 
@@ -17,7 +18,7 @@ models:
     model: openai/gpt-6-luna
     effort: medium
   medium:
-    model: openai/gpt-6-sol
+    model: openai/gpt-6.1-sol
     effort: high
   high:
     model: openai/gpt-6-astra
