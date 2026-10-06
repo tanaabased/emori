@@ -84,13 +84,12 @@ openclaw plugins inspect codex --json | tee "${TMPDIR}/codex-after-setup.json" |
 jq -S .install "${TMPDIR}/codex-after-setup.json" > "${TMPDIR}/codex-receipt-before.json"
 openclaw config get plugins.entries.codex --json | jq -S . > "${TMPDIR}/codex-config-before.json"
 
-# should route EMORI's admitted OpenAI models through the wildcard Codex binding
+# should retain the wildcard and effective Codex routing for EMORI's admitted OpenAI models
 openclaw config get agents.entries.emori --json | jq -e '
   . as $agent |
   ["openai/gpt-6-astra", "openai/gpt-6-luna", "openai/gpt-6.1-sol"] |
   (all(.[]; . as $model |
-    ($agent.models[$model].agentRuntime.id == null) and
-    ($agent.models["openai/*"].agentRuntime.id == "codex") and
+    (($agent.models[$model].agentRuntime.id // $agent.models["openai/*"].agentRuntime.id) == "codex") and
     ($agent.modelPolicy.allow | index($model)) != null)) and
   ($agent.models["openai/*"].agentRuntime.id == "codex") and
   ($agent.models | has("openai/gpt-6-sol") | not) and
@@ -192,7 +191,7 @@ cd "$GITHUB_WORKSPACE"
 openclaw agent-system install --json | tee "${TMPDIR}/setup-reinstall.json"
 jq -e '.outcomes[0].component == "codex-plugin" and .outcomes[0].code == "codex-plugin-unchanged" and .outcomes[0].status == "unchanged"' "${TMPDIR}/setup-reinstall.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "workspace-memory", "canon-checkout", "canon-plugin", "imessage-plugin", "openclaw-config"]' "${TMPDIR}/setup-reinstall.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .status] | all(. == "unchanged")' "${TMPDIR}/setup-reinstall.json"
+jq -e '[.outcomes[] | select(.component == "setup" or .component == "models") | .status] | length == 7 and all(. == "unchanged")' "${TMPDIR}/setup-reinstall.json"
 jq -e 'all(.outcomes[]; .status != "updated" and .status != "created")' "${TMPDIR}/setup-reinstall.json"
 cmp "${TMPDIR}/memory-before-repeat.md" "$GITHUB_WORKSPACE/MEMORY.md"
 
@@ -202,7 +201,7 @@ openclaw config get agents.entries.emori --json | jq -e '
   ($agent.models["openai/*"].agentRuntime.id == "codex") and
   (["openai/gpt-6-astra", "openai/gpt-6-luna", "openai/gpt-6.1-sol"] |
     all(.[]; . as $model |
-      $agent.models[$model].agentRuntime.id == null and
+      ($agent.models[$model].agentRuntime.id // $agent.models["openai/*"].agentRuntime.id) == "codex" and
       ($agent.modelPolicy.allow | index($model)) != null))
 '
 

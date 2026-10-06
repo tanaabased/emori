@@ -180,7 +180,7 @@ describe('lib/setup/openclaw-config', () => {
     assert.equal(configPatchSatisfied(current, patch), true);
   });
 
-  it('should remove only redundant exact Codex runtime policies and retain per-model settings', () => {
+  it('should preserve compatible exact Codex runtime policies and report conflicting runtimes', () => {
     const patch = buildPatch({
       agents: {
         entries: {
@@ -196,9 +196,7 @@ describe('lib/setup/openclaw-config', () => {
       },
     });
 
-    assert.deepEqual(patch.agents.entries.emori.models['openai/gpt-6-astra'], {
-      agentRuntime: null,
-    });
+    assert.equal(patch.agents.entries.emori.models['openai/gpt-6-astra'], undefined);
     assert.throws(
       () =>
         buildPatch({
@@ -212,6 +210,34 @@ describe('lib/setup/openclaw-config', () => {
         }),
       /Exact OpenAI runtime override for openai\/custom-model \(custom\) takes precedence/u,
     );
+  });
+
+  it('should converge with planner-created exact bindings without changing model settings', () => {
+    const current = buildPatch();
+    delete current.agents.entries.emori.models['openai/gpt-6-sol'];
+    delete current.agents.entries.emori.tools.message.crossContext;
+    const agent = current.agents.entries.emori;
+    agent.model = { primary: 'openai/gpt-6-astra', fallbacks: ['openai/gpt-6-luna'] };
+    agent.thinkingDefault = 'high';
+    for (const model of agent.modelPolicy.allow) {
+      agent.models[model] = {
+        agentRuntime: { id: 'codex' },
+        alias: model,
+        params: { reasoningEffort: 'medium' },
+      };
+    }
+    const before = structuredClone(current);
+    const patch = buildPatch(current);
+
+    assert.equal(configPatchSatisfied(current, patch), true);
+    assert.deepEqual(patch.agents.entries.emori.models, {
+      'openai/*': { agentRuntime: { id: 'codex' } },
+      'openai/gpt-6-sol': null,
+    });
+    assert.equal(patch.agents.entries.emori.model, undefined);
+    assert.equal(patch.agents.entries.emori.thinkingDefault, undefined);
+    assert.deepEqual(patch.agents.entries.emori.modelPolicy.allow, agent.modelPolicy.allow);
+    assert.deepEqual(current, before);
   });
 
   it('should leave model defaults, effort profiles, and other agent settings outside the patch', () => {
