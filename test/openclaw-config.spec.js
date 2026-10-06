@@ -144,9 +144,10 @@ describe('lib/setup/openclaw-config', () => {
 
   it('should carry every owned static policy through one patch', () => {
     const patch = buildPatch();
-    assert.equal(patch.agents.entries.emori.models['openai/gpt-6-astra'].agentRuntime.id, 'codex');
-    assert.equal(patch.agents.entries.emori.models['openai/gpt-6-luna'].agentRuntime.id, 'codex');
-    assert.equal(patch.agents.entries.emori.models['openai/gpt-6.1-sol'].agentRuntime.id, 'codex');
+    assert.equal(patch.agents.entries.emori.models['openai/*'].agentRuntime.id, 'codex');
+    assert.equal(patch.agents.entries.emori.models['openai/gpt-6-astra'], undefined);
+    assert.equal(patch.agents.entries.emori.models['openai/gpt-6-luna'], undefined);
+    assert.equal(patch.agents.entries.emori.models['openai/gpt-6.1-sol'], undefined);
     assert.equal(patch.agents.entries.emori.models['openai/gpt-6-sol'], null);
     assert.deepEqual(patch.agents.entries.emori.modelPolicy.allow, [
       'openai/gpt-6-astra',
@@ -165,6 +166,62 @@ describe('lib/setup/openclaw-config', () => {
     assert.equal(patch.hooks.internal.entries['session-memory'].enabled, false);
     assert.equal(patch.skills.workshop.autonomous.mode, 'propose');
     assert.equal(patch.tools.sessions.visibility, 'agent');
+  });
+
+  it('should remove only redundant exact Codex runtime policies and retain per-model settings', () => {
+    const patch = buildPatch({
+      agents: {
+        entries: {
+          emori: {
+            models: {
+              'openai/gpt-6-astra': {
+                agentRuntime: { id: 'codex' },
+                reasoning: { effort: 'high' },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    assert.deepEqual(patch.agents.entries.emori.models['openai/gpt-6-astra'], {
+      agentRuntime: null,
+    });
+    assert.throws(
+      () => buildPatch({
+        agents: {
+          entries: {
+            emori: {
+              models: { 'openai/custom-model': { agentRuntime: { id: 'custom' } } },
+            },
+          },
+        },
+      }),
+      /Exact OpenAI runtime override for openai\/custom-model \(custom\) takes precedence/u,
+    );
+  });
+
+  it('should leave model defaults, effort profiles, and other agent settings outside the patch', () => {
+    const current = {
+      agents: {
+        defaults: {
+          model: { primary: 'openai/gpt-6-luna' },
+          models: { 'openai/gpt-6-luna': { params: { reasoningEffort: 'medium' } } },
+        },
+        entries: { other: { models: { 'openai/custom': { agentRuntime: { id: 'custom' } } } } },
+      },
+    };
+    const before = structuredClone(current);
+    const patch = buildPatch(current);
+
+    assert.deepEqual(current, before);
+    assert.equal(patch.agents.defaults, undefined);
+    assert.equal(patch.agents.entries.other, undefined);
+    assert.deepEqual(patch.agents.entries.emori.modelPolicy.allow, [
+      'openai/gpt-6-astra',
+      'openai/gpt-6-luna',
+      'openai/gpt-6.1-sol',
+    ]);
   });
 
   it('should migrate the existing six-model allowlist to GPT-6.1 and converge', () => {

@@ -3,17 +3,7 @@
     "entries": {
       "emori": {
         "models": {
-          "openai/gpt-6-astra": {
-            "agentRuntime": {
-              "id": "codex"
-            }
-          },
-          "openai/gpt-6-luna": {
-            "agentRuntime": {
-              "id": "codex"
-            }
-          },
-          "openai/gpt-6.1-sol": {
+          "openai/*": {
             "agentRuntime": {
               "id": "codex"
             }
