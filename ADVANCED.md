@@ -27,31 +27,17 @@ This skips every setup check and apply, so it does not establish full readiness.
 
 ## Configuration ownership
 
-Agent System owns the identity, model and effort profiles, credentials, Git/SSH,
-GitHub admission, and memory-provider binding declared in
+Agent System owns the identity, runtime, model and effort profiles, model
+admissions, credentials, Git/SSH, GitHub admission, and memory-provider binding declared in
 [the manifest](./.agent-system/agent.yaml).
 
 EMORI's final setup step reconciles [OpenClaw policy](./openclaw.patch.json),
-including model admission and runtime bindings, execution, messaging, Workshop,
-and memory settings. It preserves unrelated shared arrays and private channel
-values. Make policy changes in that fragment and rerun installation; do not
-apply the raw fragment directly, which would bypass the merge logic and replace
-shared arrays. Primary model and fallback selection remain Agent System's job.
-
-For EMORI's runtime model allowlist, setup owns the admissions in the fragment
-and the retired IDs recorded in `lib/setup/openclaw-config.js`. Keep an ID in
-that inventory when removing it from the fragment, so reconciliation can revoke
-the old admission. Agent System selects model/effort profiles but does not own
-runtime allowlist entries; other agents' model policies are untouched.
-
-An additional admission for EMORI must be explicitly classified as operator-owned
-with `EMORI_OPERATOR_MODEL_ADMISSIONS`, a JSON array of model IDs supplied to the
-setup process (for example, `["openai/operator-model"]`). Setup retains those
-entries and unrelated managed tool grants. An unclassified live admission, or
-an ID claimed by both the workspace and operator, fails setup with an ownership
-diagnostic; it is not reported as ready and no patch is applied. Review the ID
-before classifying it. If it was formerly workspace-owned, add it to the
-inventory instead of treating it as operator policy.
+including execution, messaging, Workshop, and memory settings, while preserving
+unrelated shared arrays and private channel values. Chat-model routing, fallback
+selection, effort, runtime bindings, and admissions remain Agent System-owned
+and are reconciled from the manifest. Make non-model workspace policy changes in
+that fragment and rerun installation; do not apply the raw fragment directly,
+which would bypass merge logic and replace shared arrays.
 
 ## Private continuity
 

@@ -39,6 +39,8 @@ openclaw config set tools.sessions.visibility '"all"' --strict-json
 
 # should install Codex before host setup and then reconcile agent setup
 openclaw agent-system validate
+openclaw agents add emori --workspace "$GITHUB_WORKSPACE" --non-interactive --json
+openclaw config set agents.entries.emori.model '{"primary":"openai/gpt-6-luna","fallbacks":["openai/gpt-6-luna"]}' --strict-json
 openclaw agent-system install --json | tee "${TMPDIR}/setup-install.json"
 jq -e '.outcomes[0].component == "codex-plugin" and .outcomes[0].code == "codex-plugin-installed" and .outcomes[0].status == "created" and .outcomes[1].stepId == "brew-dependencies"' "${TMPDIR}/setup-install.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "workspace-memory", "canon-checkout", "canon-plugin", "imessage-plugin", "openclaw-config"]' "${TMPDIR}/setup-install.json"
@@ -84,16 +86,30 @@ openclaw plugins inspect codex --json | tee "${TMPDIR}/codex-after-setup.json" |
 jq -S .install "${TMPDIR}/codex-after-setup.json" > "${TMPDIR}/codex-receipt-before.json"
 openclaw config get plugins.entries.codex --json | jq -S . > "${TMPDIR}/codex-config-before.json"
 
-# should retain the wildcard and effective Codex routing for EMORI's admitted OpenAI models
+# should select the manifest-declared default model and effort
+openclaw config get agents.entries.emori.model.primary --json | jq -e '. == "openai/gpt-6-astra"'
+openclaw config get agents.entries.emori.thinkingDefault --json | jq -e '. == "high"'
+
+# should preserve existing fallbacks
+openclaw config get agents.entries.emori.model.fallbacks --json | jq -e '. == ["openai/gpt-6-luna"]'
+
+# should bind all manifest-declared models to Codex
 openclaw config get agents.entries.emori --json | jq -e '
   . as $agent |
   ["openai/gpt-6-astra", "openai/gpt-6-luna", "openai/gpt-6.1-sol"] |
-  (all(.[]; . as $model |
-    (($agent.models[$model].agentRuntime.id // $agent.models["openai/*"].agentRuntime.id) == "codex") and
-    ($agent.modelPolicy.allow | index($model)) != null)) and
-  ($agent.models["openai/*"].agentRuntime.id == "codex") and
-  ($agent.models | has("openai/gpt-6-sol") | not) and
-  ($agent.modelPolicy.allow | index("openai/gpt-6-sol")) == null
+  all(.[]; . as $model | $agent.models[$model].agentRuntime.id == "codex")
+'
+
+# should allow selection of all manifest-declared models
+openclaw config get agents --json | bun --eval '
+  import { readFileSync } from "node:fs";
+  import { resolveAllowedModelRef } from "openclaw/plugin-sdk/agent-runtime";
+  const cfg = { agents: JSON.parse(readFileSync(0, "utf8")) };
+  for (const raw of ["openai/gpt-6-astra", "openai/gpt-6-luna", "openai/gpt-6.1-sol"]) {
+    const result = resolveAllowedModelRef({ cfg, agentId: "emori", catalog: [], defaultProvider: "openai", raw });
+    if ("error" in result) throw new Error(result.error);
+    console.log(`Allowed: ${result.key}`);
+  }
 '
 
 # should install the official iMessage channel plugin without configuring the channel
@@ -195,14 +211,30 @@ jq -e '[.outcomes[] | select(.component == "setup" or .component == "models") | 
 jq -e 'all(.outcomes[]; .status != "updated" and .status != "created")' "${TMPDIR}/setup-reinstall.json"
 cmp "${TMPDIR}/memory-before-repeat.md" "$GITHUB_WORKSPACE/MEMORY.md"
 
-# should retain the effective wildcard route and admissions after repeat setup
+# should select the manifest-declared default model and effort after repeat setup
+openclaw config get agents.entries.emori.model.primary --json | jq -e '. == "openai/gpt-6-astra"'
+openclaw config get agents.entries.emori.thinkingDefault --json | jq -e '. == "high"'
+
+# should preserve existing fallbacks after repeat setup
+openclaw config get agents.entries.emori.model.fallbacks --json | jq -e '. == ["openai/gpt-6-luna"]'
+
+# should bind all manifest-declared models to Codex after repeat setup
 openclaw config get agents.entries.emori --json | jq -e '
   . as $agent |
-  ($agent.models["openai/*"].agentRuntime.id == "codex") and
-  (["openai/gpt-6-astra", "openai/gpt-6-luna", "openai/gpt-6.1-sol"] |
-    all(.[]; . as $model |
-      ($agent.models[$model].agentRuntime.id // $agent.models["openai/*"].agentRuntime.id) == "codex" and
-      ($agent.modelPolicy.allow | index($model)) != null))
+  ["openai/gpt-6-astra", "openai/gpt-6-luna", "openai/gpt-6.1-sol"] |
+  all(.[]; . as $model | $agent.models[$model].agentRuntime.id == "codex")
+'
+
+# should allow selection of all manifest-declared models after repeat setup
+openclaw config get agents --json | bun --eval '
+  import { readFileSync } from "node:fs";
+  import { resolveAllowedModelRef } from "openclaw/plugin-sdk/agent-runtime";
+  const cfg = { agents: JSON.parse(readFileSync(0, "utf8")) };
+  for (const raw of ["openai/gpt-6-astra", "openai/gpt-6-luna", "openai/gpt-6.1-sol"]) {
+    const result = resolveAllowedModelRef({ cfg, agentId: "emori", catalog: [], defaultProvider: "openai", raw });
+    if ("error" in result) throw new Error(result.error);
+    console.log(`Allowed: ${result.key}`);
+  }
 '
 
 # should preserve collaboration-managed session visibility after repeat setup
