@@ -84,16 +84,15 @@ openclaw plugins inspect codex --json | tee "${TMPDIR}/codex-after-setup.json" |
 jq -S .install "${TMPDIR}/codex-after-setup.json" > "${TMPDIR}/codex-receipt-before.json"
 openclaw config get plugins.entries.codex --json | jq -S . > "${TMPDIR}/codex-config-before.json"
 
-# should retain the wildcard and effective Codex routing for EMORI's admitted OpenAI models
+# should retain manifest-declared Codex model bindings, admissions, default, and effort
 openclaw config get agents.entries.emori --json | jq -e '
   . as $agent |
-  ["openai/gpt-6-astra", "openai/gpt-6-luna", "openai/gpt-6.1-sol"] |
+  $agent.model.primary == "openai/gpt-6-astra" and
+  $agent.thinkingDefault == "high" and
+  (["openai/gpt-6-astra", "openai/gpt-6-luna", "openai/gpt-6.1-sol"] |
   (all(.[]; . as $model |
-    (($agent.models[$model].agentRuntime.id // $agent.models["openai/*"].agentRuntime.id) == "codex") and
-    ($agent.modelPolicy.allow | index($model)) != null)) and
-  ($agent.models["openai/*"].agentRuntime.id == "codex") and
-  ($agent.models | has("openai/gpt-6-sol") | not) and
-  ($agent.modelPolicy.allow | index("openai/gpt-6-sol")) == null
+    ($agent.models[$model].agentRuntime.id == "codex") and
+    ($agent.modelPolicy.allow | index($model)) != null)))
 '
 
 # should install the official iMessage channel plugin without configuring the channel
@@ -195,13 +194,14 @@ jq -e '[.outcomes[] | select(.component == "setup" or .component == "models") | 
 jq -e 'all(.outcomes[]; .status != "updated" and .status != "created")' "${TMPDIR}/setup-reinstall.json"
 cmp "${TMPDIR}/memory-before-repeat.md" "$GITHUB_WORKSPACE/MEMORY.md"
 
-# should retain the effective wildcard route and admissions after repeat setup
+# should retain manifest-declared model bindings and admissions after repeat setup
 openclaw config get agents.entries.emori --json | jq -e '
   . as $agent |
-  ($agent.models["openai/*"].agentRuntime.id == "codex") and
+  $agent.model.primary == "openai/gpt-6-astra" and
+  $agent.thinkingDefault == "high" and
   (["openai/gpt-6-astra", "openai/gpt-6-luna", "openai/gpt-6.1-sol"] |
     all(.[]; . as $model |
-      ($agent.models[$model].agentRuntime.id // $agent.models["openai/*"].agentRuntime.id) == "codex" and
+      $agent.models[$model].agentRuntime.id == "codex" and
       ($agent.modelPolicy.allow | index($model)) != null))
 '
 
