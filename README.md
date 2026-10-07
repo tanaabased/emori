@@ -48,6 +48,9 @@ Run as the OpenClaw runtime user on the Agentbox Mac, with EMORI's 1Password
 service account token ready. Keep Agent System commands in this checkout so
 that they find her manifest.
 
+Installation also enables the [nightly Drive backup](./ADVANCED.md#drive-backups)
+when the Gateway is reachable.
+
 ```sh
 mkdir -p ~/tanaab
 git clone https://github.com/tanaabased/emori.git ~/tanaab/emori

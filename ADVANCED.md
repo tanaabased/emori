@@ -51,8 +51,11 @@ tracking, not disclosure.
 
 ## Drive backups
 
-The nightly declaration is disabled. Its proposed time is **04:00
-America/New_York**; confirm the time before activation. The repo-owned task uses
+The nightly declaration is enabled by default at **04:00 America/New_York**.
+Agent System installation synchronizes and enables the job when the Gateway is
+reachable. If scheduler discovery is unavailable, installation warns and defers
+automation sync; rerun installation once the Gateway is available.
+The repo-owned task uses
 Agent System backup commands and the strict managed Google launcher, keeping five
 verified archives in `.agent-system/backups` and EMORI's set in the
 [supplied Drive folder](https://drive.google.com/drive/folders/1rSRlVHUrApaqxpNZVAO_IXnVuVhdiZVV).
@@ -74,10 +77,10 @@ files stay untouched. Workspace and database capture are not an atomic snapshot.
 The scheduled command omits `--operator`. It requires the automation runner's
 active-agent binding; there is no fallback to host Google credentials. An
 operator-only manual run does not prove the bound scheduled command works.
-After the command pilot and explicit activation approval, enable the declaration
-and reconcile using Agent System. Run reconciliation twice; the second must make
-no changes. Completion still requires one actual nightly occurrence, its failure
-or success evidence, and saved schedule readback.
+Run reconciliation twice; the second must make no changes. Code validation and
+installation do not prove operational recovery. Completion still requires the
+operator command pilot, one actual nightly occurrence, its failure or success
+evidence, and saved schedule readback.
 
 ### Interrupted runs
 

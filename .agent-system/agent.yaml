@@ -41,7 +41,7 @@ backup:
 
 automations:
   - id: backup-drive-nightly
-    enabled: false
+    enabled: true
     runtimes: [openclaw]
     schedule:
       cron: '0 4 * * *'
