@@ -15,11 +15,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Temporarily omit setup: Gateway automation reconciliation fails after full setup.
-        # Keep examples/setup/README.md assertions intact; restore coverage after repair (#110).
         example:
           - workspace
           - install
+          - setup
           - shared
           - backup
     steps:
@@ -28,8 +27,7 @@ jobs:
       - name: Set up OpenClaw
         uses: tanaabased/actions/setup-openclaw@v1
         with:
-          # Diagnostic candidate; restore main after the upstream fix lands.
-          agent-system: github:tanaabased/openclaw-agent-system#4ea15a92979e21fc49df679276be2a7147a4f156
+          agent-system: github:tanaabased/openclaw-agent-system#main
       - name: Set up Bun
         uses: tanaabased/actions/setup-bun@v1
       - name: Install dependencies
