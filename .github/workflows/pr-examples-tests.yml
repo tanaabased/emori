@@ -44,3 +44,31 @@ jobs:
         run: |
           mkdir -p "$TMPDIR"
           bun run leia "examples/${{ matrix.example }}/README.md" --retry 0
+      - name: Report install and Gateway diagnostics
+        if: ${{ always() && (matrix.example == 'install' || matrix.example == 'setup') }}
+        continue-on-error: true
+        shell: bash
+        env:
+          TMPDIR: ${{ github.workspace }}/examples/${{ matrix.example }}/.tmp
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.EMORIKEY }}
+        run: |
+          for report in "$TMPDIR"/*install.json; do
+            test -f "$report" || continue
+            printf '\n::group::%s\n' "$(basename "$report")"
+            jq '{
+              outcomes: [.outcomes[]? | {component, stepId, status, code}],
+              warnings: [.warnings[]? | {component, code}],
+              blocked: (.blocked | if . == null then null else {component, code} end),
+              unattempted: [.unattempted[]? | {component, stepId, code}],
+              diagnostic
+            }' "$report" || printf 'Unable to parse %s\n' "$report" >&2
+            printf '::endgroup::\n'
+          done
+          if test -f "$TMPDIR/first-install-gateway.log"; then
+            printf '\n::group::Gateway immediately after first install\n'
+            cat "$TMPDIR/first-install-gateway.log"
+            printf '::endgroup::\n'
+          fi
+          printf '\n::group::Gateway after scenario cleanup\n'
+          openclaw-gateway diagnostics --debug
+          printf '::endgroup::\n'

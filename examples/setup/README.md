@@ -21,6 +21,7 @@ mkdir -p "$HOME/tanaab"
 git clone --no-local "$GITHUB_WORKSPACE" "$HOME/tanaab/emori"
 
 # should start the isolated gateway for session dispatch enrollment
+openclaw config set logging.consoleStyle '"json"' --strict-json
 openclaw-gateway start
 ```
 
@@ -46,10 +47,14 @@ openclaw config set skills.load.extraDirs "[\"$HOME/tanaab/canon/skills\"]" --st
 openclaw config set tools.sessions.visibility '"all"' --strict-json
 
 # should install Codex before host setup and then reconcile agent setup
+set -euo pipefail
 openclaw agent-system validate --json | jq -e '.status == "valid" and any(.diagnostics[]; .code == "github-notification-runtime-unsupported" and .severity == "warning" and (.message | contains("issue feedback")))'
 openclaw agents add emori --workspace "$GITHUB_WORKSPACE" --non-interactive --json
 openclaw config set agents.entries.emori.model '{"primary":"openai/gpt-6-luna","fallbacks":["openai/gpt-6-luna"]}' --strict-json
-openclaw agent-system install --yes --json | tee "${TMPDIR}/setup-install.json"
+install_status=0
+openclaw agent-system install --yes --json | tee "${TMPDIR}/setup-install.json" || install_status=$?
+openclaw-gateway diagnostics --debug > "${TMPDIR}/first-install-gateway.log" 2>&1 || true
+test "$install_status" -eq 0
 jq -e 'any(.warnings[]; .component == "github-notifications" and .code == "github-notification-runtime-unsupported" and (.message | contains("issue feedback"))) and any(.outcomes[]; .component == "github-notifications" and .code == "github-notification-runtime-unsupported" and .status == "skipped")' "${TMPDIR}/setup-install.json"
 jq -e '.outcomes[0].component == "codex-plugin" and .outcomes[0].code == "codex-plugin-installed" and .outcomes[0].status == "created" and .outcomes[1].stepId == "brew-dependencies"' "${TMPDIR}/setup-install.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "workspace-memory", "canon-checkout", "canon-plugin", "imessage-plugin", "openclaw-config"]' "${TMPDIR}/setup-install.json"
