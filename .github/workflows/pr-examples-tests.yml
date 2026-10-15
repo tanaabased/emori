@@ -28,7 +28,8 @@ jobs:
       - name: Set up OpenClaw
         uses: tanaabased/actions/setup-openclaw@v1
         with:
-          agent-system: github:tanaabased/openclaw-agent-system#main
+          # Diagnostic candidate; restore main after the upstream fix lands.
+          agent-system: github:tanaabased/openclaw-agent-system#4ea15a92979e21fc49df679276be2a7147a4f156
       - name: Set up Bun
         uses: tanaabased/actions/setup-bun@v1
       - name: Install dependencies
