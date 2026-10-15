@@ -60,6 +60,11 @@ grep -Fx '# Memory' "$GITHUB_WORKSPACE/MEMORY.md"
 printf '\nPreserved setup example note.\n' >> "$GITHUB_WORKSPACE/MEMORY.md"
 cp "$GITHUB_WORKSPACE/MEMORY.md" "${TMPDIR}/memory-before-repeat.md"
 
+# should synchronize deferred schedules before checking repeat convergence
+cd "$GITHUB_WORKSPACE"
+openclaw-gateway restart
+openclaw agent-system automations sync --json | jq -e '.status == "synchronized" and all(.warnings[]; .code != "automation-sync-deferred") and any(.outcomes[]; .code == "automation-synchronized") and all(.outcomes[]; .status != "skipped")'
+
 # should satisfy EMORI's Brewfile dependencies
 HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --verbose --file "$GITHUB_WORKSPACE/Brewfile"
 gog --version
