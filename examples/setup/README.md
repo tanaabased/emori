@@ -19,6 +19,9 @@ openclaw agent-system credentials set op --from-env
 # should prepare EMORI's checked-out workspace
 mkdir -p "$HOME/tanaab"
 git clone --no-local "$GITHUB_WORKSPACE" "$HOME/tanaab/emori"
+
+# should start the isolated gateway for session dispatch enrollment
+openclaw-gateway start
 ```
 
 ## Testing
@@ -256,4 +259,11 @@ cmp "${TMPDIR}/codex-config-before.json" "${TMPDIR}/codex-config-repeat.json"
 # should preserve EMORI's clean checkout
 test -z "$(git -C "$GITHUB_WORKSPACE" status --short --untracked-files=all)"
 test -z "$(git -C "$HOME/tanaab/emori" status --short --untracked-files=all)"
+```
+
+## Cleanup
+
+```bash
+# should stop the isolated gateway
+openclaw-gateway stop
 ```
