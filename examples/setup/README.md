@@ -4,6 +4,11 @@ This scenario verifies EMORI's full setup and repeat convergence. Keeping both
 runs together proves idempotence against the state the first run created.
 Cross-agent plugin reuse is covered separately by [shared](../shared/README.md).
 
+The `--yes` consent applies only to this isolated CI profile. The desired issue
+feedback policy remains configured but unsupported: validation must warn and
+Install must skip unsupported feedback while completing unrelated setup. This does not
+demonstrate live assignment, feedback, or assessment execution.
+
 ## Setup
 
 ```bash
@@ -14,6 +19,10 @@ openclaw agent-system credentials set op --from-env
 # should prepare EMORI's checked-out workspace
 mkdir -p "$HOME/tanaab"
 git clone --no-local "$GITHUB_WORKSPACE" "$HOME/tanaab/emori"
+
+# should start the isolated gateway for session dispatch enrollment
+openclaw config set logging.consoleStyle '"json"' --strict-json
+openclaw-gateway start
 ```
 
 ## Testing
@@ -38,10 +47,15 @@ openclaw config set skills.load.extraDirs "[\"$HOME/tanaab/canon/skills\"]" --st
 openclaw config set tools.sessions.visibility '"all"' --strict-json
 
 # should install Codex before host setup and then reconcile agent setup
-openclaw agent-system validate
+set -euo pipefail
+openclaw agent-system validate --json | jq -e '.status == "valid" and any(.diagnostics[]; .code == "github-notification-runtime-unsupported" and .severity == "warning" and (.message | contains("issue feedback")))'
 openclaw agents add emori --workspace "$GITHUB_WORKSPACE" --non-interactive --json
 openclaw config set agents.entries.emori.model '{"primary":"openai/gpt-6-luna","fallbacks":["openai/gpt-6-luna"]}' --strict-json
-openclaw agent-system install --json | tee "${TMPDIR}/setup-install.json"
+install_status=0
+openclaw agent-system install --yes --json | tee "${TMPDIR}/setup-install.json" || install_status=$?
+openclaw-gateway diagnostics --debug > "${TMPDIR}/first-install-gateway.log" 2>&1 || true
+test "$install_status" -eq 0
+jq -e 'any(.warnings[]; .component == "github-notifications" and .code == "github-notification-runtime-unsupported" and (.message | contains("issue feedback"))) and any(.outcomes[]; .component == "github-notifications" and .code == "github-notification-runtime-unsupported" and .status == "skipped")' "${TMPDIR}/setup-install.json"
 jq -e '.outcomes[0].component == "codex-plugin" and .outcomes[0].code == "codex-plugin-installed" and .outcomes[0].status == "created" and .outcomes[1].stepId == "brew-dependencies"' "${TMPDIR}/setup-install.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "workspace-memory", "canon-checkout", "canon-plugin", "imessage-plugin", "openclaw-config"]' "${TMPDIR}/setup-install.json"
 jq -e --arg brew "$(cat "${TMPDIR}/brew-expected-status")" '[.outcomes[] | select(.component == "setup") | .status] == [$brew, "updated", "updated", "updated", "updated", "updated"]' "${TMPDIR}/setup-install.json"
@@ -50,6 +64,11 @@ test -f "$GITHUB_WORKSPACE/MEMORY.md"
 grep -Fx '# Memory' "$GITHUB_WORKSPACE/MEMORY.md"
 printf '\nPreserved setup example note.\n' >> "$GITHUB_WORKSPACE/MEMORY.md"
 cp "$GITHUB_WORKSPACE/MEMORY.md" "${TMPDIR}/memory-before-repeat.md"
+
+# should synchronize deferred schedules before checking repeat convergence
+cd "$GITHUB_WORKSPACE"
+openclaw-gateway restart
+openclaw agent-system automations sync --json | jq -e '.status == "synchronized" and all(.warnings[]; .code != "automation-sync-deferred") and any(.outcomes[]; .code == "automation-synchronized") and all(.outcomes[]; .status != "skipped")'
 
 # should satisfy EMORI's Brewfile dependencies
 HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --verbose --file "$GITHUB_WORKSPACE/Brewfile"
@@ -204,7 +223,8 @@ openclaw hooks list --json | jq -e '
 ```bash
 # should leave a converged setup unchanged on repeat installation
 cd "$GITHUB_WORKSPACE"
-openclaw agent-system install --json | tee "${TMPDIR}/setup-reinstall.json"
+openclaw agent-system install --yes --json | tee "${TMPDIR}/setup-reinstall.json"
+jq -e 'any(.warnings[]; .component == "github-notifications" and .code == "github-notification-runtime-unsupported" and (.message | contains("issue feedback"))) and any(.outcomes[]; .component == "github-notifications" and .code == "github-notification-runtime-unsupported" and .status == "skipped")' "${TMPDIR}/setup-reinstall.json"
 jq -e '.outcomes[0].component == "codex-plugin" and .outcomes[0].code == "codex-plugin-unchanged" and .outcomes[0].status == "unchanged"' "${TMPDIR}/setup-reinstall.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "workspace-memory", "canon-checkout", "canon-plugin", "imessage-plugin", "openclaw-config"]' "${TMPDIR}/setup-reinstall.json"
 jq -e '[.outcomes[] | select(.component == "setup" or .component == "models") | .status] | length == 7 and all(. == "unchanged")' "${TMPDIR}/setup-reinstall.json"
@@ -249,4 +269,11 @@ cmp "${TMPDIR}/codex-config-before.json" "${TMPDIR}/codex-config-repeat.json"
 # should preserve EMORI's clean checkout
 test -z "$(git -C "$GITHUB_WORKSPACE" status --short --untracked-files=all)"
 test -z "$(git -C "$HOME/tanaab/emori" status --short --untracked-files=all)"
+```
+
+## Cleanup
+
+```bash
+# should stop the isolated gateway
+openclaw-gateway stop
 ```
