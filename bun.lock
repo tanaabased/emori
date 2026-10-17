@@ -4,6 +4,9 @@
   "workspaces": {
     "": {
       "name": "@tanaab/emori",
+      "dependencies": {
+        "@lickle/lock": "0.0.1",
+      },
       "devDependencies": {
         "@eslint/js": "^10.0.1",
         "@lando/leia": "2.0.0",
@@ -200,6 +203,16 @@
     "@lando/chai": ["chai@4.5.0", "", { "dependencies": { "assertion-error": "^1.1.0", "check-error": "^1.0.3", "deep-eql": "^4.1.3", "get-func-name": "^2.0.2", "loupe": "^2.3.6", "pathval": "^1.1.1", "type-detect": "^4.1.0" } }, "sha512-RITGBfijLkBddZvnn8jdqoTypxvqbOLYQkGGxXzeFjVHvudaPw0HNFD9x928/eUwYWd2dPCugVqspGALTZZQKw=="],
 
     "@lando/leia": ["@lando/leia@2.0.0", "", { "dependencies": { "@lando/chai": "npm:chai@^4.4.1", "@types/mocha": "^10.0.10", "chalk": "^4.1.2", "debug": "^4.3.2", "detect-newline": "^3.1.0", "glob": "^7.1.3", "lodash": "^4.17.11", "marked": "^4.0.10", "mocha": "^11.1.0", "object-hash": "^2.2.0" }, "bin": { "leia": "dist/esm/bin/leia.js" } }, "sha512-MdEy+snhhkDOTv5m/zZT1oDMOLJGmMlXt7O2hBuNfVzpLoyOCKnIfMfAhUohIuCDAT8X5wDz0GybXnLWvKd39g=="],
+
+    "@lickle/lock": ["@lickle/lock@0.0.1", "", { "optionalDependencies": { "@lickle/lock-darwin-arm64": "0.0.1", "@lickle/lock-darwin-x64": "0.0.1", "@lickle/lock-linux-x64-gnu": "0.0.1", "@lickle/lock-win32-x64-msvc": "0.0.1" } }, "sha512-PkpWvEDUoVm7wnovDnUzZKUHuQxFyNZoOx2t+lgrYCXVTksnazCvteryeZpQ8dRpe5taLTvktXNbCKsU82+yPQ=="],
+
+    "@lickle/lock-darwin-arm64": ["@lickle/lock-darwin-arm64@0.0.1", "", { "os": "darwin", "cpu": "arm64" }, "sha512-Lj3lgKS3AOhjCVPpLKAHTyQlhz6vOQVyw0WE0gSpxpfS7cvQ65zGHCKk/dl5jcoPXSNIxIWBKEJciQ0cP7wzYg=="],
+
+    "@lickle/lock-darwin-x64": ["@lickle/lock-darwin-x64@0.0.1", "", { "os": "darwin", "cpu": "x64" }, "sha512-lTPq1BYQ4mUAXKtOUnAt3DOIBikFRP4gXC9sPaSGCFD+C1HZ0W6llWH/jXx7BkeFa8EiJdpGOvdgh9LPoDkeDA=="],
+
+    "@lickle/lock-linux-x64-gnu": ["@lickle/lock-linux-x64-gnu@0.0.1", "", { "os": "linux", "cpu": "x64" }, "sha512-jIZj9okXMOINtJ3jm26rQfJezW25wsZL37vOqz2c32TAXE8yplmNtfyWbOUpUXQeFTkWJPl98qM9hdhbLo8Uew=="],
+
+    "@lickle/lock-win32-x64-msvc": ["@lickle/lock-win32-x64-msvc@0.0.1", "", { "os": "win32", "cpu": "x64" }, "sha512-3rdhYJuTFx7w21rwyPokVPEm1aGA63iA5Gp8C/WkOqmi1fGdpu3VGtXbvrH1SoDvPzHi9Iccm3CrUXtj/Hcq3A=="],
 
     "@lydell/node-pty": ["@lydell/node-pty@1.2.0-beta.15", "", { "optionalDependencies": { "@lydell/node-pty-darwin-arm64": "1.2.0-beta.15", "@lydell/node-pty-darwin-x64": "1.2.0-beta.15", "@lydell/node-pty-linux-arm64": "1.2.0-beta.15", "@lydell/node-pty-linux-x64": "1.2.0-beta.15", "@lydell/node-pty-win32-arm64": "1.2.0-beta.15", "@lydell/node-pty-win32-x64": "1.2.0-beta.15" } }, "sha512-Br8wBxzbxFwdWgk9uQ+rdzE0xfoxOK4QuGH54swhRwc5IxP6H9Y1/bcyazRGvNUs6XkB5qNVkezuKSRxUwZe7A=="],
 
