@@ -34,5 +34,8 @@
     "test:unit": "bun --bun mocha \"skills/*/test/**/*.spec.js\" \"lib/*/test/*.spec.js\" \"test/**/*.spec.js\"",
     "lint:examples": "bun scripts/validate-examples-task.js",
     "validate": "bun run lint && bun run test"
+  },
+  "dependencies": {
+    "@lickle/lock": "0.0.1"
   }
 }

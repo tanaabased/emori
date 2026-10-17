@@ -84,16 +84,36 @@ evidence, and saved schedule readback.
 
 ### Interrupted runs
 
-Failure exits nonzero. Sanitized status and private receipts live under
-`.private/backup-drive/`; never publish the journal or archive contents. A pending
-run resumes the same archive. An uncertain upload is reconciled by exact name,
-ownership and integrity; if its outcome remains unknown, the task stops without
-another upload or pruning.
+Each ordinary invocation captures current state afresh, even after an earlier
+creation, verification, or upload failure. Sanitized status and private receipts
+live under `.private/backup-drive/`; never publish the journal or archive contents.
+An older uncertain upload is reconciled by exact name, ownership and integrity,
+not replayed because a listing is empty. If it remains unresolved, the fresh
+backup can complete with `retention: "deferred"`; neither remote nor local pruning
+runs. A failure in the fresh backup still exits nonzero.
 
-A stale `run.lock` requires operator review: check its PID and ensure no task
-remains running before removing just that lock. Do not discard the journal.
-If creation was interrupted before its returned path was saved, identify and
-verify the resulting archive, then resume it explicitly:
+The whole workflow uses a nonblocking OS file lock on `run.lock`. Its descriptor
+is also inherited by each direct managed command, so killing the wrapper does
+not release exclusion while that command remains alive. The OS releases the
+lock when its last descriptor closes. The empty file stays in place: never
+delete or replace it to unlock an active run. This requires a local filesystem
+with working `flock` support on macOS or Linux; network filesystems are not supported.
+
+For the first upgrade from the existence-only lock, stop old scheduled/manual
+runs and establish that their managed commands have exited before switching
+versions. A nonempty legacy `run.lock` is refused with `legacy-backup-lock`;
+preserve it under another private evidence filename only after establishing
+writer quiescence. Do not discard the journal or status. The next admitted run
+retires a recognized old local creation/archive checkpoint while preserving
+receipts and completed archives. No migration command or live repair runs as
+part of installation.
+
+Agent System stages and verifies archives before publishing their final names.
+A hard interruption can leave staging or hidden `.pending-*` files, or a completed
+local archive whose return was lost. These files are not guessed or deleted to
+retry creation; abandoned temporary-file cleanup is separate. If the operator
+deliberately wants to upload an exact completed archive instead of capturing
+fresh state, the explicit override remains available:
 
 ```sh
 bun scripts/backup-drive-task.js --operator --resume-archive .agent-system/backups/EXACT-ARCHIVE.tar.gz

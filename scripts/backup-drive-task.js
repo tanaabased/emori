@@ -15,8 +15,8 @@ try {
     argv[0] === '--resume-archive' && argv.length === 2 ? resolve(argv[1]) : undefined;
   if (argv.length && (!operator || !resumeArchive)) throw new Error('arguments-invalid');
   const workspace = await realpath(process.cwd());
-  const commands = backupCommands({ workspace, operator });
   storage = await openStorage(workspace);
+  const commands = backupCommands({ workspace, operator, storage });
   const result = await runBackupDrive({ workspace, commands, storage, resumeArchive });
   process.stdout.write(`${JSON.stringify(result)}\n`);
 } catch (error) {
@@ -29,7 +29,7 @@ try {
   try {
     await storage?.close();
   } catch {
-    process.stderr.write('Backup lock release failed; operator review required.\n');
+    process.stderr.write('Backup lock descriptor close failed.\n');
     process.exitCode = 1;
   }
 }
