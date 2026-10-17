@@ -4,10 +4,10 @@ This scenario verifies EMORI's full setup and repeat convergence. Keeping both
 runs together proves idempotence against the state the first run created.
 Cross-agent plugin reuse is covered separately by [shared](../shared/README.md).
 
-The `--yes` consent applies only to this isolated CI profile. The desired issue
-feedback policy remains configured but unsupported: validation must warn and
-Install must skip unsupported feedback while completing unrelated setup. This does not
-demonstrate live assignment, feedback, or assessment execution.
+The `--yes` consent applies only to this isolated CI profile. Validation must
+accept the declared issue feedback policy, and installation must activate intake
+then retain it on repeat. This does not demonstrate live assignment, feedback,
+or assessment execution.
 
 ## Setup
 
@@ -48,14 +48,14 @@ openclaw config set tools.sessions.visibility '"all"' --strict-json
 
 # should install Codex before host setup and then reconcile agent setup
 set -euo pipefail
-openclaw agent-system validate --json | jq -e '.status == "valid" and any(.diagnostics[]; .code == "github-notification-runtime-unsupported" and .severity == "warning" and (.message | contains("issue feedback")))'
+openclaw agent-system validate --json | jq -e '.status == "valid" and all(.diagnostics[]; .code != "github-notification-runtime-unsupported")'
 openclaw agents add emori --workspace "$GITHUB_WORKSPACE" --non-interactive --json
 openclaw config set agents.entries.emori.model '{"primary":"openai/gpt-6-luna","fallbacks":["openai/gpt-6-luna"]}' --strict-json
 install_status=0
 openclaw agent-system install --yes --json | tee "${TMPDIR}/setup-install.json" || install_status=$?
 openclaw-gateway diagnostics --debug > "${TMPDIR}/first-install-gateway.log" 2>&1 || true
 test "$install_status" -eq 0
-jq -e 'any(.warnings[]; .component == "github-notifications" and .code == "github-notification-runtime-unsupported" and (.message | contains("issue feedback"))) and any(.outcomes[]; .component == "github-notifications" and .code == "github-notification-runtime-unsupported" and .status == "skipped")' "${TMPDIR}/setup-install.json"
+jq -e 'all(.warnings[]; .code != "github-notification-runtime-unsupported") and any(.outcomes[]; .component == "github-intake" and .code == "intake-activated" and .status == "updated")' "${TMPDIR}/setup-install.json"
 jq -e '.outcomes[0].component == "codex-plugin" and .outcomes[0].code == "codex-plugin-installed" and .outcomes[0].status == "created" and .outcomes[1].stepId == "brew-dependencies"' "${TMPDIR}/setup-install.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "workspace-memory", "canon-checkout", "canon-plugin", "imessage-plugin", "openclaw-config"]' "${TMPDIR}/setup-install.json"
 jq -e --arg brew "$(cat "${TMPDIR}/brew-expected-status")" '[.outcomes[] | select(.component == "setup") | .status] == [$brew, "updated", "updated", "updated", "updated", "updated"]' "${TMPDIR}/setup-install.json"
@@ -222,9 +222,11 @@ openclaw hooks list --json | jq -e '
 
 ```bash
 # should leave a converged setup unchanged on repeat installation
+set -euo pipefail
 cd "$GITHUB_WORKSPACE"
+test -f "${TMPDIR}/memory-before-repeat.md"
 openclaw agent-system install --yes --json | tee "${TMPDIR}/setup-reinstall.json"
-jq -e 'any(.warnings[]; .component == "github-notifications" and .code == "github-notification-runtime-unsupported" and (.message | contains("issue feedback"))) and any(.outcomes[]; .component == "github-notifications" and .code == "github-notification-runtime-unsupported" and .status == "skipped")' "${TMPDIR}/setup-reinstall.json"
+jq -e 'all(.warnings[]; .code != "github-notification-runtime-unsupported") and any(.outcomes[]; .component == "github-intake" and .code == "intake-retained" and .status == "unchanged")' "${TMPDIR}/setup-reinstall.json"
 jq -e '.outcomes[0].component == "codex-plugin" and .outcomes[0].code == "codex-plugin-unchanged" and .outcomes[0].status == "unchanged"' "${TMPDIR}/setup-reinstall.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "workspace-memory", "canon-checkout", "canon-plugin", "imessage-plugin", "openclaw-config"]' "${TMPDIR}/setup-reinstall.json"
 jq -e '[.outcomes[] | select(.component == "setup" or .component == "models") | .status] | length == 7 and all(. == "unchanged")' "${TMPDIR}/setup-reinstall.json"
