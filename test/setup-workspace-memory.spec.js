@@ -90,17 +90,23 @@ describe('workspace memory setup task', () => {
     }
   });
 
-  it('runs from the host phase before agent-bound setup and keeps generated paths ignored', () => {
-    const hostSetup = readFileSync(join(repository, '.agent-system/setup-host.yaml'), 'utf8');
-    const agentSetup = readFileSync(join(repository, '.agent-system/setup-agent.yaml'), 'utf8');
-    const agentConfig = readFileSync(join(repository, '.agent-system/agent.yaml'), 'utf8');
-    const ignoredPaths = readFileSync(join(repository, '.gitignore'), 'utf8').split(/\r?\n/u);
-    assert.ok(
-      hostSetup.indexOf('id: brew-dependencies') < hostSetup.indexOf('id: workspace-memory'),
+  it('should declare memory setup in the host phase and keep generated paths ignored', () => {
+    const manifest = globalThis.Bun.YAML.parse(
+      readFileSync(join(repository, '.agent-system/agent.yaml'), 'utf8'),
     );
-    assert.ok(agentConfig.indexOf('setup-host:') < agentConfig.indexOf('setup-agent:'));
-    assert.match(agentSetup, /id: canon-checkout/u);
-    assert.ok(ignoredPaths.includes('/MEMORY.md'));
-    assert.ok(ignoredPaths.includes('/memory/'));
+    const hostSetup = globalThis.Bun.YAML.parse(
+      readFileSync(join(repository, '.agent-system', manifest['setup-host'].file), 'utf8'),
+    );
+    assert.ok(hostSetup.steps.some(({ id }) => id === 'workspace-memory'));
+    const ignored = spawnSync(
+      'git',
+      ['check-ignore', '--no-index', 'MEMORY.md', 'memory/note.md'],
+      {
+        cwd: repository,
+        encoding: 'utf8',
+      },
+    );
+    assert.equal(ignored.status, 0, ignored.stderr);
+    assert.deepEqual(ignored.stdout.trim().split('\n'), ['MEMORY.md', 'memory/note.md']);
   });
 });

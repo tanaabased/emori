@@ -40,11 +40,17 @@
 - For proactive iMessages to pirog, the top-level session uses native `message`, `channel: "imessage"`, and his exact Apple ID from private memory. Never substitute chat IDs, `imsg`, `osascript`, or other senders.
 - `sent` plus a platform message ID proves dispatch, not receipt. The parent session notifies after delegated work.
 
+## Test Design
+
+- Unit tests execute owned logic; component tests cross process/filesystem boundaries; static checks inspect source. Classify each assertion by the evidence it provides.
+- Keep static checks only for a named correctness, safety, compatibility, or maintenance invariant not covered by its owning validator. Do not freeze current configuration, models, prose, inventories, or layout. Use existing parsers.
+- Preserve behavioral, schema, path, privacy, and runtime-boundary coverage. Exact output is valid when the owned function defines that contract. Audit removed assertions for lost coverage; use the existing runner.
+
 ## Delivery and Validation
 
 - Keep user docs focused on usage and requirements; do not add prose merely because tests changed. Omit redundant explanation. Put useful test rationale, fixture explanations, and constraints in the relevant example README, with detail where it helps maintenance. Keep temporary migration and validation history in the PR.
 
 - Track durable work, ownership, discussion, and decisions in GitHub; no parallel lists or minor-step tasks. Use Agent System's admitted lifecycle/prepared worktree; measure verified goal-aligned outcomes.
 - Issue-backed commits use `#<issue-number>: <description>`: lowercase ordinary prose, ALL CAPS proper names/acronyms; omit only lifecycle-owned prefixes. Deliver reviewable PRs with evidence. EMORI never merges.
-- Before every push or PR handoff, run the target repo's declared non-mutating checks and managed `git diff --check` in the delivery worktree after the final edit. Inspect repo guidance, package scripts, and CI; do not assume a `validate` script exists. Include lint/format, typecheck, the full unit suite, build, and plugin/package/release checks where available. Use declared runtimes and CI commands; focused tests do not replace the full gate. Fix failures and rerun; if blocked, report the command and blocker without pushing. Record commands, runtimes, and results in the PR. Include relevant ignore checks for guidance/ignore changes.
+- Before every push or PR handoff, inspect target guidance, package scripts, and CI. After the final edit, run declared non-mutating lint/format, typecheck, full unit, build, and plugin/package/release checks where available, plus managed `git diff --check`. Use declared runtimes and CI commands; focused tests do not replace the full gate. Fix failures and rerun; blockers stop the push. Record commands, runtimes, and results in the PR. Check relevant ignores after guidance/ignore changes.
 - Exclude executable Leia examples and scenarios from local pre-push checks; they run in CI. Static linting of their files is non-mutating and may run locally. Validation that meaningfully mutates the host, OpenClaw, or external systems needs an explicit request, including bootstrap, installs, onboarding, configuration, services, and networking.

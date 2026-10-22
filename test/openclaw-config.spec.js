@@ -138,22 +138,19 @@ describe('lib/setup/openclaw-config', () => {
     );
   });
 
-  it('should carry every owned static policy through one patch', () => {
+  it('should keep messaging send-only and skill changes proposal-only', () => {
     const patch = buildPatch();
-    assert.equal(patch.agents.entries.emori.models, undefined);
-    assert.equal(patch.agents.entries.emori.modelPolicy, undefined);
-    assert.equal(patch.agents.entries.emori.tools.profile, 'coding');
-    assert.equal(patch.agents.entries.emori.tools.exec.mode, 'auto');
     assert.deepEqual(patch.agents.entries.emori.tools.message.actions.allow, ['send']);
     assert.equal(patch.agents.entries.emori.tools.message.crossContext, null);
+    assert.equal(patch.skills.workshop.autonomous.mode, 'propose');
+  });
+
+  it('should insert the selected platform vector extension into the patch', () => {
+    const patch = buildPatch();
     assert.equal(
       patch.agents.entries.emori.memory.search.store.vector.extensionPath,
       vectorExtensionPath,
     );
-    assert.deepEqual(patch.agents.entries.emori.memory.search.sources, ['memory', 'sessions']);
-    assert.equal(patch.hooks.internal.entries['session-memory'].enabled, false);
-    assert.equal(patch.skills.workshop.autonomous.mode, 'propose');
-    assert.equal(patch.tools, undefined);
   });
 
   it('should leave collaboration-managed session visibility untouched and converge', () => {

@@ -3,6 +3,8 @@
 This scenario verifies EMORI's full setup and repeat convergence. Keeping both
 runs together proves idempotence against the state the first run created.
 Cross-agent plugin reuse is covered separately by [shared](../shared/README.md).
+Setup and model expectations come from the manifest; component-scoped assertions
+allow unrelated lifecycle findings without weakening setup convergence.
 
 The `--yes` consent applies only to this isolated CI profile. Validation must
 accept the declared issue feedback policy, and installation must activate intake
@@ -19,6 +21,18 @@ openclaw agent-system credentials set op --from-env
 # should prepare EMORI's checked-out workspace
 mkdir -p "$HOME/tanaab"
 git clone --no-local "$GITHUB_WORKSPACE" "$HOME/tanaab/emori"
+
+# should read expected setup and model declarations from the workspace
+cd "$GITHUB_WORKSPACE"
+bun --eval '
+  import { readFileSync } from "node:fs";
+  import { resolve } from "node:path";
+  const directory = resolve(".agent-system");
+  const yaml = (file) => Bun.YAML.parse(readFileSync(file, "utf8"));
+  const manifest = yaml(resolve(directory, "agent.yaml"));
+  const setup = ["setup-host", "setup-agent"].flatMap((key) => yaml(resolve(directory, manifest[key].file)).steps.map(({ id }) => id));
+  console.log(JSON.stringify({ setup, models: manifest.models, runtime: manifest.agent.runtime }));
+' > "${TMPDIR}/setup-expected.json"
 
 # should start the isolated gateway for session dispatch enrollment
 openclaw config set logging.consoleStyle '"json"' --strict-json
@@ -56,9 +70,9 @@ openclaw agent-system install --yes --json | tee "${TMPDIR}/setup-install.json" 
 openclaw-gateway diagnostics --debug > "${TMPDIR}/first-install-gateway.log" 2>&1 || true
 test "$install_status" -eq 0
 jq -e 'all(.warnings[]; .code != "github-notification-runtime-unsupported") and any(.outcomes[]; .component == "github-intake" and .code == "intake-activated" and .status == "updated")' "${TMPDIR}/setup-install.json"
-jq -e '.outcomes[0].component == "codex-plugin" and .outcomes[0].code == "codex-plugin-installed" and .outcomes[0].status == "created" and .outcomes[1].stepId == "brew-dependencies"' "${TMPDIR}/setup-install.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "workspace-memory", "canon-checkout", "canon-plugin", "imessage-plugin", "openclaw-config"]' "${TMPDIR}/setup-install.json"
-jq -e --arg brew "$(cat "${TMPDIR}/brew-expected-status")" '[.outcomes[] | select(.component == "setup") | .status] == [$brew, "updated", "updated", "updated", "updated", "updated"]' "${TMPDIR}/setup-install.json"
+jq -e '.outcomes as $outcomes | ([$outcomes | to_entries[] | select(.value.component == "codex-plugin" and .value.code == "codex-plugin-installed" and .value.status == "created") | .key] | first) as $plugin | ([$outcomes | to_entries[] | select(.value.component == "setup") | .key] | first) as $setup | $plugin != null and $setup != null and $plugin < $setup' "${TMPDIR}/setup-install.json"
+jq -e --slurpfile expected "${TMPDIR}/setup-expected.json" '[.outcomes[] | select(.component == "setup") | .stepId] == $expected[0].setup' "${TMPDIR}/setup-install.json"
+jq -e --arg brew "$(cat "${TMPDIR}/brew-expected-status")" 'all(.outcomes[] | select(.component == "setup"); .status == (if .stepId == "brew-dependencies" then $brew else "updated" end))' "${TMPDIR}/setup-install.json"
 test -d "$GITHUB_WORKSPACE/memory"
 test -f "$GITHUB_WORKSPACE/MEMORY.md"
 grep -Fx '# Memory' "$GITHUB_WORKSPACE/MEMORY.md"
@@ -106,17 +120,19 @@ jq -S .install "${TMPDIR}/codex-after-setup.json" > "${TMPDIR}/codex-receipt-bef
 openclaw config get plugins.entries.codex --json | jq -S . > "${TMPDIR}/codex-config-before.json"
 
 # should select the manifest-declared default model and effort
-openclaw config get agents.entries.emori.model.primary --json | jq -e '. == "openai/gpt-6-astra"'
-openclaw config get agents.entries.emori.thinkingDefault --json | jq -e '. == "high"'
+openclaw config get agents.entries.emori --json | jq -e --slurpfile expected "${TMPDIR}/setup-expected.json" '
+  .model.primary == $expected[0].models.default.model and
+  .thinkingDefault == $expected[0].models.default.effort
+'
 
 # should preserve existing fallbacks
 openclaw config get agents.entries.emori.model.fallbacks --json | jq -e '. == ["openai/gpt-6-luna"]'
 
 # should bind all manifest-declared models to Codex
-openclaw config get agents.entries.emori --json | jq -e '
+openclaw config get agents.entries.emori --json | jq -e --slurpfile expected "${TMPDIR}/setup-expected.json" '
   . as $agent |
-  ["openai/gpt-6-astra", "openai/gpt-6-luna", "openai/gpt-6.1-sol"] |
-  all(.[]; . as $model | $agent.models[$model].agentRuntime.id == "codex")
+  [$expected[0].models[].model] | unique |
+  all(.[]; . as $model | $agent.models[$model].agentRuntime.id == $expected[0].runtime)
 '
 
 # should allow selection of all manifest-declared models
@@ -124,7 +140,8 @@ openclaw config get agents --json | bun --eval '
   import { readFileSync } from "node:fs";
   import { resolveAllowedModelRef } from "openclaw/plugin-sdk/agent-runtime";
   const cfg = { agents: JSON.parse(readFileSync(0, "utf8")) };
-  for (const raw of ["openai/gpt-6-astra", "openai/gpt-6-luna", "openai/gpt-6.1-sol"]) {
+  const { models } = JSON.parse(readFileSync(`${process.env.TMPDIR}/setup-expected.json`, "utf8"));
+  for (const raw of new Set(Object.values(models).map(({ model }) => model))) {
     const result = resolveAllowedModelRef({ cfg, agentId: "emori", catalog: [], defaultProvider: "openai", raw });
     if ("error" in result) throw new Error(result.error);
     console.log(`Allowed: ${result.key}`);
@@ -227,24 +244,25 @@ cd "$GITHUB_WORKSPACE"
 test -f "${TMPDIR}/memory-before-repeat.md"
 openclaw agent-system install --yes --json | tee "${TMPDIR}/setup-reinstall.json"
 jq -e 'all(.warnings[]; .code != "github-notification-runtime-unsupported") and any(.outcomes[]; .component == "github-intake" and .code == "intake-retained" and .status == "unchanged")' "${TMPDIR}/setup-reinstall.json"
-jq -e '.outcomes[0].component == "codex-plugin" and .outcomes[0].code == "codex-plugin-unchanged" and .outcomes[0].status == "unchanged"' "${TMPDIR}/setup-reinstall.json"
-jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "workspace-memory", "canon-checkout", "canon-plugin", "imessage-plugin", "openclaw-config"]' "${TMPDIR}/setup-reinstall.json"
-jq -e '[.outcomes[] | select(.component == "setup" or .component == "models") | .status] | length == 7 and all(. == "unchanged")' "${TMPDIR}/setup-reinstall.json"
-jq -e 'all(.outcomes[]; .status != "updated" and .status != "created")' "${TMPDIR}/setup-reinstall.json"
+jq -e 'any(.outcomes[]; .component == "codex-plugin" and .code == "codex-plugin-unchanged" and .status == "unchanged")' "${TMPDIR}/setup-reinstall.json"
+jq -e --slurpfile expected "${TMPDIR}/setup-expected.json" '[.outcomes[] | select(.component == "setup") | .stepId] == $expected[0].setup' "${TMPDIR}/setup-reinstall.json"
+jq -e 'all(.outcomes[] | select(.component == "setup"); .status == "unchanged") and any(.outcomes[]; .component == "models") and all(.outcomes[] | select(.component == "models"); .status == "unchanged")' "${TMPDIR}/setup-reinstall.json"
 cmp "${TMPDIR}/memory-before-repeat.md" "$GITHUB_WORKSPACE/MEMORY.md"
 
 # should select the manifest-declared default model and effort after repeat setup
-openclaw config get agents.entries.emori.model.primary --json | jq -e '. == "openai/gpt-6-astra"'
-openclaw config get agents.entries.emori.thinkingDefault --json | jq -e '. == "high"'
+openclaw config get agents.entries.emori --json | jq -e --slurpfile expected "${TMPDIR}/setup-expected.json" '
+  .model.primary == $expected[0].models.default.model and
+  .thinkingDefault == $expected[0].models.default.effort
+'
 
 # should preserve existing fallbacks after repeat setup
 openclaw config get agents.entries.emori.model.fallbacks --json | jq -e '. == ["openai/gpt-6-luna"]'
 
 # should bind all manifest-declared models to Codex after repeat setup
-openclaw config get agents.entries.emori --json | jq -e '
+openclaw config get agents.entries.emori --json | jq -e --slurpfile expected "${TMPDIR}/setup-expected.json" '
   . as $agent |
-  ["openai/gpt-6-astra", "openai/gpt-6-luna", "openai/gpt-6.1-sol"] |
-  all(.[]; . as $model | $agent.models[$model].agentRuntime.id == "codex")
+  [$expected[0].models[].model] | unique |
+  all(.[]; . as $model | $agent.models[$model].agentRuntime.id == $expected[0].runtime)
 '
 
 # should allow selection of all manifest-declared models after repeat setup
@@ -252,7 +270,8 @@ openclaw config get agents --json | bun --eval '
   import { readFileSync } from "node:fs";
   import { resolveAllowedModelRef } from "openclaw/plugin-sdk/agent-runtime";
   const cfg = { agents: JSON.parse(readFileSync(0, "utf8")) };
-  for (const raw of ["openai/gpt-6-astra", "openai/gpt-6-luna", "openai/gpt-6.1-sol"]) {
+  const { models } = JSON.parse(readFileSync(`${process.env.TMPDIR}/setup-expected.json`, "utf8"));
+  for (const raw of new Set(Object.values(models).map(({ model }) => model))) {
     const result = resolveAllowedModelRef({ cfg, agentId: "emori", catalog: [], defaultProvider: "openai", raw });
     if ("error" in result) throw new Error(result.error);
     console.log(`Allowed: ${result.key}`);
