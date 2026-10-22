@@ -1,6 +1,18 @@
 # Workspace Registration Example
 
-This scenario verifies workspace registration, identity import, and the local voice-skill contract without configuring a model or starting a Gateway. It does not prove skill loading or model behavior.
+## What this example does
+
+Registers the checked-out repository as EMORI's workspace and imports its
+reviewed identity. It validates the resulting configuration while preserving the
+identity file and clean checkout.
+
+## What it doesn't do
+
+It does not configure a model, start a Gateway, or prove runtime skill loading or
+model behavior. Static voice-skill validation belongs to the local
+[development checks](../../README.md#development). Installed Canon skill availability belongs to
+[setup](../setup/README.md); credential installation belongs to
+[install](../install/README.md).
 
 ## Setup
 
@@ -32,12 +44,8 @@ grep -F '"avatar": "avatars/emori.png"' "${TMPDIR}/identity.json"
 # should validate the resulting OpenClaw configuration
 openclaw config validate --json | tr -d '[:space:]' | grep -F '"valid":true'
 
-# should validate the workspace voice skill
-bun "$GITHUB_WORKSPACE/skills/skill-author/scripts/validate-skill.js" --skill-dir "$GITHUB_WORKSPACE/skills/voice"
-
 # should preserve the reviewed identity file byte-for-byte
 cmp -s "${TMPDIR}/IDENTITY.before.md" "$GITHUB_WORKSPACE/IDENTITY.md"
-grep -Fx -- '- Name: EMORI' "$GITHUB_WORKSPACE/IDENTITY.md"
 
 # should leave the repository worktree clean
 git -C "$GITHUB_WORKSPACE" diff --exit-code

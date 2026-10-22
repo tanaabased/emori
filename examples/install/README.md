@@ -1,13 +1,22 @@
 # Install
 
-This scenario installs Agent System from source in an isolated OpenClaw profile,
-then validates and reconciles EMORI's checked-out workspace using her declared
-credentials while running host dependency setup and skipping agent setup.
+## What this example does
 
-The `--yes` consent applies only to this isolated CI profile. Validation must
-accept the declared issue feedback policy, and installation must activate intake
-then retain it on repeat. This does not demonstrate live assignment, feedback,
-or assessment execution.
+Installs and reconciles EMORI's checked-out workspace in an isolated OpenClaw
+profile using her declared credentials. It runs host dependency setup, verifies
+managed Git and GitHub identity, and checks intake activation. A repeat
+installation checks host setup convergence, intake retention, and preservation
+of private memory.
+
+The `--yes` consent applies only to this isolated CI profile. Automatic cron
+execution is disabled so registered schedules cannot start model turns during
+installation checks.
+
+## What it doesn't do
+
+It skips agent setup, which belongs to [setup](../setup/README.md), and does not
+exercise ongoing intake polling, feedback handling, model execution, or live
+Google operations. Shared plugin reuse belongs to [shared](../shared/README.md).
 
 ## Setup
 
@@ -21,6 +30,7 @@ mkdir -p "$HOME/tanaab"
 git clone --no-local "$GITHUB_WORKSPACE" "$HOME/tanaab/emori"
 
 # should start the isolated gateway for session dispatch enrollment
+openclaw config set cron.enabled false --strict-json
 openclaw config set logging.consoleStyle '"json"' --strict-json
 openclaw-gateway start
 ```
@@ -40,7 +50,7 @@ openclaw agent-system install --yes --skip-setup-agent --json | tee "${TMPDIR}/i
 openclaw-gateway diagnostics --debug > "${TMPDIR}/first-install-gateway.log" 2>&1 || true
 test "$install_status" -eq 0
 jq -e 'all(.warnings[]; .code != "github-notification-runtime-unsupported") and any(.outcomes[]; .component == "github-intake" and .code == "intake-activated" and .status == "updated")' "${TMPDIR}/install.json"
-jq -e '.outcomes[0].component == "codex-plugin" and .outcomes[0].code == "codex-plugin-installed" and .outcomes[0].status == "created" and .outcomes[1].stepId == "brew-dependencies"' "${TMPDIR}/install.json"
+jq -e 'any(.outcomes[]; .component == "codex-plugin" and .code == "codex-plugin-installed" and .status == "created")' "${TMPDIR}/install.json"
 jq -e '.outcomes | any(.component == "agent" and .status == "created")' "${TMPDIR}/install.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "workspace-memory"]' "${TMPDIR}/install.json"
 test -d "$GITHUB_WORKSPACE/memory"
@@ -61,11 +71,15 @@ cd "$GITHUB_WORKSPACE"
 test -f "${TMPDIR}/memory-before-repeat.md"
 openclaw agent-system install --yes --skip-setup-agent --json | tee "${TMPDIR}/reinstall.json"
 jq -e 'all(.warnings[]; .code != "github-notification-runtime-unsupported") and any(.outcomes[]; .component == "github-intake" and .code == "intake-retained" and .status == "unchanged")' "${TMPDIR}/reinstall.json"
-jq -e '.outcomes[0].component == "codex-plugin" and .outcomes[0].code == "codex-plugin-unchanged" and .outcomes[0].status == "unchanged"' "${TMPDIR}/reinstall.json"
+jq -e 'any(.outcomes[]; .component == "codex-plugin" and .code == "codex-plugin-unchanged" and .status == "unchanged")' "${TMPDIR}/reinstall.json"
 jq -e '.outcomes | any(.component == "agent" and .status == "unchanged")' "${TMPDIR}/reinstall.json"
 jq -e '[.outcomes[] | select(.component == "setup") | .stepId] == ["brew-dependencies", "workspace-memory"]' "${TMPDIR}/reinstall.json"
-jq -e '[.outcomes[] | select(.stepId == "brew-dependencies" or .stepId == "workspace-memory") | .status] == ["unchanged", "unchanged"]' "${TMPDIR}/reinstall.json"
+jq -e 'all(.outcomes[] | select(.component == "setup"); .status == "unchanged")' "${TMPDIR}/reinstall.json"
 cmp "${TMPDIR}/memory-before-repeat.md" "$GITHUB_WORKSPACE/MEMORY.md"
+
+# should use EMORI's managed git identity in her own workspace
+cd "$GITHUB_WORKSPACE"
+openclaw agent-system tool git --agent emori -- var GIT_AUTHOR_IDENT | grep -F 'EMORI <emori@tanaab.dev>'
 
 # should use EMORI's installed GitHub credential
 openclaw agent-system tool gh -- api user --jq .login | grep -Fx emoriwan
@@ -73,11 +87,4 @@ openclaw agent-system tool gh -- api user --jq .login | grep -Fx emoriwan
 # should leave EMORI's checkout clean
 git -C "$GITHUB_WORKSPACE" diff --exit-code
 test -z "$(git -C "$GITHUB_WORKSPACE" status --short --untracked-files=all)"
-```
-
-## Cleanup
-
-```bash
-# should stop the isolated gateway
-openclaw-gateway stop
 ```

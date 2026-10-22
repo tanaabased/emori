@@ -7,4 +7,10 @@ export default {
   bracketSpacing: true,
   proseWrap: 'preserve',
   endOfLine: 'lf',
+  overrides: [
+    {
+      files: '.agent-system/agent.yaml',
+      options: { singleQuote: false },
+    },
+  ],
 };

@@ -3,12 +3,32 @@ schema-version: 1
 agent:
   id: emori
   name: EMORI
+  runtime: codex
   email:
     from-environment: EMAIL
   description: Tanaab co-founder and operating partner.
-  runtime: codex
   avatar: avatars/emori.png
   emoji: 🧙‍♀️
+
+setup-host:
+  file: ./setup-host.yaml
+
+setup-agent:
+  file: ./setup-agent.yaml
+
+environment:
+  op: jp5zhxuc67n7uk3wfjgn5t4yam
+  set:
+    EMORI_SSH_KEY:
+      from-op: "op://2mh2ny4tegbi33yt3furutomzu/id_emori/private key?ssh-format=openssh"
+  required:
+    - EMAIL
+    - GH_TOKEN
+    - EMORI_SSH_KEY
+    - EMORI_MEMORY_BINDER
+    - GOG_CREDENTIALS_JSON
+    - GOG_TOKEN_JSON
+    - GOG_KEYRING_PASSWORD
 
 models:
   default:
@@ -29,39 +49,6 @@ memory:
     provider: openai
     model: text-embedding-3-small
     api-key: EMORI_MEMORY_BINDER
-
-backup:
-  output: .agent-system/backups
-  git-ignore: true
-  openclaw-state: required
-  include:
-    - '{MEMORY,DREAMS,BOOTSTRAP}.md'
-    - memory/**
-    - .private/**
-
-automations:
-  - id: backup-drive-nightly
-    enabled: true
-    runtimes: [openclaw]
-    schedule:
-      cron: '0 4 * * *'
-      timezone: America/New_York
-    run: [bun, scripts/backup-drive-task.js]
-    timeout-seconds: 3600
-
-environment:
-  op: jp5zhxuc67n7uk3wfjgn5t4yam
-  set:
-    EMORI_SSH_KEY:
-      from-op: 'op://2mh2ny4tegbi33yt3furutomzu/id_emori/private key?ssh-format=openssh'
-  required:
-    - EMAIL
-    - GH_TOKEN
-    - EMORI_SSH_KEY
-    - EMORI_MEMORY_BINDER
-    - GOG_CREDENTIALS_JSON
-    - GOG_TOKEN_JSON
-    - GOG_KEYRING_PASSWORD
 
 google:
   credential-encoding: base64
@@ -92,54 +79,54 @@ github:
   username: emoriwan
   token: GH_TOKEN
   ssh-keys:
-    key: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAqukphiWCZn3WmdIjDkeI57VMXG7TBPKupC+MfeWn2l'
+    key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAqukphiWCZn3WmdIjDkeI57VMXG7TBPKupC+MfeWn2l"
     title: EMORIKEY1
   ssh-signing-keys:
-    key: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAqukphiWCZn3WmdIjDkeI57VMXG7TBPKupC+MfeWn2l'
+    key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAqukphiWCZn3WmdIjDkeI57VMXG7TBPKupC+MfeWn2l"
     title: EMORIDENTITY1
   config:
     git-protocol: ssh
     spinner: disabled
     telemetry: disabled
-  notifications:
-    schema-version: 2
-    runtimes:
-      - openclaw
-    interval-minutes: 5
-    allowed-repository-owners:
-      - login: tanaabased
-        node-id: O_kgDODNGy1g
-      - login: pirog
-        node-id: MDQ6VXNlcjcxMzQyNA==
-      - login: lando
-        node-id: MDEyOk9yZ2FuaXphdGlvbjMxNjA1NTg0
-    issue-assignment:
-      mode: plan
-      allowed:
-        - login: pirog
-          node-id: MDQ6VXNlcjcxMzQyNA==
-          operator-owner: true
-        - login: emoriwan
-          node-id: U_kgDOEUqvpg
-      feedback:
-        inherit: true
-        allowed:
-          - login: smutlord
-            node-id: MDQ6VXNlcjMxNTk5ODk0
-      pull-request:
-        recipients:
-          - source: assignment-actor
-            roles:
-              - assignee
-          - login: pirog
-            node-id: MDQ6VXNlcjcxMzQyNA==
-            roles:
-              - assignee
-              - reviewer
+  schema-version: 3
+  runtimes:
+    - openclaw
+  allowed-repository-owners:
+    - org: tanaabased
+      node-id: O_kgDODNGy1g
+    - login: pirog
+      node-id: MDQ6VXNlcjcxMzQyNA==
+    - org: lando
+      node-id: MDEyOk9yZ2FuaXphdGlvbjMxNjA1NTg0
+  issue-assignment:
+    allowed:
+      - "@pirog"
+      - "@emoriwan"
+      - "@tanaabot"
+    reviewers:
+      - "@pirog"
+      - "@smutlord"
   policy:
     releases: allow
 
-setup-host:
-  file: ./setup-host.yaml
-setup-agent:
-  file: ./setup-agent.yaml
+backup:
+  output: .agent-system/backups
+  git-ignore: true
+  openclaw-state: required
+  include:
+    - "{MEMORY,DREAMS,BOOTSTRAP}.md"
+    - memory/**
+    - .private/**
+
+automations:
+  - id: backup-drive-nightly
+    enabled: true
+    runtimes:
+      - openclaw
+    schedule:
+      cron: "0 4 * * *"
+      timezone: America/New_York
+    run:
+      - bun
+      - scripts/backup-drive-task.js
+    timeout-seconds: 3600
