@@ -1,12 +1,18 @@
 # Shared
 
-The two small agent manifests are disposable fixtures in one isolated OpenClaw
-profile. The first install provisions Codex; the second must reuse it without
-changing its receipt, configuration, or the first agent. Repeating the second
-install checks convergence and preserves both agents.
+## What this example does
 
-Workspace setup is skipped: this scenario needs no credentials or EMORI's host
-dependencies. Her full installation is covered by [setup](../setup/README.md).
+Uses two small, disposable agent manifests in one isolated OpenClaw profile to
+verify shared Codex plugin reuse. Installing the second agent must preserve the
+plugin receipt, plugin configuration, and first agent. Repeating that installation
+checks convergence and preserves both agents.
+
+## What it doesn't do
+
+It skips workspace setup and needs no credentials or EMORI's host dependencies.
+It does not exercise model execution. EMORI's full setup belongs to
+[setup](../setup/README.md); credential and intake lifecycle checks belong to
+[install](../install/README.md).
 
 ## Setup
 

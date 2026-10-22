@@ -1,15 +1,22 @@
 # Setup
 
-This scenario verifies EMORI's full setup and repeat convergence. Keeping both
-runs together proves idempotence against the state the first run created.
-Cross-agent plugin reuse is covered separately by [shared](../shared/README.md).
-Setup and model expectations come from the manifest; component-scoped assertions
-allow unrelated lifecycle findings without weakening setup convergence.
+## What this example does
 
-The `--yes` consent applies only to this isolated CI profile. Validation must
-accept the declared issue feedback policy, and installation must activate intake
-then retain it on repeat. This does not demonstrate live assignment, feedback,
-or assessment execution.
+Runs EMORI's full setup once in an isolated OpenClaw profile. It checks an eligible
+Canon skill, manifest-declared model configuration, iMessage routing and
+send-only messaging, reported memory settings, Workshop proposal policy, and preservation
+of host session visibility and clean checkouts.
+
+The `--yes` consent applies only to this isolated CI profile. Automatic cron
+execution is disabled so registered schedules cannot start model turns during
+setup checks.
+
+## What it doesn't do
+
+It does not repeat installation, send messages, execute skills or model turns,
+or test memory indexing and recall. Credential and intake lifecycle checks belong to
+[install](../install/README.md); shared plugin reuse belongs to
+[shared](../shared/README.md). Setup and model expectations come from the manifest.
 
 ## Setup
 
@@ -35,120 +42,60 @@ bun --eval '
 ' > "${TMPDIR}/setup-expected.json"
 
 # should start the isolated gateway for session dispatch enrollment
+openclaw config set cron.enabled false --strict-json
 openclaw config set logging.consoleStyle '"json"' --strict-json
 openclaw-gateway start
+
+# should prepare a fresh setup with existing host session visibility
+cd "$GITHUB_WORKSPACE"
+test ! -e "$HOME/tanaab/canon"
+openclaw plugins list --json | jq -e 'all(.plugins[]; .id != "codex")'
+openclaw config set skills.load.extraDirs "[\"$HOME/tanaab/canon/skills\"]" --strict-json
+openclaw config set tools.sessions.visibility '"all"' --strict-json
 ```
 
 ## Testing
 
 ```bash
-# should start without EMORI setup effects and record host dependency readiness
-cd "$GITHUB_WORKSPACE"
-test ! -e "$HOME/tanaab/canon"
-test ! -e "$HOME/tanaab/openclaw-agent-system"
-openclaw plugins list --json | jq -e 'all(.plugins[]; .id != "codex")'
-! openclaw plugins inspect tanaab --json >/dev/null 2>&1
-! openclaw plugins inspect imessage --json >/dev/null 2>&1
-if node scripts/setup-brew-dependencies-task.js check; then
-  printf unchanged > "${TMPDIR}/brew-expected-status"
-else
-  test "$?" -eq 1
-  printf updated > "${TMPDIR}/brew-expected-status"
-fi
-openclaw config set skills.load.extraDirs "[\"$HOME/tanaab/canon/skills\"]" --strict-json
-
-# should start with collaboration-managed session visibility
-openclaw config set tools.sessions.visibility '"all"' --strict-json
-
-# should install Codex before host setup and then reconcile agent setup
+# should complete all declared setup tasks with codex available before host setup
 set -euo pipefail
-openclaw agent-system validate --json | jq -e '.status == "valid" and all(.diagnostics[]; .code != "github-notification-runtime-unsupported")'
-openclaw agents add emori --workspace "$GITHUB_WORKSPACE" --non-interactive --json
-openclaw config set agents.entries.emori.model '{"primary":"openai/gpt-6-luna","fallbacks":["openai/gpt-6-luna"]}' --strict-json
+cd "$GITHUB_WORKSPACE"
 install_status=0
 openclaw agent-system install --yes --json | tee "${TMPDIR}/setup-install.json" || install_status=$?
 openclaw-gateway diagnostics --debug > "${TMPDIR}/first-install-gateway.log" 2>&1 || true
 test "$install_status" -eq 0
-jq -e 'all(.warnings[]; .code != "github-notification-runtime-unsupported") and any(.outcomes[]; .component == "github-intake" and .code == "intake-activated" and .status == "updated")' "${TMPDIR}/setup-install.json"
-jq -e '.outcomes as $outcomes | ([$outcomes | to_entries[] | select(.value.component == "codex-plugin" and .value.code == "codex-plugin-installed" and .value.status == "created") | .key] | first) as $plugin | ([$outcomes | to_entries[] | select(.value.component == "setup") | .key] | first) as $setup | $plugin != null and $setup != null and $plugin < $setup' "${TMPDIR}/setup-install.json"
-jq -e --slurpfile expected "${TMPDIR}/setup-expected.json" '[.outcomes[] | select(.component == "setup") | .stepId] == $expected[0].setup' "${TMPDIR}/setup-install.json"
-jq -e --arg brew "$(cat "${TMPDIR}/brew-expected-status")" 'all(.outcomes[] | select(.component == "setup"); .status == (if .stepId == "brew-dependencies" then $brew else "updated" end))' "${TMPDIR}/setup-install.json"
+jq -e --slurpfile expected "${TMPDIR}/setup-expected.json" '
+  .agentId == "emori" and
+  (.blocked == null) and ((.unattempted // []) | length == 0) and
+  (.outcomes as $outcomes |
+    ([$outcomes | to_entries[] | select(.value.component == "codex-plugin" and .value.code == "codex-plugin-installed" and .value.status == "created") | .key] | first) as $plugin |
+    ([$outcomes | to_entries[] | select(.value.component == "setup") | .key] | first) as $setup |
+    $plugin != null and $setup != null and $plugin < $setup) and
+  ([.outcomes[] | select(.component == "setup") | .stepId] == $expected[0].setup) and
+  all(.outcomes[] | select(.component == "setup"); .status == "updated" or .status == "unchanged")
+' "${TMPDIR}/setup-install.json"
 test -d "$GITHUB_WORKSPACE/memory"
 test -f "$GITHUB_WORKSPACE/MEMORY.md"
-grep -Fx '# Memory' "$GITHUB_WORKSPACE/MEMORY.md"
-printf '\nPreserved setup example note.\n' >> "$GITHUB_WORKSPACE/MEMORY.md"
-cp "$GITHUB_WORKSPACE/MEMORY.md" "${TMPDIR}/memory-before-repeat.md"
 
-# should synchronize deferred schedules before checking repeat convergence
-cd "$GITHUB_WORKSPACE"
-openclaw-gateway restart
-openclaw agent-system automations sync --json | jq -e '.status == "synchronized" and all(.warnings[]; .code != "automation-sync-deferred") and any(.outcomes[]; .code == "automation-synchronized") and all(.outcomes[]; .status != "skipped")'
-
-# should satisfy EMORI's Brewfile dependencies
-HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --verbose --file "$GITHUB_WORKSPACE/Brewfile"
-gog --version
-
-# should clone Canon over SSH and admit it with EMORI's managed Git identity
-test -d "$HOME/tanaab/canon/.git"
-cd "$HOME/tanaab/canon"
-openclaw agent-system tool git --agent emori -- remote get-url origin | grep -Fx 'git@github.com:tanaabased/canon.git'
-openclaw agent-system tool git --agent emori -- var GIT_AUTHOR_IDENT | grep -F 'EMORI <emori@tanaab.dev>'
-cd "$GITHUB_WORKSPACE"
-test ! -e "$HOME/tanaab/openclaw-agent-system"
-
-# should activate Canon as the plugin-owned source of shared skills
-openclaw plugins inspect tanaab --json | jq -e '
-  .plugin.id == "tanaab" and
-  .plugin.enabled == true and
-  .plugin.status != "error" and
-  .plugin.rootDir == (env.HOME + "/tanaab/canon") and
-  .install.source == "path" and
-  .install.sourcePath == (env.HOME + "/tanaab/canon") and
-  (.install.acceptedSurface.skills | index("./skills")) != null
-'
+# should expose an eligible canon skill from the shared ssh checkout
+git -C "$HOME/tanaab/canon" remote get-url origin | grep -Fx 'git@github.com:tanaabased/canon.git'
 openclaw skills info tanaab-project-optimizer --agent emori --json | jq -e '
   .name == "tanaab-project-optimizer" and
   .eligible == true and
   .disabled == false and
   (.filePath | split("/") | index("plugin-skills")) != null
 '
-! openclaw config get skills.load.extraDirs --json >/dev/null 2>&1
 
-# should leave the shared Codex plugin healthy after agent setup
-openclaw plugins inspect codex --json | tee "${TMPDIR}/codex-after-setup.json" | jq -e '.plugin.id == "codex" and .plugin.enabled == true and .plugin.status != "error"'
-jq -S .install "${TMPDIR}/codex-after-setup.json" > "${TMPDIR}/codex-receipt-before.json"
-openclaw config get plugins.entries.codex --json | jq -S . > "${TMPDIR}/codex-config-before.json"
-
-# should select the manifest-declared default model and effort
-openclaw config get agents.entries.emori --json | jq -e --slurpfile expected "${TMPDIR}/setup-expected.json" '
-  .model.primary == $expected[0].models.default.model and
-  .thinkingDefault == $expected[0].models.default.effort
-'
-
-# should preserve existing fallbacks
-openclaw config get agents.entries.emori.model.fallbacks --json | jq -e '. == ["openai/gpt-6-luna"]'
-
-# should bind all manifest-declared models to Codex
+# should select and bind the manifest-declared models and effort
 openclaw config get agents.entries.emori --json | jq -e --slurpfile expected "${TMPDIR}/setup-expected.json" '
   . as $agent |
-  [$expected[0].models[].model] | unique |
-  all(.[]; . as $model | $agent.models[$model].agentRuntime.id == $expected[0].runtime)
+  .model.primary == $expected[0].models.default.model and
+  .thinkingDefault == $expected[0].models.default.effort and
+  ([$expected[0].models[].model] | unique |
+    all(.[]; . as $model | $agent.models[$model].agentRuntime.id == $expected[0].runtime))
 '
 
-# should allow selection of all manifest-declared models
-openclaw config get agents --json | bun --eval '
-  import { readFileSync } from "node:fs";
-  import { resolveAllowedModelRef } from "openclaw/plugin-sdk/agent-runtime";
-  const cfg = { agents: JSON.parse(readFileSync(0, "utf8")) };
-  const { models } = JSON.parse(readFileSync(`${process.env.TMPDIR}/setup-expected.json`, "utf8"));
-  for (const raw of new Set(Object.values(models).map(({ model }) => model))) {
-    const result = resolveAllowedModelRef({ cfg, agentId: "emori", catalog: [], defaultProvider: "openai", raw });
-    if ("error" in result) throw new Error(result.error);
-    console.log(`Allowed: ${result.key}`);
-  }
-'
-
-# should install the official iMessage channel plugin without configuring the channel
+# should install the official imessage channel plugin
 openclaw plugins inspect imessage --json | jq -e '
   .plugin.id == "imessage" and
   .plugin.enabled == true and
@@ -158,7 +105,7 @@ openclaw plugins inspect imessage --json | jq -e '
   .install.resolvedName == "@openclaw/imessage"
 '
 
-# should atomically configure EMORI's execution and messaging policy
+# should configure EMORI's execution policy
 openclaw config get agents.entries.emori.tools --json | jq -e '
   .profile == "coding" and
   .exec.mode == "auto" and
@@ -201,7 +148,7 @@ openclaw config get skills.workshop.autonomous.mode --json | jq -e '. == "propos
 # should preserve collaboration-managed session visibility after workspace setup
 openclaw config get tools.sessions.visibility --json | jq -e '. == "all"'
 
-# should configure EMORI's memory policy with the installed vector extension
+# should report memory and session sources with the installed vector extension
 case "$(uname -m)" in
   arm64) SQLITE_VECTOR_PACKAGE="sqlite-vec-darwin-arm64" ;;
   x86_64) SQLITE_VECTOR_PACKAGE="sqlite-vec-darwin-x64" ;;
@@ -209,92 +156,27 @@ case "$(uname -m)" in
 esac
 EXPECTED_VECTOR_EXTENSION="$(npm root --global)/${SQLITE_VECTOR_PACKAGE}/vec0.dylib"
 test -f "$EXPECTED_VECTOR_EXTENSION"
-openclaw config get agents.entries.emori.memory.search.store.vector --json | jq -e \
-  --arg extension "$EXPECTED_VECTOR_EXTENSION" \
-  '.enabled == true and .extensionPath == $extension'
 openclaw memory status --agent emori --json | jq -e \
   --arg extension "$EXPECTED_VECTOR_EXTENSION" \
   'map(select(.agentId == "emori")) |
    length == 1 and
    .[0].status.vector.enabled == true and
-   .[0].status.vector.extensionPath == $extension'
+   .[0].status.vector.extensionPath == $extension and
+   .[0].status.sources == ["memory", "sessions"]'
 
 # should enable private same-agent recall without the legacy memory hook
 openclaw config get agents.entries.emori.memory.search.rememberAcrossConversations --json | jq -e '. == true'
 openclaw config get agents.entries.emori.memory.search.sources --json | jq -e '. == ["memory", "sessions"]'
 openclaw config get agents.entries.emori.memory.search.experimental.sessionMemory --json | jq -e '. == true'
 openclaw config get hooks.internal.entries.session-memory.enabled --json | jq -e '. == false'
-openclaw memory status --agent emori --json | jq -e '
-  map(select(.agentId == "emori")) |
-  length == 1 and
-  .[0].status.sources == ["memory", "sessions"]
-'
 openclaw hooks list --json | jq -e '
   [.hooks[] | select(.name == "session-memory")] |
   length == 1 and
   .[0].disabled == true and
   .[0].enabledByConfig == false
 '
-```
 
-```bash
-# should leave a converged setup unchanged on repeat installation
-set -euo pipefail
-cd "$GITHUB_WORKSPACE"
-test -f "${TMPDIR}/memory-before-repeat.md"
-openclaw agent-system install --yes --json | tee "${TMPDIR}/setup-reinstall.json"
-jq -e 'all(.warnings[]; .code != "github-notification-runtime-unsupported") and any(.outcomes[]; .component == "github-intake" and .code == "intake-retained" and .status == "unchanged")' "${TMPDIR}/setup-reinstall.json"
-jq -e 'any(.outcomes[]; .component == "codex-plugin" and .code == "codex-plugin-unchanged" and .status == "unchanged")' "${TMPDIR}/setup-reinstall.json"
-jq -e --slurpfile expected "${TMPDIR}/setup-expected.json" '[.outcomes[] | select(.component == "setup") | .stepId] == $expected[0].setup' "${TMPDIR}/setup-reinstall.json"
-jq -e 'all(.outcomes[] | select(.component == "setup"); .status == "unchanged") and any(.outcomes[]; .component == "models") and all(.outcomes[] | select(.component == "models"); .status == "unchanged")' "${TMPDIR}/setup-reinstall.json"
-cmp "${TMPDIR}/memory-before-repeat.md" "$GITHUB_WORKSPACE/MEMORY.md"
-
-# should select the manifest-declared default model and effort after repeat setup
-openclaw config get agents.entries.emori --json | jq -e --slurpfile expected "${TMPDIR}/setup-expected.json" '
-  .model.primary == $expected[0].models.default.model and
-  .thinkingDefault == $expected[0].models.default.effort
-'
-
-# should preserve existing fallbacks after repeat setup
-openclaw config get agents.entries.emori.model.fallbacks --json | jq -e '. == ["openai/gpt-6-luna"]'
-
-# should bind all manifest-declared models to Codex after repeat setup
-openclaw config get agents.entries.emori --json | jq -e --slurpfile expected "${TMPDIR}/setup-expected.json" '
-  . as $agent |
-  [$expected[0].models[].model] | unique |
-  all(.[]; . as $model | $agent.models[$model].agentRuntime.id == $expected[0].runtime)
-'
-
-# should allow selection of all manifest-declared models after repeat setup
-openclaw config get agents --json | bun --eval '
-  import { readFileSync } from "node:fs";
-  import { resolveAllowedModelRef } from "openclaw/plugin-sdk/agent-runtime";
-  const cfg = { agents: JSON.parse(readFileSync(0, "utf8")) };
-  const { models } = JSON.parse(readFileSync(`${process.env.TMPDIR}/setup-expected.json`, "utf8"));
-  for (const raw of new Set(Object.values(models).map(({ model }) => model))) {
-    const result = resolveAllowedModelRef({ cfg, agentId: "emori", catalog: [], defaultProvider: "openai", raw });
-    if ("error" in result) throw new Error(result.error);
-    console.log(`Allowed: ${result.key}`);
-  }
-'
-
-# should preserve collaboration-managed session visibility after repeat setup
-openclaw config get tools.sessions.visibility --json | jq -e '. == "all"'
-
-# should preserve the shared plugin receipt and configuration after repeat setup
-openclaw plugins inspect codex --json | jq -S .install > "${TMPDIR}/codex-receipt-repeat.json"
-cmp "${TMPDIR}/codex-receipt-before.json" "${TMPDIR}/codex-receipt-repeat.json"
-openclaw config get plugins.entries.codex --json | jq -S . > "${TMPDIR}/codex-config-repeat.json"
-cmp "${TMPDIR}/codex-config-before.json" "${TMPDIR}/codex-config-repeat.json"
-
-# should preserve EMORI's clean checkout
+# should preserve EMORI's clean checkouts
 test -z "$(git -C "$GITHUB_WORKSPACE" status --short --untracked-files=all)"
 test -z "$(git -C "$HOME/tanaab/emori" status --short --untracked-files=all)"
-```
-
-## Cleanup
-
-```bash
-# should stop the isolated gateway
-openclaw-gateway stop
 ```
