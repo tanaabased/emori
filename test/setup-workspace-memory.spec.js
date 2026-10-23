@@ -5,6 +5,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import ignore from 'ignore';
+
 const task = fileURLToPath(new URL('../scripts/setup-workspace-memory-task.js', import.meta.url));
 const repository = dirname(dirname(task));
 const seed = '# Memory\n\nPrivate, curated notes for this agent.\n';
@@ -98,15 +100,9 @@ describe('workspace memory setup task', () => {
       readFileSync(join(repository, '.agent-system', manifest['setup-host'].file), 'utf8'),
     );
     assert.ok(hostSetup.steps.some(({ id }) => id === 'workspace-memory'));
-    const ignored = spawnSync(
-      'git',
-      ['check-ignore', '--no-index', 'MEMORY.md', 'memory/note.md'],
-      {
-        cwd: repository,
-        encoding: 'utf8',
-      },
-    );
-    assert.equal(ignored.status, 0, ignored.stderr);
-    assert.deepEqual(ignored.stdout.trim().split('\n'), ['MEMORY.md', 'memory/note.md']);
+    const ignored = ignore().add(readFileSync(join(repository, '.gitignore'), 'utf8'));
+    assert.equal(ignored.ignores('MEMORY.md'), true);
+    assert.equal(ignored.ignores('memory/note.md'), true);
+    assert.equal(ignored.ignores('README.md'), false);
   });
 });
