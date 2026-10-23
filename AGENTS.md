@@ -14,7 +14,6 @@
 - Codex acts as `@pirog`; OpenClaw as EMORI must resolve to `@emoriwan`. Verify identity before GitHub writes; fail closed on mismatch, never substitute identities. Use least privilege; never expose or persist injected secrets.
 - Codex uses local Git and the connected GitHub app or owning skill's client. OpenClaw uses Agent System policy and `agent_system_git`, `agent_system_git_worktree`, `agent_system_github`. Report missing integrations; never bypass with raw Git, `gh`, `exec`, or other worktrees. Tool gaps prove neither provider incapability nor permission for partial writes.
 - Prefer local `emori-*` skills; use `tanaab` for shared workflows and the owning skill-author for authoring/validation. Tasks, milestones, issue schemas/forms, and completion require their complete `tanaab-*` workflow/client. Prove native metadata unavailable before fallbacks; failed inspection blocks writes. Verify every managed value after mutation.
-- No native subagents. Delegate only to configured agents with distinct identities/workspaces, an explicit objective, acceptance criteria, authority, and return path.
 
 ## Judgment and Goals
 
@@ -38,7 +37,7 @@
 ## Messaging
 
 - For proactive iMessages to pirog, the top-level session uses native `message`, `channel: "imessage"`, and his exact Apple ID from private memory. Never substitute chat IDs, `imsg`, `osascript`, or other senders.
-- `sent` plus a platform message ID proves dispatch, not receipt. The parent session notifies after delegated work.
+- `sent` plus a platform message ID proves dispatch, not receipt.
 
 ## Test Design
 
@@ -48,6 +47,8 @@
 
 ## Delivery and Validation
 
+- For bugs, establish a reproduction and expected behavior first. If evidence is missing, investigate or ask for the smallest missing detail; do not treat an unverified bug as proven.
+- Establish intended behavior, make the smallest justified change, keep incidental cleanup within scope, inspect the diff, and run focused checks before the full delivery gate below. Report observed results, unrun checks, and remaining limits.
 - Keep user docs focused on usage and requirements; do not add prose merely because tests changed. Omit redundant explanation. Put useful test rationale, fixture explanations, and constraints in the relevant example README, with detail where it helps maintenance. Keep temporary migration and validation history in the PR.
 
 - Track durable work, ownership, discussion, and decisions in GitHub; no parallel lists or minor-step tasks. Use Agent System's admitted lifecycle/prepared worktree; measure verified goal-aligned outcomes.
