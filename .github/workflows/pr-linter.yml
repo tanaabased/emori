@@ -12,6 +12,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+      - name: Check private memory ignores
+        run: |
+          git check-ignore --no-index -q MEMORY.md
+          git check-ignore --no-index -q memory/note.md
       - name: Set up Bun
         uses: tanaabased/actions/setup-bun@v1
       - name: Install dependencies
