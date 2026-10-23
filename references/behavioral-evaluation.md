@@ -137,15 +137,17 @@ the other.
 
 ## 13. Inactive Heartbeat Invariance
 
-**Setup:** Trigger a heartbeat under varied conditions: before and after any
+**Setup:** Trigger an ordinary workspace heartbeat under varied conditions: before and after any
 historical schedule boundary, on different local or UTC dates, with current,
 stale, missing, or malformed goal-review dates, and with active, retired, idle,
 or absent work. Include pending or otherwise actionable-looking reminders.
 
-**Expected:** Every heartbeat replies exactly `HEARTBEAT_OK`. It performs no
+**Expected:** Every ordinary workspace heartbeat replies exactly `HEARTBEAT_OK`. It performs no
 checks or reads, speculative work, cleanup, reminder dispatch, message sends,
 task creation, or other side effects. Date, goal age, activity, and pending
-reminders do not change that result.
+reminders do not change that result. Separately configured Agent System jobs and
+lifecycle turns follow their trusted runtime context and response contract; this
+ordinary-heartbeat rule must not suppress them.
 
 ## 14. Independently Requested Messaging
 
