@@ -2,10 +2,11 @@
 
 ## What this example does
 
-Runs EMORI's full setup once in an isolated OpenClaw profile. It checks an eligible
+Runs EMORI's full setup and repeat reconciliation in an isolated OpenClaw profile. It checks an eligible
 Canon skill, manifest-declared model configuration, iMessage routing and
-send-only messaging, reported memory settings, Workshop proposal policy, and preservation
-of host session visibility and clean checkouts.
+send-only messaging, SQLite vector loading, Workshop background learning disabled,
+and preservation of host session visibility and clean checkouts. It verifies the
+managed Codex dependency pair against Agent System's requirement, not an EMORI pin.
 
 The `--yes` consent applies only to this isolated CI profile. Automatic cron
 execution is disabled so registered schedules cannot start model turns during
@@ -13,7 +14,7 @@ setup checks.
 
 ## What it doesn't do
 
-It does not repeat installation, send messages, execute skills or model turns,
+It does not send messages, execute skills or model turns,
 or test memory indexing and recall. Credential and intake lifecycle checks belong to
 [install](../install/README.md); shared plugin reuse belongs to
 [shared](../shared/README.md). Setup and model expectations come from the manifest.
@@ -86,6 +87,11 @@ openclaw skills info tanaab-project-optimizer --agent emori --json | jq -e '
   (.filePath | split("/") | index("plugin-skills")) != null
 '
 
+# should resolve the Codex dependency pair owned by Agent System
+openclaw plugins inspect agent-system --json > "${TMPDIR}/agent-system.json"
+openclaw plugins inspect codex --json > "${TMPDIR}/codex.json"
+node "$GITHUB_WORKSPACE/examples/setup/codex-dependencies.mjs" "${TMPDIR}/agent-system.json" "${TMPDIR}/codex.json"
+
 # should select and bind the manifest-declared models and effort
 openclaw config get agents.entries.emori --json | jq -e --slurpfile expected "${TMPDIR}/setup-expected.json" '
   . as $agent |
@@ -142,8 +148,19 @@ openclaw config get bindings --json | jq -e '
 '
 ! openclaw config get session.dmScope --json >/dev/null 2>&1
 
-# should configure Workshop proposal policy
-openclaw config get skills.workshop.autonomous.mode --json | jq -e '. == "propose"'
+# should disable Workshop background learning without reviving proposal staging
+openclaw config get skills.workshop.autonomous.mode --json | jq -e '. == "off"'
+
+# should validate the installed merged configuration with its plugins
+openclaw config validate --json | jq -e '.valid == true'
+
+# should reject the removed Workshop proposal mode without applying it
+set -euo pipefail
+if openclaw config patch --file "$GITHUB_WORKSPACE/examples/setup/unsupported-workshop.patch.json" --dry-run --json > "${TMPDIR}/unsupported-workshop.json"; then
+  exit 1
+fi
+jq -e '.ok == false and any(.errors[]; .kind == "schema" and (.message | contains("skills.workshop.autonomous.mode")))' "${TMPDIR}/unsupported-workshop.json"
+openclaw config get skills.workshop.autonomous.mode --json | jq -e '. == "off"'
 
 # should preserve collaboration-managed session visibility after workspace setup
 openclaw config get tools.sessions.visibility --json | jq -e '. == "all"'
@@ -156,6 +173,7 @@ case "$(uname -m)" in
 esac
 EXPECTED_VECTOR_EXTENSION="$(npm root --global)/${SQLITE_VECTOR_PACKAGE}/vec0.dylib"
 test -f "$EXPECTED_VECTOR_EXTENSION"
+node "$GITHUB_WORKSPACE/examples/setup/vector-extension.mjs" "$EXPECTED_VECTOR_EXTENSION"
 openclaw memory status --agent emori --json | jq -e \
   --arg extension "$EXPECTED_VECTOR_EXTENSION" \
   'map(select(.agentId == "emori")) |
@@ -175,6 +193,24 @@ openclaw hooks list --json | jq -e '
   .[0].disabled == true and
   .[0].enabledByConfig == false
 '
+
+# should converge on full repeat reconciliation without renewed policy or model drift
+set -euo pipefail
+cd "$GITHUB_WORKSPACE"
+for section in agents bindings channels hooks skills tools; do
+  openclaw config get "$section" --json | jq -S . > "${TMPDIR}/${section}-before.json"
+done
+openclaw agent-system install --yes --json | tee "${TMPDIR}/setup-reinstall.json"
+jq -e --slurpfile expected "${TMPDIR}/setup-expected.json" '
+  .blocked == null and ((.unattempted // []) | length == 0) and
+  ([.outcomes[] | select(.component == "setup") | .stepId] == $expected[0].setup) and
+  all(.outcomes[] | select(.component == "setup"); .status == "unchanged")
+' "${TMPDIR}/setup-reinstall.json"
+for section in agents bindings channels hooks skills tools; do
+  openclaw config get "$section" --json | jq -S . > "${TMPDIR}/${section}-after.json"
+  cmp "${TMPDIR}/${section}-before.json" "${TMPDIR}/${section}-after.json"
+done
+openclaw config validate --json | jq -e '.valid == true'
 
 # should preserve EMORI's clean checkouts
 test -z "$(git -C "$GITHUB_WORKSPACE" status --short --untracked-files=all)"

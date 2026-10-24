@@ -29,6 +29,10 @@ describe('lib/setup/openclaw-config', () => {
       sqliteVectorExtensionPath('/opt/homebrew/lib/node_modules\n', 'darwin', 'arm64'),
       vectorExtensionPath,
     );
+    assert.equal(
+      sqliteVectorExtensionPath('/usr/local/lib/node_modules\n', 'darwin', 'x64'),
+      '/usr/local/lib/node_modules/sqlite-vec-darwin-x64/vec0.dylib',
+    );
   });
 
   it('should preserve shared grants and leave model admission to the manifest', () => {
@@ -138,11 +142,11 @@ describe('lib/setup/openclaw-config', () => {
     );
   });
 
-  it('should keep messaging send-only and skill changes proposal-only', () => {
+  it('should keep messaging send-only and background learning disabled', () => {
     const patch = buildPatch();
     assert.deepEqual(patch.agents.entries.emori.tools.message.actions.allow, ['send']);
     assert.equal(patch.agents.entries.emori.tools.message.crossContext, null);
-    assert.equal(patch.skills.workshop.autonomous.mode, 'propose');
+    assert.equal(patch.skills.workshop.autonomous.mode, 'off');
   });
 
   it('should insert the selected platform vector extension into the patch', () => {

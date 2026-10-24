@@ -67,7 +67,7 @@
   "skills": {
     "workshop": {
       "autonomous": {
-        "mode": "propose"
+        "mode": "off"
       }
     }
   }
