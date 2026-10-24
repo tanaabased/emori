@@ -46,7 +46,7 @@ jobs:
           TMPDIR: ${{ github.workspace }}/examples/${{ matrix.example }}/.tmp
         run: |
           mkdir -p "$TMPDIR"
-          if [[ '${{ matrix.example }}' == install ]]; then
+          if [[ '${{ matrix.example }}' == install || '${{ matrix.example }}' == setup ]]; then
             export OPENCLAW_PLUGIN_LIFECYCLE_TRACE=1
             export EMORI_ENROLLMENT_TRACE_FILE="$TMPDIR/enrollment-trace.jsonl"
             export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--import=$GITHUB_WORKSPACE/examples/install/trace-enrollment.js"
