@@ -16,7 +16,11 @@ jobs:
       fail-fast: false
       matrix:
         example:
+          - workspace
           - install
+          - setup
+          - shared
+          - backup
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -42,9 +46,11 @@ jobs:
           TMPDIR: ${{ github.workspace }}/examples/${{ matrix.example }}/.tmp
         run: |
           mkdir -p "$TMPDIR"
-          export OPENCLAW_PLUGIN_LIFECYCLE_TRACE=1
-          export EMORI_ENROLLMENT_TRACE_FILE="$TMPDIR/enrollment-trace.jsonl"
-          export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--import=$GITHUB_WORKSPACE/examples/install/trace-enrollment.js"
+          if [[ '${{ matrix.example }}' == install ]]; then
+            export OPENCLAW_PLUGIN_LIFECYCLE_TRACE=1
+            export EMORI_ENROLLMENT_TRACE_FILE="$TMPDIR/enrollment-trace.jsonl"
+            export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--import=$GITHUB_WORKSPACE/examples/install/trace-enrollment.js"
+          fi
           # Preserve the action-installed OpenClaw's position on PATH.
           leia "examples/${{ matrix.example }}/README.md" --retry 0
       - name: RUNNING A LEVEL THREE DIAGNOSTICS
