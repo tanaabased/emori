@@ -46,6 +46,11 @@ jobs:
           TMPDIR: ${{ github.workspace }}/examples/${{ matrix.example }}/.tmp
         run: |
           mkdir -p "$TMPDIR"
+          if [[ '${{ matrix.example }}' == install || '${{ matrix.example }}' == setup ]]; then
+            export OPENCLAW_PLUGIN_LIFECYCLE_TRACE=1
+            export EMORI_ENROLLMENT_TRACE_FILE="$TMPDIR/enrollment-trace.jsonl"
+            export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--import=$GITHUB_WORKSPACE/examples/install/trace-enrollment.js"
+          fi
           # Preserve the action-installed OpenClaw's position on PATH.
           leia "examples/${{ matrix.example }}/README.md" --retry 0
       - name: RUNNING A LEVEL THREE DIAGNOSTICS
@@ -82,6 +87,13 @@ jobs:
             cat "$TMPDIR/first-install-gateway.log"
             printf '::endgroup::\n'
           fi
+          for trace in enrollment-trace.jsonl first-install-gateway-full.log; do
+            if test -f "$TMPDIR/$trace"; then
+              printf '\n::group::%s\n' "$trace"
+              cat "$TMPDIR/$trace"
+              printf '::endgroup::\n'
+            fi
+          done
           printf '\n::group::Gateway after scenario\n'
           openclaw-gateway diagnostics --debug
           printf '::endgroup::\n'
