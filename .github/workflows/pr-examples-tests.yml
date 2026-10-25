@@ -28,7 +28,8 @@ jobs:
         shell: bash
         run: echo "$GITHUB_WORKSPACE/node_modules/.bin" >> "$GITHUB_PATH"
       - name: Set up OpenClaw
-        uses: tanaabased/actions/setup-openclaw@v1
+        # Temporary Actions #62 trial; restore @v1 after publication.
+        uses: tanaabased/actions/setup-openclaw@f29b9d653cff05922d36b315cb0e064a7b9f58e1
         with:
           agent-system: github:tanaabased/openclaw-agent-system#main
       - name: Set up Bun
