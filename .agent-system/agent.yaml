@@ -119,7 +119,7 @@ backup:
     - .private/**
 
 automations:
-  - id: backup-drive-nightly
+  - id: backup-agent-nightly
     enabled: true
     runtimes:
       - openclaw
