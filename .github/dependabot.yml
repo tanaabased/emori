@@ -8,6 +8,8 @@ updates:
       dependencies:
         applies-to: version-updates
         update-types: ['major', 'minor', 'patch']
+    ignore:
+      - dependency-name: 'openclaw'
 
   - package-ecosystem: 'github-actions'
     directory: '/'
