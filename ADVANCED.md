@@ -39,6 +39,11 @@ and are reconciled from the manifest. Make non-model workspace policy changes in
 that fragment and rerun installation; do not apply the raw fragment directly,
 which would bypass merge logic and replace shared arrays.
 
+Workshop is explicitly `off`: background learning and unused-skill cleanup are
+disabled. OpenClaw removed proposal staging; `off` does not restore review before
+each change. Ask EMORI to save or update a learned skill, or use `/learn`, when
+you want to learn from a conversation. This requires the `skill_workshop` tool.
+
 ## Private continuity
 
 Setup does not restore private memory, import conversations, or force an index

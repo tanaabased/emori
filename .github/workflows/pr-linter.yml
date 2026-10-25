@@ -16,6 +16,8 @@ jobs:
         run: |
           git check-ignore --no-index -q MEMORY.md
           git check-ignore --no-index -q memory/note.md
+      - name: Set up Node.js
+        uses: tanaabased/actions/setup-node@v1
       - name: Set up Bun
         uses: tanaabased/actions/setup-bun@v1
       - name: Install dependencies
