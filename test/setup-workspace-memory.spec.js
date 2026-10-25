@@ -1,96 +1,95 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
-import { lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  lstatSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const task = fileURLToPath(new URL('../scripts/setup-workspace-memory-task.js', import.meta.url));
-const repository = dirname(dirname(task));
+import { applyWorkspaceMemory, checkWorkspaceMemory } from '../lib/setup/workspace-memory.js';
+
+const repository = fileURLToPath(new URL('../', import.meta.url));
 const seed = '# Memory\n\nPrivate, curated notes for this agent.\n';
 
-function workspace() {
-  return mkdtempSync(join(tmpdir(), 'emori-workspace-memory-'));
-}
-
-function run(mode, cwd) {
-  return spawnSync(task, [mode], { cwd, encoding: 'utf8' });
-}
-
-describe('workspace memory setup task', () => {
+describe('lib/setup/workspace-memory', () => {
   let directory;
 
-  afterEach(() => {
-    if (directory) rmSync(directory, { recursive: true, force: true });
-    directory = undefined;
+  beforeEach(() => {
+    directory = mkdtempSync(join(tmpdir(), 'emori-workspace-memory-'));
   });
 
-  it('creates private paths on a fresh workspace, checks without writing, and is repeatable', () => {
-    directory = workspace();
-    const before = run('check', directory);
-    assert.equal(before.status, 1);
-    assert.equal(lstatSync(directory).isDirectory(), true);
-    assert.throws(() => lstatSync(join(directory, 'memory')));
-    assert.throws(() => lstatSync(join(directory, 'MEMORY.md')));
+  afterEach(() => {
+    rmSync(directory, { recursive: true, force: true });
+  });
 
-    assert.equal(run('apply', directory).status, 0);
+  it('should check without changing a fresh workspace, then initialize both paths', () => {
+    assert.equal(checkWorkspaceMemory(directory), false);
+    assert.deepEqual(readdirSync(directory), []);
+
+    applyWorkspaceMemory(directory);
     assert.equal(lstatSync(join(directory, 'memory')).isDirectory(), true);
     assert.equal(lstatSync(join(directory, 'MEMORY.md')).isFile(), true);
     assert.equal(readFileSync(join(directory, 'MEMORY.md'), 'utf8'), seed);
-    assert.equal(run('check', directory).status, 0);
-    assert.equal(run('apply', directory).status, 0);
-    assert.equal(readFileSync(join(directory, 'MEMORY.md'), 'utf8'), seed);
+    assert.equal(checkWorkspaceMemory(directory), true);
   });
 
-  it('fills only the absent path for either partial workspace state', () => {
-    directory = workspace();
+  it('should create only the missing memory file in a partial workspace', () => {
     mkdirSync(join(directory, 'memory'));
-    assert.equal(run('apply', directory).status, 0);
+    assert.equal(checkWorkspaceMemory(directory), false);
+    applyWorkspaceMemory(directory);
     assert.equal(lstatSync(join(directory, 'memory')).isDirectory(), true);
     assert.equal(readFileSync(join(directory, 'MEMORY.md'), 'utf8'), seed);
-
-    const other = workspace();
-    try {
-      writeFileSync(join(other, 'MEMORY.md'), 'existing notes\n');
-      assert.equal(run('apply', other).status, 0);
-      assert.equal(lstatSync(join(other, 'memory')).isDirectory(), true);
-      assert.equal(readFileSync(join(other, 'MEMORY.md'), 'utf8'), 'existing notes\n');
-    } finally {
-      rmSync(other, { recursive: true, force: true });
-    }
+    assert.equal(checkWorkspaceMemory(directory), true);
   });
 
-  it('preserves existing content and an intentionally empty memory file', () => {
-    directory = workspace();
+  it('should create only the missing memory directory and preserve existing notes', () => {
+    writeFileSync(join(directory, 'MEMORY.md'), 'existing notes\n');
+    assert.equal(checkWorkspaceMemory(directory), false);
+    applyWorkspaceMemory(directory);
+    assert.equal(lstatSync(join(directory, 'memory')).isDirectory(), true);
+    assert.equal(readFileSync(join(directory, 'MEMORY.md'), 'utf8'), 'existing notes\n');
+    assert.equal(checkWorkspaceMemory(directory), true);
+  });
+
+  it('should preserve an intentionally empty memory file and existing daily notes', () => {
     mkdirSync(join(directory, 'memory'));
     writeFileSync(join(directory, 'memory', 'note.md'), 'keep this note\n');
     writeFileSync(join(directory, 'MEMORY.md'), '');
-    assert.equal(run('apply', directory).status, 0);
+    applyWorkspaceMemory(directory);
     assert.equal(readFileSync(join(directory, 'MEMORY.md'), 'utf8'), '');
     assert.equal(readFileSync(join(directory, 'memory', 'note.md'), 'utf8'), 'keep this note\n');
   });
 
-  it('fails on conflicting path types without replacing them or making partial changes', () => {
-    directory = workspace();
+  it('should fail on a conflicting memory directory without making partial changes', () => {
     writeFileSync(join(directory, 'memory'), 'not a directory');
-    const conflict = run('apply', directory);
-    assert.equal(conflict.status, 2);
+    assert.throws(() => applyWorkspaceMemory(directory), /conflicting type/u);
     assert.equal(readFileSync(join(directory, 'memory'), 'utf8'), 'not a directory');
-    assert.throws(() => lstatSync(join(directory, 'MEMORY.md')));
-
-    const other = workspace();
-    try {
-      mkdirSync(join(other, 'MEMORY.md'));
-      const fileConflict = run('apply', other);
-      assert.equal(fileConflict.status, 2);
-      assert.equal(lstatSync(join(other, 'MEMORY.md')).isDirectory(), true);
-      assert.throws(() => lstatSync(join(other, 'memory')));
-    } finally {
-      rmSync(other, { recursive: true, force: true });
-    }
+    assert.deepEqual(readdirSync(directory), ['memory']);
   });
 
-  it('should declare memory setup in the host phase and keep generated paths ignored', () => {
+  it('should fail on a conflicting memory file without making partial changes', () => {
+    mkdirSync(join(directory, 'MEMORY.md'));
+    assert.throws(() => applyWorkspaceMemory(directory), /conflicting type/u);
+    assert.equal(lstatSync(join(directory, 'MEMORY.md')).isDirectory(), true);
+    assert.deepEqual(readdirSync(directory), ['MEMORY.md']);
+  });
+
+  it('should be safe to apply repeatedly', () => {
+    applyWorkspaceMemory(directory);
+    applyWorkspaceMemory(directory);
+    assert.equal(checkWorkspaceMemory(directory), true);
+    assert.equal(readFileSync(join(directory, 'MEMORY.md'), 'utf8'), seed);
+  });
+});
+
+describe('workspace memory setup declaration', () => {
+  it('should declare memory setup in the host phase', () => {
     const manifest = globalThis.Bun.YAML.parse(
       readFileSync(join(repository, '.agent-system/agent.yaml'), 'utf8'),
     );
@@ -98,15 +97,5 @@ describe('workspace memory setup task', () => {
       readFileSync(join(repository, '.agent-system', manifest['setup-host'].file), 'utf8'),
     );
     assert.ok(hostSetup.steps.some(({ id }) => id === 'workspace-memory'));
-    const ignored = spawnSync(
-      'git',
-      ['check-ignore', '--no-index', 'MEMORY.md', 'memory/note.md'],
-      {
-        cwd: repository,
-        encoding: 'utf8',
-      },
-    );
-    assert.equal(ignored.status, 0, ignored.stderr);
-    assert.deepEqual(ignored.stdout.trim().split('\n'), ['MEMORY.md', 'memory/note.md']);
   });
 });

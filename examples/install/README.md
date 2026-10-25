@@ -32,7 +32,7 @@ git clone --no-local "$GITHUB_WORKSPACE" "$HOME/tanaab/emori"
 # should start the isolated gateway for session dispatch enrollment
 openclaw config set cron.enabled false --strict-json
 openclaw config set logging.consoleStyle '"json"' --strict-json
-openclaw-gateway start
+openclaw-gateway start --debug
 ```
 
 ## Testing
@@ -48,6 +48,12 @@ openclaw agent-system validate --json | jq -e '.status == "valid" and all(.diagn
 install_status=0
 openclaw agent-system install --yes --skip-setup-agent --json | tee "${TMPDIR}/install.json" || install_status=$?
 openclaw-gateway diagnostics --debug > "${TMPDIR}/first-install-gateway.log" 2>&1 || true
+if gateway_log=$(openclaw-gateway log-path); then
+  gateway_redactor="$(dirname "$(command -v openclaw-gateway)")/lib/redact-stream.mjs"
+  if ! node "$gateway_redactor" < "$gateway_log" > "${TMPDIR}/first-install-gateway-full.log"; then
+    printf 'Full Gateway trace unavailable\n' > "${TMPDIR}/first-install-gateway-full.log"
+  fi
+fi
 test "$install_status" -eq 0
 jq -e 'all(.warnings[]; .code != "github-notification-runtime-unsupported") and any(.outcomes[]; .component == "github-intake" and .code == "intake-activated" and .status == "updated")' "${TMPDIR}/install.json"
 jq -e 'any(.outcomes[]; .component == "codex-plugin" and .code == "codex-plugin-installed" and .status == "created")' "${TMPDIR}/install.json"

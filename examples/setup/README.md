@@ -45,7 +45,7 @@ bun --eval '
 # should start the isolated gateway for session dispatch enrollment
 openclaw config set cron.enabled false --strict-json
 openclaw config set logging.consoleStyle '"json"' --strict-json
-openclaw-gateway start
+openclaw-gateway start --debug
 
 # should prepare a fresh setup with existing host session visibility
 cd "$GITHUB_WORKSPACE"
@@ -64,6 +64,12 @@ cd "$GITHUB_WORKSPACE"
 install_status=0
 openclaw agent-system install --yes --json | tee "${TMPDIR}/setup-install.json" || install_status=$?
 openclaw-gateway diagnostics --debug > "${TMPDIR}/first-install-gateway.log" 2>&1 || true
+if gateway_log=$(openclaw-gateway log-path); then
+  gateway_redactor="$(dirname "$(command -v openclaw-gateway)")/lib/redact-stream.mjs"
+  if ! node "$gateway_redactor" < "$gateway_log" > "${TMPDIR}/first-install-gateway-full.log"; then
+    printf 'Full Gateway trace unavailable\n' > "${TMPDIR}/first-install-gateway-full.log"
+  fi
+fi
 test "$install_status" -eq 0
 jq -e --slurpfile expected "${TMPDIR}/setup-expected.json" '
   .agentId == "emori" and
