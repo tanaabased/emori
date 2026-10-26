@@ -103,7 +103,7 @@ openclaw config get agents.entries.emori --json | jq -e --slurpfile expected "${
   . as $agent |
   .model.primary == $expected[0].models.default.model and
   .thinkingDefault == $expected[0].models.default.effort and
-  ([$expected[0].models[].model] | unique |
+  ([$expected[0].models | .default.model, .low.model, .medium.model, .high.model] | unique |
     all(.[]; . as $model | $agent.models[$model].agentRuntime.id == $expected[0].runtime))
 '
 

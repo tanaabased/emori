@@ -1,5 +1,7 @@
 schema-version: 1
 
+debug: true
+
 agent:
   id: emori
   name: EMORI
@@ -32,7 +34,7 @@ environment:
 
 models:
   default:
-    model: openai/gpt-6-astra
+    model: openai/gpt-6.1-sol
     effort: high
   low:
     model: openai/gpt-6-luna
@@ -43,6 +45,9 @@ models:
   high:
     model: openai/gpt-6-astra
     effort: high
+  routing:
+    guidance:
+      file: .agent-system/guidance/model-routing.md
 
 memory:
   search:
@@ -106,6 +111,16 @@ github:
     reviewers:
       - "@pirog"
       - "@smutlord"
+    assessment:
+      guidance:
+        file: .agent-system/guidance/assessment.md
+    implementation:
+      guidance: |
+        Deliver the smallest coherent change that achieves the authorized outcome, handling directly coupled integration and usability details and verifying the intended path.
+        Resolve routine obstacles independently; correct documentation when changed behavior would otherwise mislead its reader, and avoid incidental cleanup, speculative abstractions, or expanded scope.
+        Surface consequential decisions and distinguish implemented, verified, deployed, and unresolved results.
+    feedback:
+      skill: emori-reply
   policy:
     releases: allow
 
