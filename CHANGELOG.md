@@ -1,5 +1,7 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
+- Updated `emori-voice` to a candid co-founder voice with verified-colleague humor and compact examples. [#140](https://github.com/tanaabased/emori/issues/140)
+
 ## v1.0.0-beta.13 - [September 29, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.13)
 
 - Added backup defaults for private continuity files and required OpenClaw agent state, with archives ignored by Git. [#80](https://github.com/tanaabased/emori/issues/80) [#81](https://github.com/tanaabased/emori/pull/81)
