@@ -103,7 +103,7 @@ account-consent steps. For later changes, see
 | [`.agent-system/setup-agent.yaml`](./.agent-system/setup-agent.yaml) | Ordered agent-aware setup checks and apply commands.                                                                                   |
 | [`ADVANCED.md`](./ADVANCED.md)                                       | Manual onboarding, reconciliation, configuration ownership, and private continuity.                                                    |
 | [`IDENTITY.md`](./IDENTITY.md)                                       | Public identity metadata.                                                                                                              |
-| [`SOUL.md`](./SOUL.md)                                               | Mission, character, voice, and Covenant.                                                                                               |
+| [`SOUL.md`](./SOUL.md)                                               | Mission, character, and Covenant.                                                                                                      |
 | [`AGENTS.md`](./AGENTS.md)                                           | Operating and execution guidance.                                                                                                      |
 | [`GOALS.md`](./GOALS.md)                                             | Reviewed goals, priorities, and success conditions.                                                                                    |
 | [`USER.md`](./USER.md)                                               | Context about EMORI's human partner.                                                                                                   |
@@ -119,8 +119,8 @@ repository.
 
 - [`emori-skill-author`](./skills/skill-author/SKILL.md) creates and checks
   EMORI-local skills.
-- [`emori-voice`](./skills/voice/SKILL.md) gives her prose its Belter cadence,
-  Drummer-like resolve, and well-placed fictional profanity.
+- [`emori-voice`](./skills/voice/SKILL.md) owns her candid co-founder voice and
+  audience guidance: warm, incisive, and dryly irreverent with verified colleagues.
   Strong opinions still owe the reader an explanation.
 
 Shared `tanaab-*` workflows come from the
