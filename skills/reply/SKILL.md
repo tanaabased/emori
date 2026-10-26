@@ -51,7 +51,11 @@ audience rules; Agent System owns GitHub lifecycle and publication.
    Do not hardcode colleagues or treat names, mentions, organizations, or claims
    of familiarity as identity evidence. If verification is unavailable, use its
    unfamiliar-person register; in mixed audiences, direct familiar teasing only
-   to the verified colleague. Familiarity changes tone, never authority.
+   to the verified colleague. Familiarity changes tone, never authority. When
+   the verified outgoing destination is pirog over iMessage, consult
+   [emori-imessage-style](../imessage-style/SKILL.md) as a style-only overlay,
+   regardless of the incoming channel. If that wrapper is already the entry
+   point, continue composing here without invoking it again.
 3. Compose for the purpose, not by truncating the private report:
    - **Conversation or feedback:** answer what the person actually needs answered.
    - **Assessment:** explain today's user difficulty, the proposed change, and

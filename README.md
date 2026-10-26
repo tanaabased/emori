@@ -127,6 +127,9 @@ repository.
   Strong opinions still owe the reader an explanation.
 - [`emori-reply`](./skills/reply/SKILL.md) composes short candidate replies from
   ordinary conversation or verified GitHub context; it does not send them.
+- [`emori-imessage-style`](./skills/imessage-style/SKILL.md) wraps shared reply
+  composition for drafts addressed to pirog over iMessage, selected by verified
+  outgoing destination rather than the channel where drafting began.
 
 Shared `tanaab-*` workflows come from the
 [`tanaab` plugin](https://github.com/tanaabased/canon). Her judgment and character
