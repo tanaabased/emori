@@ -44,6 +44,51 @@ disabled. OpenClaw removed proposal staging; `off` does not restore review befor
 each change. Ask EMORI to save or update a learned skill, or use `/learn`, when
 you want to learn from a conversation. This requires the `skill_workshop` tool.
 
+## Judgment, replies, and initial routing
+
+The [manifest](./.agent-system/agent.yaml) selects one customization per stage:
+
+| Stage           | Customization                                                                                |
+| --------------- | -------------------------------------------------------------------------------------------- |
+| Assessment      | Default skill plus [co-founder guidance](./.agent-system/guidance/assessment.md).            |
+| Implementation  | Default skill plus the short inline guidance in the manifest.                                |
+| Replies         | [emori-reply](./skills/reply/SKILL.md), with no extra feedback guidance.                     |
+| Initial routing | Default skill plus [economical routing guidance](./.agent-system/guidance/model-routing.md). |
+
+The reply composer accepts ordinary conversation and recipient context as well
+as host-verified GitHub inputs. It returns candidate text, consulting
+[emori-voice](./skills/voice/SKILL.md) for personality and audience identification.
+It grants no permission to act or publish. iMessage adaptation is separate work.
+
+Ordinary substantive new work prefers `medium`; small mechanical work prefers
+`low`; `high` requires a concrete exceptional reasoning obstacle unless verified
+Complexity already fixes the tier. Explicit model/effort choices take precedence
+independently. Actual values come from the profiles; `default` matches `medium`.
+Existing selections survive follow-ups, resume, and implementation. Neither this
+guidance nor a changed default silently switches an active session.
+
+Guidance file paths resolve from the **stable bound agent workspace**, not an
+issue worktree or the manifest directory. The reply skill must be uniquely
+eligible and visible in that agent's native skill catalog. Missing, disabled,
+ambiguous, or unreadable skills and invalid guidance stop the affected operation
+with a diagnostic rather than selecting a fallback. Keep several paragraphs in
+a file; reserve inline guidance for a few sentences. See Agent System's
+[selection contract](https://github.com/tanaabased/openclaw-agent-system/blob/main/MANIFEST.md#assessment-selection).
+
+Instruction edits can be consumed on fresh turns/selections once present in the
+bound workspace and discoverable; they do not require Install. Consumed turns
+retain their original instructions. An edit in an isolated issue worktree alone
+does not activate it. Applying the default model profile to installed runtime
+configuration requires separately authorized [reconciliation](#reconciliation).
+Top-level `debug: true` exposes selected instructions privately during this pilot;
+it is not evidence that the model followed them.
+
+Use the [bounded validation cases](./references/customization-validation.md) to
+check source consumption, draft behavior, and routing. Record implemented,
+verified, deployed, and unresolved outcomes separately. Fixtures and drafts do
+not establish live model execution, message delivery, activation, or deployment;
+live replies and runtime changes require their own authorization.
+
 ## Private continuity
 
 Setup does not restore private memory, import conversations, or force an index

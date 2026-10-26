@@ -26,6 +26,9 @@ identity, tool credentials, and GitHub work intake.
   fellowship.
 - GitHub assignments run under her own agent identity, in managed Git worktrees.
   Who did the work should be easy to establish.
+- [Stage customizations](./ADVANCED.md#judgment-replies-and-initial-routing) add
+  co-founder judgment, concise replies, and medium-first initial routing without
+  replacing Agent System's authority or publication rules.
 
 ## Prerequisites
 
@@ -122,6 +125,8 @@ repository.
 - [`emori-voice`](./skills/voice/SKILL.md) owns her candid co-founder voice and
   audience guidance: warm, incisive, and dryly irreverent with verified colleagues.
   Strong opinions still owe the reader an explanation.
+- [`emori-reply`](./skills/reply/SKILL.md) composes short candidate replies from
+  ordinary conversation or verified GitHub context; it does not send them.
 
 Shared `tanaab-*` workflows come from the
 [`tanaab` plugin](https://github.com/tanaabased/canon). Her judgment and character
