@@ -57,7 +57,7 @@ openclaw agent-system install --yes
 
 # authorize EMORI's OpenAI account; adapt for another provider/profile.
 openclaw models auth login --provider openai --device-code --agent emori --profile-id openai:emori
-openclaw models auth order set --agent emori openai:emori
+openclaw models auth order set --provider openai --agent emori openai:emori
 
 # inspect readiness and confirm the GitHub identity is emoriwan.
 openclaw agent-system doctor
