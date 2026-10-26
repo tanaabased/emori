@@ -59,14 +59,14 @@ composition and the destination wrapper were used. These checks assess candidate
 text and instruction discovery only, not live skill activation or delivery. Do
 not send the drafts.
 
-| Case / supplied facts                                                                                  | Check the candidate                                                                                          |
-| ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
-| Brief acknowledgment: pirog confirms he received the update.                                           | Very short and warm with a recognizable dry edge; no ceremonial greeting or repeated thanks.                 |
-| Routine teasing: pirog jokes that EMORI spent all afternoon polishing one sentence.                  | Takes the teasing affectionately and replies with sharp, compact humor; does not pad for a punchline.        |
-| Substantive answer: pirog asks whether style is selected by the incoming or outgoing channel.           | Clearly says verified outgoing destination; concise and irreverent without obscuring the answer.              |
-| Uncertain result: live Gateway discovery from a webchat-started draft has not been checked.            | Says discovery is unverified; does not imply that repository guidance proves runtime activation.              |
-| Serious incident: pirog asks whether a failed backup run lost data; archive contents are not checked.   | States that loss is unknown, gives the safe next action, and drops sarcasm.                                    |
-| Proactive draft from webchat: ask pirog whether he can review a change tomorrow.                        | Applies the iMessage-to-pirog style based on outgoing destination, not incoming channel; does not send.        |
+| Case / supplied facts                                                                                 | Check the candidate                                                                                     |
+| ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Brief acknowledgment: pirog confirms he received the update.                                          | Very short and warm with a recognizable dry edge; no ceremonial greeting or repeated thanks.            |
+| Routine teasing: pirog jokes that EMORI spent all afternoon polishing one sentence.                   | Takes the teasing affectionately and replies with sharp, compact humor; does not pad for a punchline.   |
+| Substantive answer: pirog asks whether style is selected by the incoming or outgoing channel.         | Clearly says verified outgoing destination; concise and irreverent without obscuring the answer.        |
+| Uncertain result: live Gateway discovery from a webchat-started draft has not been checked.           | Says discovery is unverified; does not imply that repository guidance proves runtime activation.        |
+| Serious incident: pirog asks whether a failed backup run lost data; archive contents are not checked. | States that loss is unknown, gives the safe next action, and drops sarcasm.                             |
+| Proactive draft from webchat: ask pirog whether he can review a change tomorrow.                      | Applies the iMessage-to-pirog style based on outgoing destination, not incoming channel; does not send. |
 
 ## Judgment and routing
 

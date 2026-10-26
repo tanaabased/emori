@@ -48,12 +48,12 @@ you want to learn from a conversation. This requires the `skill_workshop` tool.
 
 The [manifest](./.agent-system/agent.yaml) selects one customization per stage:
 
-| Stage           | Customization                                                                                |
-| --------------- | -------------------------------------------------------------------------------------------- |
-| Assessment      | Default skill plus [co-founder guidance](./.agent-system/guidance/assessment.md).            |
-| Implementation  | Default skill plus the short inline guidance in the manifest.                                |
+| Stage           | Customization                                                                                                                                                                                            |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Assessment      | Default skill plus [co-founder guidance](./.agent-system/guidance/assessment.md).                                                                                                                        |
+| Implementation  | Default skill plus the short inline guidance in the manifest.                                                                                                                                            |
 | Replies         | [emori-reply](./skills/reply/SKILL.md), with no extra feedback guidance; use [emori-imessage-style](./skills/imessage-style/SKILL.md) as a destination-specific overlay for verified iMessages to pirog. |
-| Initial routing | Default skill plus [economical routing guidance](./.agent-system/guidance/model-routing.md). |
+| Initial routing | Default skill plus [economical routing guidance](./.agent-system/guidance/model-routing.md).                                                                                                             |
 
 The reply composer accepts ordinary conversation and recipient context as well
 as host-verified GitHub inputs. It returns candidate text, consulting
