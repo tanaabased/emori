@@ -2,22 +2,24 @@
 
 ## What this example does
 
-Runs EMORI's full setup and repeat reconciliation in an isolated OpenClaw profile. It checks an eligible
-Canon skill, manifest-declared model configuration, iMessage routing and
-send-only messaging, SQLite vector loading, Workshop background learning disabled,
-and preservation of host session visibility and clean checkouts. It verifies the
-managed Codex dependency pair against Agent System's requirement, not an EMORI pin.
+Runs my full setup twice in an isolated OpenClaw profile to check configuration
+and repeatability. Covers an eligible Canon skill, manifest-declared models,
+iMessage routing and send-only messaging, SQLite vector loading, and disabled
+Workshop background learning. Host session visibility and clean checkouts must
+survive both passes. Agent System owns the required Codex dependency pair;
+this scenario checks its requirement rather than adding another pin.
 
 The `--yes` consent applies only to this isolated CI profile. Automatic cron
 execution is disabled so registered schedules cannot start model turns during
-setup checks.
+the checks.
 
 ## What it doesn't do
 
-It does not send messages, execute skills or model turns,
-or test memory indexing and recall. Credential and intake lifecycle checks belong to
-[install](../install/README.md); shared plugin reuse belongs to
-[shared](../shared/README.md). Setup and model expectations come from the manifest.
+Configuration is not execution. This scenario sends no messages, runs no skills
+or model turns, and does not test memory indexing or recall. Credential and intake
+lifecycle checks belong to [install](../install/README.md); shared plugin reuse
+belongs to [shared](../shared/README.md). Setup and model expectations come from
+the manifest.
 
 ## Setup
 

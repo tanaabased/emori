@@ -2,17 +2,17 @@
 
 ## What this example does
 
-Creates and verifies a backup from a disposable workspace with EMORI's manifest,
-identity, synthetic private continuity, and an agent database. It restores into
-staging and checks recovered content, excluded paths, and preservation of source
-data and agent registrations.
+Creates a backup from a disposable workspace with my manifest, identity, synthetic
+private continuity, and an agent database. Verifies the archive and restores it
+into staging, checking recovered content, excluded paths, and preservation of
+source data and agent registrations.
 
 ## What it doesn't do
 
-It does not start or activate a runtime, replace a live workspace, or exercise
-scheduled backups, remote uploads, or retention pruning. It does not establish
-that a restored agent can run. [Setup](../setup/README.md) covers fresh
-installation and configuration, not activation of a restored agent.
+It does not activate a runtime, replace a live workspace, or exercise scheduled
+backups, remote uploads, or retention. Recovering files does not establish that
+the restored agent can run. [Setup](../setup/README.md) covers fresh installation
+and configuration, not activation after recovery.
 
 ## Setup
 

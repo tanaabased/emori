@@ -2,18 +2,18 @@
 
 ### Features
 
-- Added co-founder assessment and implementation guidance, a shared reply composer, and economical initial model routing. [#119](https://github.com/tanaabased/emori/issues/119) [#142](https://github.com/tanaabased/emori/pull/142)
+- Added co-founder guidance for assessment and implementation, concise shared replies, and model routing that prefers the medium profile for routine substantive work. [#119](https://github.com/tanaabased/emori/issues/119) [#142](https://github.com/tanaabased/emori/pull/142)
 - Added destination-aware iMessage styling for verified replies to pirog, reusing the shared voice and composer. [#124](https://github.com/tanaabased/emori/issues/124) [#143](https://github.com/tanaabased/emori/pull/143)
 - Added nightly verified Google Drive backups with five-copy retention limited to proven, job-owned archives. [#111](https://github.com/tanaabased/emori/issues/111) [#113](https://github.com/tanaabased/emori/pull/113) [#117](https://github.com/tanaabased/emori/pull/117)
 - Enabled EMORI to self-assign eligible issues within her existing repository and admission scope. [#102](https://github.com/tanaabased/emori/issues/102) [#103](https://github.com/tanaabased/emori/pull/103)
 
 ### Bug Fixes
 
-- Fixed fresh setup to initialize missing private memory storage while preserving existing notes. [#97](https://github.com/tanaabased/emori/issues/97) [#98](https://github.com/tanaabased/emori/pull/98)
-- Fixed interrupted or historical backup failures blocking fresh captures; cleanup failures now preserve confirmed delivery. [#122](https://github.com/tanaabased/emori/issues/122) [#123](https://github.com/tanaabased/emori/pull/123) [#138](https://github.com/tanaabased/emori/issues/138) [#139](https://github.com/tanaabased/emori/pull/139)
+- Fixed fresh setup to create missing private memory storage without overwriting existing notes. [#97](https://github.com/tanaabased/emori/issues/97) [#98](https://github.com/tanaabased/emori/pull/98)
+- Fixed older backup failures blocking fresh captures. Cleanup failures no longer turn a confirmed delivery into a failed backup. [#122](https://github.com/tanaabased/emori/issues/122) [#123](https://github.com/tanaabased/emori/pull/123) [#138](https://github.com/tanaabased/emori/issues/138) [#139](https://github.com/tanaabased/emori/pull/139)
 - Fixed setup overwriting the shared iMessage default account or collaboration-managed session visibility. [#86](https://github.com/tanaabased/emori/issues/86) [#89](https://github.com/tanaabased/emori/pull/89) [#104](https://github.com/tanaabased/emori/issues/104) [#105](https://github.com/tanaabased/emori/pull/105)
 - Fixed the local skill templates rejecting `Required Reading` sections.
-- Fixed setup diagnostics misreporting output-buffer and other subprocess failures as missing executables.
+- Distinguished missing executables, output-buffer overflows, and other subprocess failures in setup diagnostics.
 - Fixed the quickstart auth-order command to supply the required provider.
 
 ### Improvements
@@ -26,8 +26,8 @@
 
 ### Developer Notes
 
-- Simplified setup, usage, and development documentation and consolidated behavioral evaluation guidance.
-- Added collection-wide skill validation and explicit governing-reference reading triggers.
+- Simplified setup, usage, and development documentation, consolidated behavioral checks, and made EMORI’s voice the documentation house style.
+- Added validation for every local skill and explicit instructions for when to read governing references.
 - Moved private memory ignore checks into CI and kept executable Leia scenarios out of local pre-push validation. [#114](https://github.com/tanaabased/emori/pull/114) [#129](https://github.com/tanaabased/emori/issues/129) [#130](https://github.com/tanaabased/emori/pull/130)
 - Colocated setup tests with their implementation.
 - Updated Bun to `1.4.4` and made lint/format runtime selection explicit.

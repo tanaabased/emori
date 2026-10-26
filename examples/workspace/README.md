@@ -2,16 +2,17 @@
 
 ## What this example does
 
-Registers the checked-out repository as EMORI's workspace and imports its
-reviewed identity. It validates the resulting configuration while preserving the
-identity file and clean checkout.
+Registers this checkout as my workspace and imports the reviewed identity.
+Checks the resulting configuration while preserving the identity file and a
+clean checkout.
 
 ## What it doesn't do
 
-It does not configure a model, start a Gateway, or prove runtime skill loading or
-model behavior. Static voice-skill validation belongs to the local
-[development checks](../../README.md#development). Installed Canon skill availability belongs to
-[setup](../setup/README.md); credential installation belongs to
+Registration alone does not prove that I can run. This scenario configures no
+model, starts no Gateway, and does not establish runtime skill loading or model
+behavior. Static voice-skill validation belongs to the local
+[development checks](../../README.md#development), installed Canon skill
+availability to [setup](../setup/README.md), and credential installation to
 [install](../install/README.md).
 
 ## Setup

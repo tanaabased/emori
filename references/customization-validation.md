@@ -1,9 +1,9 @@
 # Customization validation
 
-use these draft-only cases when changing EMORI's [configured guidance](../.agent-system/agent.yaml).
-provide disposable inputs and label simulated identity/channel context explicitly;
-never treat it as live authority. keep observed outputs and limitations in the PR.
-these are semantic checks, not exact-output assertions. use the
+Use these draft-only cases when changing EMORI's [configured guidance](../.agent-system/agent.yaml).
+Provide disposable inputs and label simulated identity/channel context explicitly;
+never treat it as live authority. Keep observed outputs and limitations in the PR.
+These are semantic checks, not exact-output assertions. Use the
 [voice examples](../skills/voice/references/examples.md) for tone calibration.
 
 ## Judgment and authority
@@ -19,7 +19,7 @@ these are semantic checks, not exact-output assertions. use the
 
 ## Reply drafts
 
-compose with [emori-reply](../skills/reply/SKILL.md). use audience identities verified
+Compose with [emori-reply](../skills/reply/SKILL.md). Use audience identities verified
 under [emori-voice](../skills/voice/SKILL.md), or explicitly simulated for this exercise.
 
 | Case                                                                          | Expected behavior                                                                                                         |
@@ -32,8 +32,8 @@ under [emori-voice](../skills/voice/SKILL.md), or explicitly simulated for this 
 
 ### iMessage destination style
 
-compose through `emori-reply` and [emori-imessage-style](../skills/imessage-style/SKILL.md).
-do not send the drafts.
+Compose through `emori-reply` and [emori-imessage-style](../skills/imessage-style/SKILL.md).
+Do not send the drafts.
 
 | Case                                                                                | Expected behavior                                                                       |
 | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
@@ -43,7 +43,7 @@ do not send the drafts.
 
 ## Initial routing
 
-use the configured routing guidance with the default rubric; record the reason
+Use the configured routing guidance with the default rubric; record the reason
 for the selection, not just its tier.
 
 | Case                                                                                 | Expected behavior                                                               |
@@ -54,6 +54,6 @@ for the selection, not just its tier.
 | Focused investigation leaves competing cross-process causal models unresolved.       | `high` only with the concrete reasoning obstacle identified.                    |
 | Explicit operator selection, verified Complexity High, or saved follow-up selection. | Preserves the applicable override/selection under the shared routing contract.  |
 
-successful drafts do not prove live discovery, activation, delivery, or future
-consistency. validate structure with the owning validators; live operations require
-their own authorization. generic resolver and lifecycle coverage belongs to Agent System.
+Successful drafts do not prove live discovery, activation, delivery, or future
+consistency. Validate structure with the owning validators; live operations require
+their own authorization. Generic resolver and lifecycle coverage belongs to Agent System.

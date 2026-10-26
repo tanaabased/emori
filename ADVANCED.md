@@ -1,29 +1,29 @@
 # Advanced operations
 
-commands for EMORI's installed workspace. start with the
-[README quickstart](./README.md#quickstart).
+Use these commands to inspect or reconcile the installed workspace. Start with
+the [README quickstart](./README.md#quickstart) for initial setup.
 
 ## Command cheat sheet
 
-run individual commands as needed from the installed checkout.
+Run individual commands as needed from the installed checkout.
 
 ```sh
-# validate without applying changes.
+# Validate without applying changes.
 openclaw agent-system validate
 
-# reconcile configuration and setup; apply openclaw.patch.json through this installer.
+# Apply configuration and run setup; apply openclaw.patch.json through this installer.
 openclaw agent-system install --yes
 
-# inspect readiness and drift without repairs.
+# Check installed state without changing it.
 openclaw agent-system doctor
 
-# skip all setup checks and tasks; this does not establish full setup readiness.
+# Skip all setup checks and tasks; this does not establish full setup readiness.
 openclaw agent-system install --skip-setup
 
-# confirm the GitHub identity is emoriwan.
+# Confirm the GitHub identity is emoriwan.
 openclaw agent-system tool gh -- api user --jq .login
 
-# inspect configured jobs and recent nightly execution/delivery results.
+# Inspect configured jobs and recent nightly execution/delivery results.
 openclaw agent-system automations list
 openclaw agent-system automations runs backup-agent-nightly --limit 10
 ```
