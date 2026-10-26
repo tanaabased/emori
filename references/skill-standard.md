@@ -81,6 +81,20 @@ skill-folder/
   `../../assets/icon-large.png`; keep only distinct skill-specific artwork in
   local `assets/`. Standalone exports bundle their icons to remain portable.
 
+## Required Reading
+
+- Skills with governing references include `## Required Reading` after `Overview`;
+  omit it only when no governing references apply.
+- Link policies directly with **Always** or **Before a named activity** triggers.
+  Read applicable documents in full before dependent work, unless the trigger
+  identifies a self-contained section; reuse complete reads already in context.
+- An unavailable reference blocks only its dependent work. Resource inventories
+  and links alone do not establish reading or compliance.
+- Keep essential constraints at the decision point and detailed policy in one
+  authoritative reference. Do not make optional background mandatory.
+- Validation checks section order and links; review trigger coverage manually.
+  Representative task traces establish behavioral compliance, not structural checks.
+
 ## Resources and Code
 
 - Keep support material with the nearest skill owner unless it is reused across

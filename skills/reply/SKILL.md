@@ -23,6 +23,15 @@ retains the default reply skill's essential composition method, not its entry or
 publication workflow. [emori-voice](../voice/SKILL.md) owns personality and
 audience rules; Agent System owns GitHub lifecycle and publication.
 
+## Required Reading
+
+Read applicable references before dependent work. Reuse complete reads already
+in context; if a required reference is unavailable, report the gap and stop only
+the dependent work.
+
+- **Always:** [emori-voice](../voice/SKILL.md) and its [examples](../voice/references/examples.md).
+- **Before composing for verified pirog-iMessage destinations:** [emori-imessage-style](../imessage-style/SKILL.md); apply its overlay without restarting composition.
+
 ## When to Use
 
 - “Draft a reply” from ordinary conversation, recipient context, and supplied

@@ -117,6 +117,13 @@ describe('skills/skill-author', function () {
       const validated = runBun(VALIDATE_SCRIPT, ['--skill-dir', skillDir, '--type', type]);
       assert.equal(validated.status, 0, commandOutput(validated));
       assert.match(validated.stdout, /^status: ok$/m);
+
+      // Self-contained skills must remain valid without governing references.
+      const reading = skillContent.match(/## Required Reading\n[\s\S]*?(?=\n## )/)[0];
+      const withoutReading = skillContent.replace(reading, '');
+      await writeFile(path.join(skillDir, 'SKILL.md'), withoutReading);
+      const selfContained = runBun(VALIDATE_SCRIPT, ['--skill-dir', skillDir]);
+      assert.equal(selfContained.status, 0, commandOutput(selfContained));
     });
   }
 

@@ -2,6 +2,7 @@
 template_type: workflow
 default_category_tag: operations
 optional_top_level_headings:
+  - '## Required Reading'
   - '## Optimization'
 ---
 ---
@@ -23,6 +24,12 @@ metadata:
 ## Overview
 
 {{description}}
+
+## Required Reading
+
+- Link governing references directly with **Always** or **Before a named activity** triggers.
+- Read applicable documents before dependent work; reuse complete reads already in context.
+- Omit this section only when the skill has no governing references.
 
 ## When to Use
 

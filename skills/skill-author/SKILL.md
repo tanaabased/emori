@@ -25,6 +25,16 @@ Author, standardize, optimize, and validate EMORI-local skills using this
 workspace's [skill standard](../../references/skill-standard.md), scaffolder,
 and validator. The standard owns local conventions and the Tanaab boundary.
 
+## Required Reading
+
+Read applicable references before dependent work. Reuse complete reads already
+in context; if a required reference is unavailable, report the gap and stop only
+the dependent work.
+
+- **Always:** [EMORI Skill Standard](../../references/skill-standard.md).
+- **Before scaffolding or reviewing type shape:** the matching local [generic](./templates/generic.md), [coding](./templates/coding.md), [integration](./templates/integration.md), [workflow](./templates/workflow.md), or [meta](./templates/meta.md) template.
+- **Before changing shared Tanaab skills:** use `tanaab-skill-author` and its governing references; this local skill does not own shared canon.
+
 ## When to Use
 
 - Create a new EMORI-local skill.

@@ -25,6 +25,14 @@ is pirog over iMessage. It layers over the shared
 composition, recipient identification, facts, uncertainty, and serious-situation
 restraint. This skill changes tone only and never sends a draft.
 
+## Required Reading
+
+Read applicable references before dependent work. Reuse complete reads already
+in context; if a required reference is unavailable, report the gap and stop only
+the dependent work.
+
+- **Always:** [emori-reply](../reply/SKILL.md), [emori-voice](../voice/SKILL.md), and the [voice examples](../voice/references/examples.md). Reuse complete reads; do not recursively invoke the composer.
+
 ## When to Use
 
 - Compose a reply or proactive-message draft when the outgoing destination is

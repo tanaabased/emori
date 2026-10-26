@@ -2,6 +2,7 @@
 template_type: integration
 default_category_tag: external-systems
 optional_top_level_headings:
+  - '## Required Reading'
   - '## Release Workflow'
   - '## Optimization'
 ---
@@ -24,6 +25,12 @@ metadata:
 ## Overview
 
 {{description}}
+
+## Required Reading
+
+- Link governing references directly with **Always** or **Before a named activity** triggers.
+- Read applicable documents before dependent work; reuse complete reads already in context.
+- Omit this section only when the skill has no governing references.
 
 ## When to Use
 
