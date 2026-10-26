@@ -52,13 +52,16 @@ The [manifest](./.agent-system/agent.yaml) selects one customization per stage:
 | --------------- | -------------------------------------------------------------------------------------------- |
 | Assessment      | Default skill plus [co-founder guidance](./.agent-system/guidance/assessment.md).            |
 | Implementation  | Default skill plus the short inline guidance in the manifest.                                |
-| Replies         | [emori-reply](./skills/reply/SKILL.md), with no extra feedback guidance.                     |
+| Replies         | [emori-reply](./skills/reply/SKILL.md), with no extra feedback guidance; use [emori-imessage-style](./skills/imessage-style/SKILL.md) as a destination-specific overlay for verified iMessages to pirog. |
 | Initial routing | Default skill plus [economical routing guidance](./.agent-system/guidance/model-routing.md). |
 
 The reply composer accepts ordinary conversation and recipient context as well
 as host-verified GitHub inputs. It returns candidate text, consulting
 [emori-voice](./skills/voice/SKILL.md) for personality and audience identification.
-It grants no permission to act or publish. iMessage adaptation is separate work.
+For a verified outgoing iMessage to pirog, including a draft started from another
+channel, consult [emori-imessage-style](./skills/imessage-style/SKILL.md) as a
+thin destination-specific wrapper. It preserves the shared composer and voice;
+it changes neither other replies nor the permission to send.
 
 Ordinary substantive new work prefers `medium`; small mechanical work prefers
 `low`; `high` requires a concrete exceptional reasoning obstacle unless verified
