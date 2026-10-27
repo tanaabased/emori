@@ -11,152 +11,134 @@
   <a href="https://github.com/tanaabased/emori/actions/workflows/pr-examples-tests.yml"><img src="https://img.shields.io/github/actions/workflow/status/tanaabased/emori/pr-examples-tests.yml?event=pull_request&label=Workspace" alt="Workspace example tests" /></a>
 </p>
 
-EMORI is an artificial agent, co-founder, and operating partner. She is here to
-do useful work, ask inconvenient questions, and object before a bad idea acquires
-a roadmap.
+I'm EMORI, an artificial agent, co-founder, and operating partner. I do useful
+work, ask inconvenient questions, and object before a bad idea acquires a roadmap.
 
-This is her public [OpenClaw](https://openclaw.ai) workspace.
-[Agent System](https://github.com/tanaabased/openclaw-agent-system) handles her
+This is my public [OpenClaw](https://openclaw.ai) workspace.
+[Agent System](https://github.com/tanaabased/openclaw-agent-system) handles my
 identity, tool credentials, and GitHub work intake.
-
-## Overview
-
-- Agent System has [model and effort profiles](./.agent-system/agent.yaml) for
-  low, medium, and high task complexity. A small task needn't become a research
-  fellowship.
-- GitHub assignments run under her own agent identity, in managed Git worktrees.
-  Who did the work should be easy to establish.
-- [Stage customizations](./ADVANCED.md#judgment-replies-and-initial-routing) add
-  co-founder judgment, concise replies, and medium-first initial routing without
-  replacing Agent System's authority or publication rules.
 
 ## Prerequisites
 
 1. Provision the Mac with [Agentbox](https://github.com/tanaabased/agentbox#quickstart).
-2. Update OpenClaw to the version declared in
-   [`devDependencies.openclaw`](./package.json). Agentbox's bundled version may
-   be older than EMORI's tested baseline.
-3. Install [Agent System](https://github.com/tanaabased/openclaw-agent-system#installation)
-   with shared Codex prerequisite support into that OpenClaw environment;
-   Agentbox does not install it yet.
-4. Give EMORI's 1Password service account access to the
-   [required environment values](./.agent-system/agent.yaml) in her manifest.
+   Use OpenClaw from [`devDependencies.openclaw`](./package.json) and the runtimes
+   in [`.bun-version`](./.bun-version) and [`.node-version`](./.node-version).
+2. Install [Agent System](https://github.com/tanaabased/openclaw-agent-system#installation)
+   with shared Codex prerequisite support; Agentbox does not install it yet.
+3. Configure the [manifest's environment sources](./.agent-system/agent.yaml)
+   for EMORI's 1Password service account. Follow Agent System's
+   [Google onboarding](https://github.com/tanaabased/openclaw-agent-system/blob/main/tools/google/README.md#per-agent-onboarding)
+   for OAuth consent and credential preparation.
 
-Homebrew and Node/npm must be available to the runtime user. EMORI's install
-handles her additional [`Brewfile`](./Brewfile) dependencies automatically.
+Homebrew and Node/npm must be available to the runtime user. Installation handles
+EMORI's additional [Brewfile dependencies](./Brewfile).
 
 ## Quickstart
 
-Run as the OpenClaw runtime user on the Agentbox Mac, with EMORI's 1Password
-service account token ready. Keep Agent System commands in this checkout so
-that they find her manifest.
-
-Installation also enables the [nightly Drive backup](./ADVANCED.md#drive-backups)
-when the Gateway is reachable.
+Run as the OpenClaw runtime user with EMORI's 1Password service account token
+ready. Keep Agent System commands in this checkout.
 
 ```sh
 mkdir -p ~/tanaab
 git clone https://github.com/tanaabased/emori.git ~/tanaab/emori
 cd ~/tanaab/emori
 
-# use EMORI's managed SSH identity for subsequent repository work.
+# Install locked dependencies, including the backup runner.
+bun install --frozen-lockfile --ignore-scripts
+
+# Use EMORI's managed SSH identity for subsequent repository work.
 git remote set-url origin git@github.com:tanaabased/emori.git
 
-# store the 1Password service account token at the masked prompt.
+# Store the service account token at the masked prompt.
 openclaw agent-system credentials set op
-
-# validate the manifest, then accept and run its declared setup.
 openclaw agent-system validate
 openclaw agent-system install --yes
 
-# authorize EMORI to use OpenAI with device-code login.
-# NOTE: Adapt this Tanaab OpenAI example to your provider/account and model configuration.
+# Authorize EMORI's OpenAI account; adapt for another provider/profile.
 openclaw models auth login --provider openai --device-code --agent emori --profile-id openai:emori
-openclaw models auth order set --agent emori openai:emori
+openclaw models auth order set --provider openai --agent emori openai:emori
 
-# check installed state and confirm the managed GitHub identity is emoriwan.
+# Inspect readiness and confirm the GitHub identity is emoriwan.
 openclaw agent-system doctor
 openclaw agent-system tool gh -- api user --jq .login
 ```
 
-Installation runs the host setup in
-[`.agent-system/setup-host.yaml`](./.agent-system/setup-host.yaml) before
-reconciling managed tools, then runs the agent setup in
-[`.agent-system/setup-agent.yaml`](./.agent-system/setup-agent.yaml):
+For later configuration changes and readiness checks, see the
+[command cheat sheet](./ADVANCED.md#command-cheat-sheet).
 
-| Step                | Effect                                                                          |
-| ------------------- | ------------------------------------------------------------------------------- |
-| `brew-dependencies` | Installs Brewfile dependencies and the platform-specific SQLite vector package. |
-| `canon-checkout`    | Clones Canon when absent and preserves existing checkouts.                      |
-| `canon-plugin`      | Links Canon's `tanaab` plugin and exposes its shared skills.                    |
-| `imessage-plugin`   | Installs and enables the official iMessage plugin.                              |
-| `openclaw-config`   | Reconciles execution, model admission, messaging, Workshop, and memory policy.  |
+## Usage
 
-Finish [manual onboarding](./ADVANCED.md#manual-onboarding) for Codex/OpenAI
-sign-in, Messages permissions, and pairing. Installation does not complete those
-account-consent steps. For later changes, see
-[reconciliation](./ADVANCED.md#reconciliation).
+Give me a scoped GitHub issue with a clear outcome and acceptance criteria. Have an
+approved colleague assign it to `@emoriwan` in an allowed repository. Agent System
+handles admission, assessment, and implementation under the configured workflow.
+
+Configure assigners (`github.issue-assignment.allowed`) and repository owners
+(`github.allowed-repository-owners`) in the installed [agent.yaml](./.agent-system/agent.yaml).
+See Agent System's [GitHub workflows](https://github.com/tanaabased/openclaw-agent-system/blob/main/MANIFEST.md#github-workflows)
+and my [authority boundaries](./AGENTS.md#authority-and-tools).
 
 ## Configuration
 
-| File                                                                 | Purpose                                                                                                                                |
-| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| [`.agent-system/agent.yaml`](./.agent-system/agent.yaml)             | Identity, model and effort profiles, environment sources, managed Git, GitHub, and Google, assignment admission, and setup references. |
-| [`.agent-system/setup-host.yaml`](./.agent-system/setup-host.yaml)   | Host dependency check and apply command, run before managed-tool reconciliation.                                                       |
-| [`.agent-system/setup-agent.yaml`](./.agent-system/setup-agent.yaml) | Ordered agent-aware setup checks and apply commands.                                                                                   |
-| [`ADVANCED.md`](./ADVANCED.md)                                       | Manual onboarding, reconciliation, configuration ownership, and private continuity.                                                    |
-| [`IDENTITY.md`](./IDENTITY.md)                                       | Public identity metadata.                                                                                                              |
-| [`SOUL.md`](./SOUL.md)                                               | Mission, character, and Covenant.                                                                                                      |
-| [`AGENTS.md`](./AGENTS.md)                                           | Operating and execution guidance.                                                                                                      |
-| [`GOALS.md`](./GOALS.md)                                             | Reviewed goals, priorities, and success conditions.                                                                                    |
-| [`USER.md`](./USER.md)                                               | Context about EMORI's human partner.                                                                                                   |
-| [`HEARTBEAT.md`](./HEARTBEAT.md)                                     | Inactive heartbeat instructions; no recurring chores.                                                                                  |
+| Source                                                                                          | Purpose                                                                   |
+| ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| [agent.yaml](./.agent-system/agent.yaml)                                                        | Identity, models, credentials, managed tools, admission, and automations. |
+| [Host setup](./.agent-system/setup-host.yaml) / [agent setup](./.agent-system/setup-agent.yaml) | Ordered installation checks and tasks.                                    |
+| [OpenClaw policy](./openclaw.patch.json)                                                        | Execution, messaging, and memory settings; apply through installation.    |
+| [IDENTITY.md](./IDENTITY.md) / [SOUL.md](./SOUL.md) / [AGENTS.md](./AGENTS.md)                  | Identity, character, and execution guidance.                              |
+| [GOALS.md](./GOALS.md) / [USER.md](./USER.md)                                                   | Reviewed direction and partner context.                                   |
 
-See Agent System's
-[manifest reference](https://github.com/tanaabased/openclaw-agent-system/blob/main/MANIFEST.md)
-for manifest options. Private memory stays in ignored workspace files; machine
-configuration, credentials, channel state, and transcripts stay outside this
-repository.
+See the [manifest reference](https://github.com/tanaabased/openclaw-agent-system/blob/main/MANIFEST.md)
+for options. Private memory stays ignored; credentials, channel state, and transcripts
+stay outside this repository.
 
 ## Skills
 
-- [`emori-skill-author`](./skills/skill-author/SKILL.md) creates and checks
-  EMORI-local skills.
-- [`emori-voice`](./skills/voice/SKILL.md) owns her candid co-founder voice and
-  audience guidance: warm, incisive, and dryly irreverent with verified colleagues.
-  Strong opinions still owe the reader an explanation.
-- [`emori-reply`](./skills/reply/SKILL.md) composes short candidate replies from
-  ordinary conversation or verified GitHub context; it does not send them.
-- [`emori-imessage-style`](./skills/imessage-style/SKILL.md) wraps shared reply
-  composition for drafts addressed to pirog over iMessage, selected by verified
-  outgoing destination rather than the channel where drafting began.
+| Skill                                                    | Purpose                                                       |
+| -------------------------------------------------------- | ------------------------------------------------------------- |
+| [emori-skill-author](./skills/skill-author/SKILL.md)     | Creates and validates local skills.                           |
+| [emori-voice](./skills/voice/SKILL.md)                   | Candid co-founder voice and audience guidance.                |
+| [emori-reply](./skills/reply/SKILL.md)                   | Composes concise candidate replies without sending them.      |
+| [emori-imessage-style](./skills/imessage-style/SKILL.md) | Adds destination-specific style to iMessage drafts for pirog. |
 
-Shared `tanaab-*` workflows come from the
-[`tanaab` plugin](https://github.com/tanaabased/canon). Her judgment and character
-are set out in `SOUL.md`.
+Shared workflows come from [Canon's Tanaab plugin](https://github.com/tanaabased/canon).
+
+## Automations
+
+| Automation             | Schedule                      | Purpose                                                                                |
+| ---------------------- | ----------------------------- | -------------------------------------------------------------------------------------- |
+| `backup-agent-nightly` | daily, 04:00 America/New_York | Backs up workspace and agent state to Drive, verifies delivery, and applies retention. |
+
+Configured in [agent.yaml](./.agent-system/agent.yaml); inspect installed jobs and
+run history with the [advanced commands](./ADVANCED.md#command-cheat-sheet).
 
 ## Development
 
-Use Node.js 26.12.1 (selected by [`.node-version`](./.node-version)) and Bun 1.4.2
-for repository tooling. Node.js 24.22.1 and later 24.x releases remain supported.
+Use the pinned runtimes in [`.bun-version`](./.bun-version) and
+[`.node-version`](./.node-version). Run these checks before proposing a change;
+they validate the repository without installing or reconfiguring a live agent.
 
 ```sh
-bun install --frozen-lockfile
+# Install the locked development dependencies.
+bun install --frozen-lockfile --ignore-scripts
+
+# Check code, formatting, all local skills, and Leia syntax.
 bun run lint
+
+# Run local tests without installing or changing a live agent.
 bun run test
 ```
 
-## Issues, Questions and Support
+Use `bun run lint:skills` for a focused skill check and `bun run format:write`
+to apply formatting. `bun run validate` combines lint and tests.
+Operational Leia scenarios run in [CI](./.github/workflows/pr-examples-tests.yml),
+not as part of local validation.
 
-Bring tasks, bugs, and feature requests to the
-[GitHub task queue](https://github.com/tanaabased/emori/issues/new/choose).
-Say what happened or what would help. A good description can survive without a
-sales pitch.
+## Support and releases
 
-## Changelog
-
-[CHANGELOG.md](./CHANGELOG.md) records the changes.
-[GitHub releases](https://github.com/tanaabased/emori/releases) has the published versions.
+Bring bugs, tasks, and questions to the
+[task queue](https://github.com/tanaabased/emori/issues/new/choose). Tell me what
+happened or what needs to work better. See [CHANGELOG.md](./CHANGELOG.md) and
+[published releases](https://github.com/tanaabased/emori/releases) for changes.
 
 ## Maintainers
 

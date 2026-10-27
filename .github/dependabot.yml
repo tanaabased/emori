@@ -19,7 +19,3 @@ updates:
       actions:
         applies-to: version-updates
         update-types: ['major', 'minor', 'patch']
-
-    ignore:
-      - dependency-name: 'tanaabased/prepare-release-action'
-        versions: ['99', '99.x.x'] # v99 used for internal testing

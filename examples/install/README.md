@@ -2,21 +2,20 @@
 
 ## What this example does
 
-Installs and reconciles EMORI's checked-out workspace in an isolated OpenClaw
-profile using her declared credentials. It runs host dependency setup, verifies
-managed Git and GitHub identity, and checks intake activation. A repeat
-installation checks host setup convergence, intake retention, and preservation
-of private memory.
+Installs my checked-out workspace in an isolated OpenClaw profile using my declared
+credentials. Checks host dependencies, managed Git and GitHub identity, and intake
+activation. A repeat installation must leave the configuration unchanged while preserving
+intake and private memory.
 
 The `--yes` consent applies only to this isolated CI profile. Automatic cron
 execution is disabled so registered schedules cannot start model turns during
-installation checks.
+the checks.
 
 ## What it doesn't do
 
-It skips agent setup, which belongs to [setup](../setup/README.md), and does not
-exercise ongoing intake polling, feedback handling, model execution, or live
-Google operations. Shared plugin reuse belongs to [shared](../shared/README.md).
+Agent setup belongs to [setup](../setup/README.md); this scenario skips it.
+It does not exercise ongoing intake polling, feedback handling, model execution,
+or live Google operations. Shared plugin reuse belongs to [shared](../shared/README.md).
 
 ## Setup
 

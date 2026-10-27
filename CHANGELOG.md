@@ -1,6 +1,37 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
-- Updated `emori-voice` to a candid co-founder voice with verified-colleague humor and compact examples. [#140](https://github.com/tanaabased/emori/issues/140)
+### Features
+
+- Added co-founder guidance for assessment and implementation, concise shared replies, and model routing that prefers the medium profile for routine substantive work. [#119](https://github.com/tanaabased/emori/issues/119) [#142](https://github.com/tanaabased/emori/pull/142)
+- Added destination-aware iMessage styling for verified replies to pirog, reusing the shared voice and composer. [#124](https://github.com/tanaabased/emori/issues/124) [#143](https://github.com/tanaabased/emori/pull/143)
+- Added nightly verified Google Drive backups with five-copy retention limited to proven, job-owned archives. [#111](https://github.com/tanaabased/emori/issues/111) [#113](https://github.com/tanaabased/emori/pull/113) [#117](https://github.com/tanaabased/emori/pull/117)
+- Enabled EMORI to self-assign eligible issues within her existing repository and admission scope. [#102](https://github.com/tanaabased/emori/issues/102) [#103](https://github.com/tanaabased/emori/pull/103)
+
+### Bug Fixes
+
+- Fixed fresh setup to create missing private memory storage without overwriting existing notes. [#97](https://github.com/tanaabased/emori/issues/97) [#98](https://github.com/tanaabased/emori/pull/98)
+- Fixed older backup failures blocking fresh captures. Cleanup failures no longer turn a confirmed delivery into a failed backup. [#122](https://github.com/tanaabased/emori/issues/122) [#123](https://github.com/tanaabased/emori/pull/123) [#138](https://github.com/tanaabased/emori/issues/138) [#139](https://github.com/tanaabased/emori/pull/139)
+- Fixed setup overwriting the shared iMessage default account or collaboration-managed session visibility. [#86](https://github.com/tanaabased/emori/issues/86) [#89](https://github.com/tanaabased/emori/pull/89) [#104](https://github.com/tanaabased/emori/issues/104) [#105](https://github.com/tanaabased/emori/pull/105)
+- Fixed the local skill templates rejecting `Required Reading` sections.
+- Distinguished missing executables, output-buffer overflows, and other subprocess failures in setup diagnostics.
+- Fixed the quickstart auth-order command to supply the required provider.
+
+### Improvements
+
+- Centralized model admission, runtime bindings, and effort in `agent.yaml`, with shared Codex prerequisite setup. [#91](https://github.com/tanaabased/emori/issues/91) [#92](https://github.com/tanaabased/emori/pull/92) [#93](https://github.com/tanaabased/emori/pull/93) [#107](https://github.com/tanaabased/emori/pull/107) [#109](https://github.com/tanaabased/emori/pull/109)
+- Migrated GitHub intake and workflow configuration to Agent System's v3 contract. [#110](https://github.com/tanaabased/emori/issues/110) [#120](https://github.com/tanaabased/emori/pull/120) [#126](https://github.com/tanaabased/emori/pull/126)
+- Renamed the nightly automation to `backup-agent-nightly`. [#132](https://github.com/tanaabased/emori/issues/132) [#136](https://github.com/tanaabased/emori/pull/136)
+- Updated `emori-voice` to a candid co-founder voice with verified-colleague humor, replacing the fictional vocabulary palette. [#140](https://github.com/tanaabased/emori/issues/140) [#141](https://github.com/tanaabased/emori/pull/141)
+- Updated default and medium model profiles to GPT-6.1 Sol, reserving Astra for exceptional reasoning demands. [#100](https://github.com/tanaabased/emori/issues/100) [#101](https://github.com/tanaabased/emori/pull/101) [#119](https://github.com/tanaabased/emori/issues/119) [#142](https://github.com/tanaabased/emori/pull/142)
+
+### Developer Notes
+
+- Simplified setup, usage, and development documentation, consolidated behavioral checks, and made EMORI’s voice the documentation house style.
+- Added validation for every local skill and explicit instructions for when to read governing references.
+- Moved private memory ignore checks into CI and kept executable Leia scenarios out of local pre-push validation. [#114](https://github.com/tanaabased/emori/pull/114) [#129](https://github.com/tanaabased/emori/issues/129) [#130](https://github.com/tanaabased/emori/pull/130)
+- Colocated setup tests with their implementation.
+- Updated Bun to `1.4.4` and made lint/format runtime selection explicit.
+- Updated the OpenClaw baseline to `2026.10.6`; excluded OpenClaw from automatic dependency upgrades. [#133](https://github.com/tanaabased/emori/issues/133) [#134](https://github.com/tanaabased/emori/pull/134) [#128](https://github.com/tanaabased/emori/issues/128) [#135](https://github.com/tanaabased/emori/pull/135)
 
 ## v1.0.0-beta.13 - [September 29, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0-beta.13)
 

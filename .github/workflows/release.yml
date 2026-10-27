@@ -9,7 +9,8 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  publish-repo:
+    name: Publish repo
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code

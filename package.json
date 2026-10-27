@@ -7,9 +7,9 @@
   "repository": "https://github.com/tanaabased/emori",
   "bugs": "https://github.com/tanaabased/emori/issues",
   "homepage": "https://github.com/tanaabased/emori",
-  "packageManager": "bun@1.4.2",
+  "packageManager": "bun@1.4.4",
   "engines": {
-    "bun": ">=1.4.2 <1.5.0",
+    "bun": ">=1.4.4 <1.5.0",
     "node": ">=24.22.1 <25.0.0 || >=26.12.1 <27.0.0"
   },
   "private": true,
@@ -25,16 +25,16 @@
     "prettier": "^3.9.10"
   },
   "scripts": {
-    "format:check": "prettier . --check --ignore-unknown",
-    "format:write": "prettier . --write --ignore-unknown",
+    "format:check": "bun run --bun prettier . --check --ignore-unknown",
+    "format:write": "bun run --bun prettier . --write --ignore-unknown",
     "leia": "bun ./node_modules/.bin/leia",
-    "lint": "bun run lint:eslint && bun run lint:examples && bun run lint:voice && bun run format:check",
-    "lint:eslint": "eslint .",
+    "lint": "bun run lint:eslint && bun run lint:examples && bun run lint:skills && bun run format:check",
+    "lint:eslint": "bun run --bun eslint .",
     "test": "bun run test:unit",
-    "test:unit": "bun --bun mocha \"skills/*/test/**/*.spec.js\" \"lib/*/test/*.spec.js\" \"test/**/*.spec.js\"",
+    "test:unit": "bun --bun mocha \"skills/*/test/**/*.spec.js\" \"lib/*/test/*.spec.js\"",
     "lint:examples": "bun scripts/validate-examples-task.js",
-    "lint:voice": "bun skills/skill-author/scripts/validate-skill.js --skill-dir skills/voice",
-    "validate": "bun run lint && bun run test"
+    "validate": "bun run lint && bun run test",
+    "lint:skills": "bun scripts/validate-skills-task.js"
   },
   "dependencies": {
     "@lickle/lock": "0.0.1"

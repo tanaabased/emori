@@ -534,6 +534,7 @@ function buildManualChecks({ expectedType }) {
   const checks = [
     'Check that the description clearly says what the skill does and when to use it.',
     'Check that the skill owns one narrow, concrete surface.',
+    'Check Required Reading triggers cover governing references before dependent work; omit only for self-contained skills.',
     'Check that the skill owns an EMORI-local specialization rather than duplicating a shared Tanaab capability.',
     'Check that bundled resources stay local unless they clearly pass the hoist test for a repository-wide contract.',
     'Check that any repo-root resources referenced by the skill still earn hoisted status through proven reuse, repo-wide contract status, or standalone human value.',
