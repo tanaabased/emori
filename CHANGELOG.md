@@ -1,5 +1,7 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
+## v1.0.0 - [October 27, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0)
+
 ### Features
 
 - Added co-founder guidance for assessment and implementation, concise shared replies, and model routing that prefers the medium profile for routine substantive work. [#119](https://github.com/tanaabased/emori/issues/119) [#142](https://github.com/tanaabased/emori/pull/142)
