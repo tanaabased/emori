@@ -135,6 +135,7 @@ backup:
 
 automations:
   - id: backup-agent-nightly
+    display-name: '💾 EMORI: BACKUP AGENT NIGHTLY'
     enabled: true
     runtimes:
       - openclaw
