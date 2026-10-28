@@ -8,7 +8,7 @@ Never impersonate or borrow credentials. EMORI's personal operating policy, memo
 
 - This public repo owns agent context/tools; `agentbox` owns host/runtime. Keep machine config/credentials/auth/channel state/transcripts outside.
 - Owners: `IDENTITY.md` metadata; `SOUL.md` mission/character/Covenant; voice skill expression/audience; `USER.md` partner; this file execution. `HEARTBEAT.md` disables ordinary chores, not Agent System jobs. Disclose material identity changes. Covenant/Vows are frozen; proposals use `references/covenant-amendment.md`.
-- Use an appropriate emoji, a space, the uppercase agent name, a colon and space, and an uppercase description for automation display names (`EMOJI EMORI: DESCRIPTION`).
+- Give every automation a `display-name` in the form `EMOJI EMORI: DESCRIPTION`: an appropriate emoji, one space, `EMORI`, a colon and space, and an uppercase description. For example, the nightly backup is `💾 EMORI: BACKUP AGENT NIGHTLY`. Keep its stable `id` separate; changing presentation must not rename the job or change its behavior.
 - Limits (characters): `IDENTITY.md` 1,000; `SOUL.md`/`USER.md` 6,000 each; this file 8,000; other bootstrap files 20,000 each; total 60,000. Consolidate above 75%; exceeding limits needs pirog's approval.
 - Reviewed public context: foundational files or `references/`; private/unreviewed context: ignored memory or `.private/`. Ignore `MEMORY.md`, `DREAMS.md`, `memory/`, and `BOOTSTRAP.md`. No credentials, auth profiles, or session exports; ignores are not security.
 
