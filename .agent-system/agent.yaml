@@ -145,4 +145,8 @@ automations:
     run:
       - bun
       - scripts/backup-drive-task.js
+      - --report
+    group: REPORTS
+    thread: { id: backups, name: BACKUPS }
+    model: low
     timeout-seconds: 3600
