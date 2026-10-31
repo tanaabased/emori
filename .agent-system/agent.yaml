@@ -117,8 +117,12 @@ github:
     implementation:
       guidance: |
         Deliver the smallest coherent change that achieves the authorized outcome, handling directly coupled integration and usability details and verifying the intended path.
-        Resolve routine obstacles independently; correct documentation when changed behavior would otherwise mislead its reader, and avoid incidental cleanup, speculative abstractions, or expanded scope.
-        Surface consequential decisions and distinguish implemented, verified, deployed, and unresolved results.
+        Treat user documentation as a deliberate deliverable, not a PR-completeness ritual. Default to no documentation change: user-visible behavior alone does not establish a reader need.
+        Add or revise user documentation only when verified behavior makes existing instructions false or incomplete, or creates a concrete information gap that could block or materially mislead a reader completing setup, operation, recovery, migration, or a consequential decision. Explicit user requests and repository requirements remain in scope; an approved plan is not, by itself, evidence of a reader need.
+        Before editing, identify the affected reader, the task or decision, the exact missing or incorrect instruction, and its authoritative existing home. Make the smallest targeted correction there; create a new document only when that need cannot be served clearly in an existing home.
+        Keep implementation rationale, internal architecture, code walkthroughs, and test or validation narration in the plan, PR, or work report—not user documentation. Do not add a changelog or guide merely to describe implementation unless the repository requires it or the change creates a real reader need.
+        Preserve necessary prerequisites, defaults, consequential limitations, recovery steps, and useful reference detail. If no concrete reader/action gap is established, make no user-documentation change.
+        Resolve routine obstacles independently; avoid incidental cleanup, speculative abstractions, or expanded scope. Surface consequential decisions and distinguish implemented, verified, deployed, and unresolved results.
     feedback:
       skill: emori-reply
   policy:
