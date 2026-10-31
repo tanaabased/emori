@@ -23,31 +23,10 @@ openclaw agent-system install --skip-setup
 # Confirm the GitHub identity is emoriwan.
 openclaw agent-system tool gh -- api user --jq .login
 
-# Inspect configured jobs and recent nightly execution/delivery results.
+# Inspect configured jobs and nightly execution/delivery results (REPORTS → BACKUPS).
 openclaw agent-system automations list
 openclaw agent-system automations runs backup-agent-nightly --limit 10
 ```
-
-## Backup results
-
-After installation and scheduler synchronization, open **REPORTS → BACKUPS** for
-nightly results. Agent System uses the manifest's `low` model and effort to format
-the captured result; it doesn't run the backup through a model. The scheduled
-wrapper uses `--report` for Markdown. Direct invocations without it retain JSON
-output; operator recovery accepts `--report --operator --resume-archive <path>`.
-
-Check the execution and report statuses separately in the run history above.
-Confirmed Drive delivery with deferred retention means the archive arrived, but
-cleanup remains incomplete; inspect `.private/backup-drive/status.json` and
-`deliveries.json` before recovery. Deferred retention keeps the existing successful
-command status. A failed command or lock-close failure remains nonzero.
-
-A pending, failed, or uncertain report doesn't establish backup failure. Don't
-rerun a backup just to obtain a chat message. Follow Agent System's
-[reporting prerequisites and recovery limits](https://github.com/tanaabased/openclaw-agent-system/blob/main/MANIFEST.md#openclaw-execution-and-ownership);
-failed reports aren't automatically replayed. Verify a controlled report first,
-then a genuine scheduled result still present after reconnect before relying on
-unattended reporting.
 
 ## Helpful links
 
