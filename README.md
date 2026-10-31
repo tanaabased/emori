@@ -114,7 +114,7 @@ run history with the [advanced commands](./ADVANCED.md#command-cheat-sheet).
 
 The updater declaration is not proof of installation or unattended operation.
 Its production entrypoint stops before Git or reconciliation until supported
-maintenance exclusion, stable execution, shared readiness and loaded-state
+maintenance exclusion, stable execution and loaded-state
 verification are connected. See [updater operation](./ADVANCED.md#agent-update-pilot)
 before enabling it on a live host.
 

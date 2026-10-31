@@ -35,26 +35,27 @@ openclaw agent-system automations runs update-agent --limit 10
 requests 23:30 America/New_York with an initial 30-minute limit. **It is not ready
 for activation:** the production host adapter currently returns
 `maintenance-unavailable` before any Git, dependency, Install or Doctor command.
-The shared-source job in [#153](https://github.com/tanaabased/emori/issues/153)
-must supply supported readiness and reporting integration; checkout admission
-exclusion, stable runner/tool inputs and loaded-state verification also remain
-unconnected. A timestamp or an operator-written file cannot substitute for them.
+Checkout activity/shared-maintenance exclusion, stable execution and loaded-state
+verification remain unconnected. The backup lock alone does not cover these.
 
 The implemented core requires clean, inactive canonical `main` and the approved
 upstream, advances fast-forward-only, and installs frozen dependencies even when
-unchanged. It then requires verified shared readiness before Agent System Install
-with `--skip-setup`, followed by Doctor's normal checks. Skipping setup does not
+unchanged. Agent System Install uses `--skip-setup`, followed by Doctor's normal
+checks. Native lifecycle failures are reported without a duplicate readiness pass;
+a successful shared-source refresh is not required. Skipping setup does not
 establish full setup readiness. Configuration drift may cause native rejection;
 the updater preserves successful work and never resets or re-admits itself.
 Shared Gateway restart/recovery belongs to the shared-source job.
 
 With a supported Bun runtime, local checkpoints are stored owner-only in
 `.private/update-agent/status.json` and per-run JSON files in
-`.private/update-agent/runs/`. The command emits JSON and a short summary with a
-nonzero exit for incomplete work. These files are not a persistent morning card;
-that integration and controlled plus genuinely scheduled host proof are still
-outstanding. The existing backup lock prevents local backup/update overlap,
-but does not establish checkout inactivity or shared maintenance exclusion.
+`.private/update-agent/runs/`. The command emits Markdown on stdout, sanitized
+diagnostics on stderr and a nonzero exit for incomplete work, including early
+failures. Its declaration routes reports to REPORTS / UPDATES using `model: low`.
+Agent System separately formats and delivers captured results; printing Markdown
+does not confirm delivery. Inspect native run history for execution and reporting
+status. Controlled and genuinely scheduled host proof remain outstanding; report
+recovery must not rerun maintenance.
 
 After an interrupted mutation or uncertain Install, inspect the recorded revision,
 pending step and native results. Reconcile through the supported Agent System

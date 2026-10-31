@@ -143,6 +143,11 @@ automations:
     enabled: true
     runtimes:
       - openclaw
+    group: REPORTS
+    thread:
+      id: updates
+      name: UPDATES
+    model: low
     schedule:
       cron: "30 23 * * *"
       timezone: America/New_York
