@@ -144,5 +144,11 @@ automations:
       timezone: America/New_York
     run:
       - bun
-      - scripts/backup-drive-task.js
+      - scripts/backup-agent.js
+      - --report
+    group: REPORTS
+    thread:
+      id: backups
+      name: BACKUPS
+    model: low
     timeout-seconds: 3600
