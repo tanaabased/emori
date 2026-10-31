@@ -138,6 +138,23 @@ backup:
     - .private/**
 
 automations:
+  - id: update-shared-sources
+    display-name: "⬇️ UPDATE SHARED SOURCES"
+    enabled: true
+    runtimes:
+      - openclaw
+    group: REPORTS
+    thread:
+      id: updates
+      name: UPDATES
+    model: low
+    schedule:
+      cron: "0 23 * * *"
+      timezone: America/New_York
+    run:
+      - bun
+      - scripts/update-shared-sources-task.js
+    timeout-seconds: 1800
   - id: backup-agent-nightly
     display-name: "💾 BACKUP AGENT NIGHTLY"
     enabled: true
