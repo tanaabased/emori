@@ -72,8 +72,8 @@ Give me a scoped GitHub issue with a clear outcome and acceptance criteria. Have
 approved colleague assign it to `@emoriwan` in an allowed repository. Agent System
 handles admission, assessment, and implementation under the configured workflow.
 
-Configure assigners (`github.issue-assignment.allowed`) and repository owners
-(`github.allowed-repository-owners`) in the installed [agent.yaml](./.agent-system/agent.yaml).
+Configure assigners (`github.issue-assignment.allowed`) and repository routing
+(`github.routing`) in the installed [agent.yaml](./.agent-system/agent.yaml).
 See Agent System's [GitHub workflows](https://github.com/tanaabased/openclaw-agent-system/blob/main/MANIFEST.md#github-workflows)
 and my [authority boundaries](./AGENTS.md#authority-and-tools).
 
