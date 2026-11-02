@@ -32,6 +32,7 @@
     "lint:eslint": "bun run --bun eslint .",
     "test": "bun run test:unit",
     "test:unit": "bun --bun mocha \"skills/*/test/**/*.spec.js\" \"lib/*/test/*.spec.js\"",
+    "test:maintenance": "bun test ./lib/update-agent/test/",
     "lint:examples": "bun scripts/validate-examples-task.js",
     "validate": "bun run lint && bun run test",
     "lint:skills": "bun scripts/validate-skills-task.js"

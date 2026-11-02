@@ -56,9 +56,14 @@ enables the schedule; repository validation alone does not verify live delivery.
 
 `update-agent` is a deterministic Bun command, not an agent prompt. Its declaration
 requests 23:30 America/New_York with an initial 30-minute limit. Use the declared
-Bun runtime range. Installation and controlled validation are separate from this
-repository declaration; verify one controlled run/report and a genuine scheduled
-occurrence before treating the job as proven unattended maintenance.
+maintenance Bun range: stable `>=1.4.2 <1.5.0`, independent of the preferred
+development runtime in `.bun-version` and `package.json#engines.bun`. Unsupported
+runtimes stop before maintenance state is accessed and report the observed
+version, required range and executable when safe. Choose a supported runtime
+before retrying; the updater does not upgrade Bun. Installation and controlled
+validation are separate from this repository declaration; verify one controlled
+run/report and a genuine scheduled occurrence before treating the job as proven
+unattended maintenance.
 
 The updater requires clean canonical `main` and the approved
 upstream, advances fast-forward-only, and installs frozen dependencies even when
