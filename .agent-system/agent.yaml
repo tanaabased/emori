@@ -96,13 +96,10 @@ github:
   schema-version: 3
   runtimes:
     - openclaw
-  allowed-repository-owners:
-    - org: tanaabased
-      node-id: O_kgDODNGy1g
-    - login: pirog
-      node-id: MDQ6VXNlcjcxMzQyNA==
-    - org: lando
-      node-id: MDEyOk9yZ2FuaXphdGlvbjMxNjA1NTg0
+  routing:
+    - "tanaabased/*"
+    - "pirog/me"
+    - "lando/*"
   issue-assignment:
     allowed:
       - "@pirog"
