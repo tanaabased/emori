@@ -36,13 +36,19 @@ The shared-source job uses the existing Canon and Agent System checkouts in
 `git.worktrees.repositories.local`. It skips dirty, non-main, ahead/diverged,
 linked or unexpected checkouts without discarding work. It does not reserve
 checkouts against concurrent use; avoid editing them during the 23:00 run.
-Eligible sources receive a frozen Bun install even when unchanged, then Agent
-System sync runs. Agent repositories and the backup job are unaffected.
+Eligible sources receive a frozen Bun install even when unchanged. Agent System
+sync runs unless a prior successful build still matches the current inputs and
+artifacts; unchanged source alone isn't enough to skip it. Agent repositories
+and the backup job are unaffected.
 
-**Gateway restart is manual in this version.** A successful sync reports
-“restart pending,” exits nonzero to flag the unfinished step, and leaves active
-work alone. Arrange a restart when work is idle; don't rerun source updates just
-to restart. Source results do not gate separate agent updates.
+**Gateway restart is manual in this version.** Successful maintenance with
+only activation outstanding exits successfully with
+a pending-activation warning. Actual failures or incomplete maintenance still
+exit nonzero. Arrange a restart when work is idle; don't rerun source updates just
+to restart. Pending activation survives later runs and failures. Without suitable
+loaded-build evidence, the warning may remain after an independent restart;
+unchanged source doesn't prove activation. Source results do not gate separate
+agent updates.
 
 After interruption, the next run inspects current checkout state before updating;
 it does not assume unfinished commands succeeded or roll changes back. To read
