@@ -26,8 +26,31 @@ openclaw agent-system tool gh -- api user --jq .login
 # Inspect configured jobs and nightly execution/delivery results (REPORTS → BACKUPS).
 openclaw agent-system automations list
 openclaw agent-system automations runs backup-agent-nightly --limit 10
+
+# Inspect source and agent update results (REPORTS → UPDATES).
+openclaw agent-system automations runs update-shared-sources --limit 10
 openclaw agent-system automations runs update-agent --limit 10
 ```
+
+The shared-source job uses the existing Canon and Agent System checkouts in
+`git.worktrees.repositories.local`. It skips dirty, non-main, ahead/diverged,
+linked or unexpected checkouts without discarding work. It does not reserve
+checkouts against concurrent use; avoid editing them during the 23:00 run.
+Eligible sources receive a frozen Bun install even when unchanged, then Agent
+System sync runs. Agent repositories and the backup job are unaffected.
+
+**Gateway restart is manual in this version.** A successful sync reports
+“restart pending,” exits nonzero to flag the unfinished step, and leaves active
+work alone. Arrange a restart when work is idle; don't rerun source updates just
+to restart. Source results do not gate separate agent updates.
+
+After interruption, the next run inspects current checkout state before updating;
+it does not assume unfinished commands succeeded or roll changes back. To read
+the last private checkpoint without repeating maintenance, run
+`bun scripts/update-shared-sources-task.js --report-only` from the installed
+checkout. Agent System retains execution and report-delivery outcomes separately;
+don't rerun maintenance solely to resend a report. Installing the declaration
+enables the schedule; repository validation alone does not verify live delivery.
 
 ## Agent update pilot
 
