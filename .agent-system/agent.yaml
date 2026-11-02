@@ -150,7 +150,6 @@ automations:
     model: low
     schedule:
       cron: "0 23 * * *"
-      timezone: America/New_York
     run:
       - bun
       - scripts/update-shared-sources-task.js
@@ -167,7 +166,6 @@ automations:
     model: low
     schedule:
       cron: "30 23 * * *"
-      timezone: America/New_York
     run:
       - bun
       - scripts/update-agent-task.js
@@ -179,7 +177,6 @@ automations:
       - openclaw
     schedule:
       cron: "0 4 * * *"
-      timezone: America/New_York
     run:
       - bun
       - scripts/backup-agent.js
