@@ -35,8 +35,8 @@ openclaw agent-system automations runs update-agent --limit 10
 Avoid editing the maintained checkouts while an update is running. The jobs do
 not reserve them against other work.
 
-Gateway restart is manual after shared-source sync. When the report says
-“restart pending,” arrange a restart once work is idle; don't rerun maintenance
+Gateway restart is manual after shared-source sync. When the report warns of
+pending activation, arrange a restart once work is idle; don't rerun maintenance
 just to restart or resend a report.
 
 ```sh
