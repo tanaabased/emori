@@ -96,13 +96,10 @@ github:
   schema-version: 3
   runtimes:
     - openclaw
-  allowed-repository-owners:
-    - org: tanaabased
-      node-id: O_kgDODNGy1g
-    - login: pirog
-      node-id: MDQ6VXNlcjcxMzQyNA==
-    - org: lando
-      node-id: MDEyOk9yZ2FuaXphdGlvbjMxNjA1NTg0
+  routing:
+    - "tanaabased/*"
+    - "pirog/me"
+    - "lando/*"
   issue-assignment:
     allowed:
       - "@pirog"
@@ -150,7 +147,6 @@ automations:
     model: low
     schedule:
       cron: "0 23 * * *"
-      timezone: America/New_York
     run:
       - bun
       - scripts/update-shared-sources-task.js
@@ -167,7 +163,6 @@ automations:
     model: low
     schedule:
       cron: "30 23 * * *"
-      timezone: America/New_York
     run:
       - bun
       - scripts/update-agent-task.js
@@ -179,7 +174,6 @@ automations:
       - openclaw
     schedule:
       cron: "0 4 * * *"
-      timezone: America/New_York
     run:
       - bun
       - scripts/backup-agent.js
