@@ -36,13 +36,29 @@ Avoid editing the maintained checkouts while an update is running. The jobs do
 not reserve them against other work.
 
 Gateway restart is manual after shared-source sync. When the report warns of
-pending activation, arrange a restart once work is idle; don't rerun maintenance
+pending activation, arrange a restart once work is idle; don't rerun updates
 just to restart or resend a report.
 
 ```sh
-# Read the last shared-source report without repeating maintenance.
+# Read retained reports without repeating updates or claiming message delivery.
 bun scripts/update-shared-sources-task.js --report-only
+bun scripts/update-agent-task.js --report-only
+
+# Recheck health only when the recorded agent configuration was fully applied.
+bun scripts/update-agent-task.js --verify-only
 ```
+
+Verification-only runs Doctor with normal checks, not source updates, dependency
+installation, or configuration application. It refuses changed checkouts,
+incomplete application, and uncertain checkpoints. The original update and its
+failed health check stay in history; verification is a separate observation.
+Use `--help` on the agent update command for its modes. Reporting commands emit
+the [Agent System report document](https://github.com/tanaabased/openclaw-agent-system/blob/main/API.md#command-report-output)
+to stdout; the shared service renders cards in scheduled chats.
+
+A restart request or matching files on disk does not prove which build the
+Gateway loaded. No supported running-build observation is currently available to
+this updater, so activation stays unverified until that evidence exists.
 
 If an agent update is interrupted, inspect `.private/update-agent/status.json`
 and the native run details before recovery. Resolve any uncertain operation and
