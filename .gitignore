@@ -16,6 +16,7 @@
 
 # OpenClaw runtime state belongs outside this workspace
 /.openclaw/
+/.openclaw-repair/
 /openclaw-workspace-state.json
 /openclaw.json
 /auth-profiles.json
