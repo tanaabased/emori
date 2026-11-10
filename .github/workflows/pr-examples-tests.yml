@@ -17,7 +17,6 @@ jobs:
       matrix:
         example:
           - workspace
-          - install
           - setup
           - shared
           - backup
@@ -46,11 +45,6 @@ jobs:
           TMPDIR: ${{ github.workspace }}/examples/${{ matrix.example }}/.tmp
         run: |
           mkdir -p "$TMPDIR"
-          if [[ '${{ matrix.example }}' == install || '${{ matrix.example }}' == setup ]]; then
-            export OPENCLAW_PLUGIN_LIFECYCLE_TRACE=1
-            export EMORI_ENROLLMENT_TRACE_FILE="$TMPDIR/enrollment-trace.jsonl"
-            export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--import=$GITHUB_WORKSPACE/examples/install/trace-enrollment.js"
-          fi
           # Preserve the action-installed OpenClaw's position on PATH.
           leia "examples/${{ matrix.example }}/README.md" --retry 0
       - name: RUNNING A LEVEL THREE DIAGNOSTICS
@@ -63,7 +57,7 @@ jobs:
             echo "No OpenClaw workspace was created; see the scenario failure output above."
           fi
       - name: Report install and Gateway diagnostics
-        if: ${{ always() && (matrix.example == 'install' || matrix.example == 'setup') }}
+        if: ${{ always() && matrix.example == 'setup' }}
         continue-on-error: true
         shell: bash
         env:
@@ -87,13 +81,11 @@ jobs:
             cat "$TMPDIR/first-install-gateway.log"
             printf '::endgroup::\n'
           fi
-          for trace in enrollment-trace.jsonl first-install-gateway-full.log; do
-            if test -f "$TMPDIR/$trace"; then
-              printf '\n::group::%s\n' "$trace"
-              cat "$TMPDIR/$trace"
-              printf '::endgroup::\n'
-            fi
-          done
+          if test -f "$TMPDIR/first-install-gateway-full.log"; then
+            printf '\n::group::Full Gateway trace after first install\n'
+            cat "$TMPDIR/first-install-gateway-full.log"
+            printf '::endgroup::\n'
+          fi
           printf '\n::group::Gateway after scenario\n'
           openclaw-gateway diagnostics --debug
           printf '::endgroup::\n'

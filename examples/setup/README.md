@@ -17,9 +17,9 @@ the checks.
 
 Configuration is not execution. This scenario sends no messages, runs no skills
 or model turns, and does not test memory indexing or recall. Credential and intake
-lifecycle checks belong to [install](../install/README.md); shared plugin reuse
-belongs to [shared](../shared/README.md). Setup and model expectations come from
-the manifest.
+lifecycle checks belong to [Agent System](https://github.com/tanaabased/openclaw-agent-system/tree/main/examples/os-install-online);
+shared plugin reuse belongs to [shared](../shared/README.md). Setup and model
+expectations come from the manifest.
 
 ## Setup
 
