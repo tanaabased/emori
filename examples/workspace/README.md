@@ -13,7 +13,7 @@ model, starts no Gateway, and does not establish runtime skill loading or model
 behavior. Static voice-skill validation belongs to the local
 [development checks](../../README.md#development), installed Canon skill
 availability to [setup](../setup/README.md), and credential installation to
-[install](../install/README.md).
+[Agent System](https://github.com/tanaabased/openclaw-agent-system).
 
 ## Setup
 

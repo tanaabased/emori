@@ -10,7 +10,7 @@ configuration, or the first agent. Repeating it must leave the configuration unc
 
 It skips workspace setup, needs no credentials or my host dependencies, and runs
 no models. Full setup belongs to [setup](../setup/README.md); credential and intake
-lifecycle checks belong to [install](../install/README.md).
+lifecycle checks belong to [Agent System](https://github.com/tanaabased/openclaw-agent-system/tree/main/examples/os-install-online).
 
 ## Setup
 
