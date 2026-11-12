@@ -3,7 +3,7 @@
 ## What this example does
 
 Runs my full setup twice in an isolated OpenClaw profile to check configuration
-and repeatability. Covers an eligible Canon skill, manifest-declared models,
+and repeatability. Covers a loaded Canon plugin exposing skills, manifest-declared models,
 iMessage routing and send-only messaging, SQLite vector loading, and disabled
 Workshop background learning. Host session visibility and clean checkouts must
 survive both passes. Agent System owns the required Codex dependency pair;
@@ -19,7 +19,8 @@ Configuration is not execution. This scenario sends no messages, runs no skills
 or model turns, and does not test memory indexing or recall. Credential and intake
 lifecycle checks belong to [Agent System](https://github.com/tanaabased/openclaw-agent-system/tree/main/examples/os-install-online);
 shared plugin reuse belongs to [shared](../shared/README.md). Setup and model
-expectations come from the manifest.
+expectations come from the manifest. The scenario checks that every declared setup
+step completes, without requiring unrelated steps to stay in a particular order.
 
 ## Setup
 
@@ -80,19 +81,20 @@ jq -e --slurpfile expected "${TMPDIR}/setup-expected.json" '
     ([$outcomes | to_entries[] | select(.value.component == "codex-plugin" and .value.code == "codex-plugin-installed" and .value.status == "created") | .key] | first) as $plugin |
     ([$outcomes | to_entries[] | select(.value.component == "setup") | .key] | first) as $setup |
     $plugin != null and $setup != null and $plugin < $setup) and
-  ([.outcomes[] | select(.component == "setup") | .stepId] == $expected[0].setup) and
+  (.outcomes as $outcomes |
+    all($expected[0].setup[]; . as $stepId |
+      any($outcomes[]; .component == "setup" and .stepId == $stepId))) and
   all(.outcomes[] | select(.component == "setup"); .status == "updated" or .status == "unchanged")
 ' "${TMPDIR}/setup-install.json"
 test -d "$GITHUB_WORKSPACE/memory"
 test -f "$GITHUB_WORKSPACE/MEMORY.md"
 
-# should expose an eligible canon skill from the shared ssh checkout
+# should expose the checked-out Canon plugin with at least one skill
 git -C "$HOME/tanaab/canon" remote get-url origin | grep -Fx 'git@github.com:tanaabased/canon.git'
-openclaw skills info tanaab-project-optimizer --agent emori --json | jq -e '
-  .name == "tanaab-project-optimizer" and
-  .eligible == true and
-  .disabled == false and
-  (.filePath | split("/") | index("plugin-skills")) != null
+openclaw plugins inspect tanaab --json | jq -e '
+  .plugin.enabled == true and
+  .plugin.status == "loaded" and
+  (.install.acceptedSurface.skills | length > 0)
 '
 
 # should resolve the Codex dependency pair owned by Agent System
@@ -211,7 +213,9 @@ done
 openclaw agent-system install --yes --json | tee "${TMPDIR}/setup-reinstall.json"
 jq -e --slurpfile expected "${TMPDIR}/setup-expected.json" '
   .blocked == null and ((.unattempted // []) | length == 0) and
-  ([.outcomes[] | select(.component == "setup") | .stepId] == $expected[0].setup) and
+  (.outcomes as $outcomes |
+    all($expected[0].setup[]; . as $stepId |
+      any($outcomes[]; .component == "setup" and .stepId == $stepId))) and
   all(.outcomes[] | select(.component == "setup"); .status == "unchanged")
 ' "${TMPDIR}/setup-reinstall.json"
 for section in agents bindings channels hooks skills tools; do
