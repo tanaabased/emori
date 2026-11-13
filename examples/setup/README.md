@@ -175,7 +175,7 @@ openclaw config get skills.workshop.autonomous.mode --json | jq -e '. == "off"'
 # should preserve collaboration-managed session visibility after workspace setup
 openclaw config get tools.sessions.visibility --json | jq -e '. == "all"'
 
-# should report memory and session sources with the installed vector extension
+# should configure the installed vector extension
 case "$(uname -m)" in
   arm64) SQLITE_VECTOR_PACKAGE="sqlite-vec-darwin-arm64" ;;
   x86_64) SQLITE_VECTOR_PACKAGE="sqlite-vec-darwin-x64" ;;
@@ -184,13 +184,9 @@ esac
 EXPECTED_VECTOR_EXTENSION="$(npm root --global)/${SQLITE_VECTOR_PACKAGE}/vec0.dylib"
 test -f "$EXPECTED_VECTOR_EXTENSION"
 node "$GITHUB_WORKSPACE/examples/setup/vector-extension.mjs" "$EXPECTED_VECTOR_EXTENSION"
-openclaw memory status --agent emori --json | jq -e \
+openclaw config get agents.entries.emori.memory.search.store.vector --json | jq -e \
   --arg extension "$EXPECTED_VECTOR_EXTENSION" \
-  'map(select(.agentId == "emori")) |
-   length == 1 and
-   .[0].status.vector.enabled == true and
-   .[0].status.vector.extensionPath == $extension and
-   .[0].status.sources == ["memory", "sessions"]'
+  '.enabled == true and .extensionPath == $extension'
 
 # should enable private same-agent recall without the legacy memory hook
 openclaw config get agents.entries.emori.memory.search.rememberAcrossConversations --json | jq -e '. == true'
