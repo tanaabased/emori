@@ -181,9 +181,8 @@ automations:
     schedule:
       cron: "0 4 * * *"
     run:
-      - bun
-      - scripts/backup-agent.js
-      - --report
+      - bash
+      - scripts/backup-agent.sh
     group: REPORTS
     thread:
       id: backups
