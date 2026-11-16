@@ -1,15 +1,14 @@
 defaults: &defaults
-  enabled: true
   runtimes: [openclaw]
   group: REPORTS
   model: low
+  timeout-seconds: 3600
 
 updates: &updates
   <<: *defaults
   thread:
     id: updates
     name: UPDATES
-  timeout-seconds: 1800
 
 automations:
   - <<: *updates
@@ -39,4 +38,3 @@ automations:
     thread:
       id: backups
       name: BACKUPS
-    timeout-seconds: 3600

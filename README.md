@@ -83,6 +83,7 @@ and my [authority boundaries](./AGENTS.md#authority-and-tools).
 | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | [agent.yaml](./.agent-system/agent.yaml)                                                        | Identity, models, credentials, managed tools, and admission.           |
 | [Automations](./.agent-system/automations.yml)                                                  | Scheduled jobs and shared reporting defaults.                          |
+| [Guidance](./guidance/)                                                                         | Assessment, implementation, and model-routing instructions.            |
 | [Host setup](./.agent-system/setup-host.yaml) / [agent setup](./.agent-system/setup-agent.yaml) | Ordered installation checks and tasks.                                 |
 | [OpenClaw policy](./openclaw.patch.json)                                                        | Execution, messaging, and memory settings; apply through installation. |
 | [IDENTITY.md](./IDENTITY.md) / [SOUL.md](./SOUL.md) / [AGENTS.md](./AGENTS.md)                  | Identity, character, and execution guidance.                           |
