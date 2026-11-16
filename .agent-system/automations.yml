@@ -28,8 +28,8 @@ automations:
       - bun
       - scripts/update-agent-task.js
   - <<: *defaults
-    id: backup-agent-nightly
-    display-name: '💾 BACKUP AGENT NIGHTLY'
+    id: backup-agent
+    display-name: '💾 BACKUP AGENT'
     schedule:
       cron: '0 4 * * *'
     run:
