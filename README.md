@@ -79,13 +79,15 @@ and my [authority boundaries](./AGENTS.md#authority-and-tools).
 
 ## Configuration
 
-| Source                                                                                          | Purpose                                                                   |
-| ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| [agent.yaml](./.agent-system/agent.yaml)                                                        | Identity, models, credentials, managed tools, admission, and automations. |
-| [Host setup](./.agent-system/setup-host.yaml) / [agent setup](./.agent-system/setup-agent.yaml) | Ordered installation checks and tasks.                                    |
-| [OpenClaw policy](./openclaw.patch.json)                                                        | Execution, messaging, and memory settings; apply through installation.    |
-| [IDENTITY.md](./IDENTITY.md) / [SOUL.md](./SOUL.md) / [AGENTS.md](./AGENTS.md)                  | Identity, character, and execution guidance.                              |
-| [GOALS.md](./GOALS.md) / [USER.md](./USER.md)                                                   | Reviewed direction and partner context.                                   |
+| Source                                                                                          | Purpose                                                                |
+| ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| [agent.yaml](./.agent-system/agent.yaml)                                                        | Identity, models, credentials, managed tools, and admission.           |
+| [Automations](./.agent-system/automations.yml)                                                  | Scheduled jobs and shared reporting defaults.                          |
+| [Guidance](./guidance/)                                                                         | Assessment, implementation, and model-routing instructions.            |
+| [Host setup](./.agent-system/setup-host.yaml) / [agent setup](./.agent-system/setup-agent.yaml) | Ordered installation checks and tasks.                                 |
+| [OpenClaw policy](./openclaw.patch.json)                                                        | Execution, messaging, and memory settings; apply through installation. |
+| [IDENTITY.md](./IDENTITY.md) / [SOUL.md](./SOUL.md) / [AGENTS.md](./AGENTS.md)                  | Identity, character, and execution guidance.                           |
+| [GOALS.md](./GOALS.md) / [USER.md](./USER.md)                                                   | Reviewed direction and partner context.                                |
 
 See the [manifest reference](https://github.com/tanaabased/openclaw-agent-system/blob/main/MANIFEST.md)
 for options. Private memory stays ignored; credentials, channel state, and transcripts
@@ -110,7 +112,7 @@ Shared workflows come from [Canon's Tanaab plugin](https://github.com/tanaabased
 | `update-shared-sources` | daily, 23:00 local time | Updates eligible Canon and Agent System sources; reports in REPORTS / UPDATES. Gateway restart remains an operator action. |
 | `update-agent`          | daily, 23:30 local time | Fast-forwards eligible EMORI main, reconciles dependencies, and reports in UPDATES.                                        |
 
-Configured in [agent.yaml](./.agent-system/agent.yaml); inspect installed jobs and
+Configured in [automations.yml](./.agent-system/automations.yml); inspect installed jobs and
 run history with the [advanced commands](./ADVANCED.md#command-cheat-sheet).
 
 ## Development

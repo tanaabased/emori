@@ -11,7 +11,8 @@ this scenario checks its requirement rather than adding another pin.
 
 The `--yes` consent applies only to this isolated CI profile. Automatic cron
 execution is disabled so registered schedules cannot start model turns during
-the checks.
+the checks. A temporary local manifest overlay pauses issue pickup so setup does
+not depend on live milestone state; intake lifecycle belongs to Agent System.
 
 ## What it doesn't do
 
@@ -44,6 +45,10 @@ bun --eval '
   const setup = ["setup-host", "setup-agent"].flatMap((key) => yaml(resolve(directory, manifest[key].file)).steps.map(({ id }) => id));
   console.log(JSON.stringify({ setup, models: manifest.models, runtime: manifest.agent.runtime }));
 ' > "${TMPDIR}/setup-expected.json"
+
+# should isolate setup from live issue pickup prerequisites
+test ! -e "$GITHUB_WORKSPACE/.agent-system/agent.local.yaml"
+cp "$GITHUB_WORKSPACE/examples/setup/setup-overlay.yaml" "$GITHUB_WORKSPACE/.agent-system/agent.local.yaml"
 
 # should start the isolated gateway for session dispatch enrollment
 openclaw config set cron.enabled false --strict-json
@@ -221,6 +226,14 @@ done
 openclaw config validate --json | jq -e '.valid == true'
 
 # should preserve EMORI's clean checkouts
+rm "$GITHUB_WORKSPACE/.agent-system/agent.local.yaml"
 test -z "$(git -C "$GITHUB_WORKSPACE" status --short --untracked-files=all)"
 test -z "$(git -C "$HOME/tanaab/emori" status --short --untracked-files=all)"
+```
+
+## Cleanup
+
+```bash
+# should remove the temporary setup overlay even after a failed assertion
+rm -f "$GITHUB_WORKSPACE/.agent-system/agent.local.yaml"
 ```
