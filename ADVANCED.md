@@ -27,9 +27,6 @@ openclaw agent-system tool gh -- api user --jq .login
 openclaw agent-system automations list
 openclaw agent-system automations runs backup-agent --limit 10
 
-# Run the synchronized backup manually (creates/uploads a backup and applies retention).
-openclaw agent-system automations run backup-agent --json
-
 # Inspect source and agent update results (REPORTS → UPDATES).
 openclaw agent-system automations runs update-shared-sources --limit 10
 openclaw agent-system automations runs update-agent --limit 10
@@ -67,44 +64,6 @@ If an agent update is interrupted, inspect `.private/update-agent/status.json`
 and the native run details before recovery. Resolve any uncertain operation and
 verify installed state before preserving and moving the checkpoint aside for a
 new attempt. Keep the per-run records; never clear a checkpoint just to retry.
-
-## Migrate the backup automation ID
-
-`backup-agent` / 💾 BACKUP AGENT replaces `backup-agent-nightly`. This is a
-stable-ID migration, not a display-only rename. Apply it only as an authorized
-operator action in the installed checkout, while no backup or agent update is
-running. Do not reset ownership records or edit scheduler storage.
-
-1. Before applying the new declaration, inspect installed jobs with
-   `openclaw agent-system automations list --json` and read old history with
-   `openclaw agent-system automations runs backup-agent-nightly --limit 10 --json`.
-   Record the old job's native ID, enabled state, cron/timezone, and destination.
-   Stop if ownership is conflicting or inspection is incomplete; a missing job in
-   a scoped view does not establish absence.
-2. Temporarily remove only the old backup declaration from
-   `.agent-system/automations.yml`, leaving the other jobs unchanged. Run
-   `openclaw agent-system automations sync --json`. Confirm the old job is disabled
-   and its mapping/history retained before adding the replacement. This staged
-   sync avoids enabling a replacement before the old schedule is disabled.
-3. Apply the new `backup-agent` declaration from this repository and sync again.
-   Preserve the recorded enabled state: if the old job was intentionally disabled,
-   set `enabled: false` on the replacement before syncing. Keep `0 4 * * *` and the
-   existing timezone behavior (no explicit timezone means host-local time), command,
-   reporting thread, and other settings unchanged.
-4. Inspect installed jobs again. Confirm the replacement's name is
-   💾 BACKUP AGENT, its settings match the snapshot, and only the intended backup
-   job is active (none if intentionally disabled). The old job must remain disabled,
-   with history still readable under `backup-agent-nightly`; that retained record
-   is not an orphaned active schedule. Leave it in place to preserve history.
-5. When a real backup run is authorized and the replacement is enabled, use
-   `openclaw agent-system automations run backup-agent --json`. Check the returned
-   run ID with `openclaw agent-system automations runs backup-agent --run-id <runId> --json`.
-   A queued result is not completion: verify execution and delivery separately.
-
-The rename does not change archive names, Drive destination, retention, permissions,
-credentials, or backup contents. If a sync fails or has an uncertain outcome, inspect
-its retained progress and installed jobs before continuing; do not create a second
-job manually or clear ownership state to retry.
 
 ## Helpful links
 
