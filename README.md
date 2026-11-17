@@ -108,9 +108,9 @@ Shared workflows come from [Canon's Tanaab plugin](https://github.com/tanaabased
 
 | Automation              | Schedule                | Purpose                                                                                                                    |
 | ----------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `backup-agent`          | daily, 04:00 local time | Backs up workspace and agent state to Drive, verifies delivery, and applies retention.                                     |
+| `backup-agent`          | daily, 01:01 Eastern    | Backs up workspace and agent state to Drive, verifies delivery, and applies retention.                                     |
 | `update-shared-sources` | daily, 23:00 local time | Updates eligible Canon and Agent System sources; reports in REPORTS / UPDATES. Gateway restart remains an operator action. |
-| `update-agent`          | daily, 23:30 local time | Fast-forwards eligible EMORI main, reconciles dependencies, and reports in UPDATES.                                        |
+| `update-agent`          | daily, 23:30 local time | Fast-forwards eligible EMORI main, installs dependencies, runs Install without setup and Doctor, and reports in UPDATES.   |
 
 Configured in [automations.yml](./.agent-system/automations.yml); inspect installed jobs and
 run history with the [advanced commands](./ADVANCED.md#command-cheat-sheet).

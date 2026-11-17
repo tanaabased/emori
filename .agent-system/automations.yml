@@ -31,7 +31,8 @@ automations:
     id: backup-agent
     display-name: '💾 BACKUP AGENT'
     schedule:
-      cron: '0 4 * * *'
+      cron: '1 1 * * *'
+      timezone: America/New_York
     run:
       - bash
       - scripts/backup-agent.sh

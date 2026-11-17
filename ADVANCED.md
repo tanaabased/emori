@@ -35,35 +35,29 @@ openclaw agent-system automations runs update-agent --limit 10
 Avoid editing the maintained checkouts while an update is running. The jobs do
 not reserve them against other work.
 
-Gateway restart is manual after shared-source sync. When the report warns of
-pending activation, arrange a restart once work is idle; don't rerun updates
-just to restart or resend a report.
+The source job fast-forwards eligible clean `main` checkouts, installs locked
+dependencies, and runs Agent System's build/sync. The agent job updates EMORI,
+installs locked dependencies, runs Install with `--skip-setup`, then Doctor.
+Neither job resets local work or switches branches. Backup and both updaters share
+one exclusion lock; overlapping runs are skipped and reported.
 
-```sh
-# Read retained reports without repeating updates or claiming message delivery.
-bun scripts/update-shared-sources-task.js --report-only
-bun scripts/update-agent-task.js --report-only
+Reports appear in UPDATES with one table per job. Green means no action is needed
+for the reported work; warnings name the outstanding action, and command failures
+are red. Setup being intentionally skipped is not a warning. Source/build success
+does not prove the running Gateway loaded new code. Gateway restart remains an
+operator action; neither updater performs it.
 
-# Recheck health only when the recorded agent configuration was fully applied.
-bun scripts/update-agent-task.js --verify-only
-```
+Use the native run-history commands above to inspect earlier results. For a fresh
+health check without updating, run `openclaw agent-system doctor`. The old wrapper
+`--report-only` and `--verify-only` modes have been removed. Old private updater
+records are left untouched but no longer gate new runs. After an interruption,
+inspect the failed step and current state before an operator retry; do not delete
+a lock file to force entry. The next scheduled occurrence checks current state
+again and still honors native refusals.
 
-Verification-only runs Doctor with normal checks, not source updates, dependency
-installation, or configuration application. It refuses changed checkouts,
-incomplete application, and uncertain checkpoints. The original update and its
-failed health check stay in history; verification is a separate observation.
-Use `--help` on the agent update command for its modes. Reporting commands emit
-the [Agent System report document](https://github.com/tanaabased/openclaw-agent-system/blob/main/API.md#command-report-output)
-to stdout; the shared service renders cards in scheduled chats.
-
-A restart request or matching files on disk does not prove which build the
-Gateway loaded. No supported running-build observation is currently available to
-this updater, so activation stays unverified until that evidence exists.
-
-If an agent update is interrupted, inspect `.private/update-agent/status.json`
-and the native run details before recovery. Resolve any uncertain operation and
-verify installed state before preserving and moving the checkpoint aside for a
-new attempt. Keep the per-run records; never clear a checkpoint just to retry.
+The declared backup schedule is 01:01 in `America/New_York`. Apply the automation
+configuration through Agent System Install and inspect the installed job to verify
+the schedule; changing the declaration alone does not change a running scheduler.
 
 ## Helpful links
 
