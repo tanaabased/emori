@@ -23,9 +23,9 @@ openclaw agent-system install --skip-setup
 # Confirm the GitHub identity is emoriwan.
 openclaw agent-system tool gh -- api user --jq .login
 
-# Inspect configured jobs and nightly execution/delivery results (REPORTS → BACKUPS).
+# Inspect configured jobs and backup execution/delivery results (REPORTS → BACKUPS).
 openclaw agent-system automations list
-openclaw agent-system automations runs backup-agent-nightly --limit 10
+openclaw agent-system automations runs backup-agent --limit 10
 
 # Inspect source and agent update results (REPORTS → UPDATES).
 openclaw agent-system automations runs update-shared-sources --limit 10
