@@ -17,12 +17,12 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@lando/leia": "2.0.0",
-    "eslint": "^10.14.0",
+    "eslint": "^10.15.0",
     "eslint-config-prettier": "^10.1.1",
     "globals": "^17.14.0",
     "mocha": "^12.0.3",
     "openclaw": "2026.11.3",
-    "prettier": "^3.9.10"
+    "prettier": "^3.10.1"
   },
   "scripts": {
     "format:check": "bun run --bun prettier . --check --ignore-unknown",
