@@ -8,7 +8,7 @@ updates: &updates
   <<: *defaults
   thread:
     id: updates
-    name: UPDATES
+    name: SYSTEM UPDATE
 
 automations:
   - <<: *updates
@@ -27,7 +27,7 @@ automations:
     run:
       - bun
       - scripts/update-agent-task.js
-  - <<: *defaults
+  - <<: *updates
     id: backup-agent
     display-name: '💾 BACKUP AGENT'
     schedule:
@@ -36,6 +36,3 @@ automations:
     run:
       - bash
       - scripts/backup-agent.sh
-    thread:
-      id: backups
-      name: BACKUPS
