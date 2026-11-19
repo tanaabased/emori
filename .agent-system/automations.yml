@@ -14,25 +14,21 @@ automations:
   - <<: *updates
     id: update-shared-sources
     display-name: '⬇️ UPDATE SHARED SOURCES'
-    schedule:
-      cron: '0 23 * * *'
+    schedule: '0 23 * * *'
     run:
       - bun
       - scripts/update-shared-sources-task.js
   - <<: *updates
     id: update-agent
     display-name: '⬇️ UPDATE AGENT'
-    schedule:
-      cron: '30 23 * * *'
+    schedule: '30 23 * * *'
     run:
       - bun
       - scripts/update-agent-task.js
   - <<: *updates
     id: backup-agent
     display-name: '💾 BACKUP AGENT'
-    schedule:
-      cron: '1 1 * * *'
-      timezone: America/New_York
+    schedule: '1 1 * * *'
     run:
       - bash
       - scripts/backup-agent.sh

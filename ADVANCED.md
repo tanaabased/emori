@@ -55,9 +55,10 @@ inspect the failed step and current state before an operator retry; do not delet
 a lock file to force entry. The next scheduled occurrence checks current state
 again and still honors native refusals.
 
-The declared backup schedule is 01:01 in `America/New_York`. Apply the automation
-configuration through Agent System Install and inspect the installed job to verify
-the schedule; changing the declaration alone does not change a running scheduler.
+The backup is scheduled for 01:01 in the OpenClaw Gateway host's time zone. Both
+update schedules also use that time zone. Apply the automation configuration
+through Agent System Install and inspect the installed job to verify the schedule;
+changing the declaration alone does not change a running scheduler.
 
 ## Helpful links
 
