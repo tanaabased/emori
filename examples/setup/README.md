@@ -53,14 +53,13 @@ cp "$GITHUB_WORKSPACE/examples/setup/setup-overlay.yaml" "$GITHUB_WORKSPACE/.age
 # should start the isolated gateway for session dispatch enrollment
 openclaw config set cron.enabled false --strict-json
 openclaw config set logging.consoleStyle '"json"' --strict-json
+openclaw config set tools.sessions.visibility '"all"' --strict-json
 openclaw-gateway start --debug
 
 # should prepare a fresh setup with existing host session visibility
 cd "$GITHUB_WORKSPACE"
 test ! -e "$HOME/tanaab/canon"
 openclaw plugins list --json | jq -e 'all(.plugins[]; .id != "codex")'
-openclaw config set skills.load.extraDirs "[\"$HOME/tanaab/canon/skills\"]" --strict-json
-openclaw config set tools.sessions.visibility '"all"' --strict-json
 ```
 
 ## Testing
