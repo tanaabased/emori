@@ -23,11 +23,10 @@ openclaw agent-system install --skip-setup
 # Confirm the GitHub identity is emoriwan.
 openclaw agent-system tool gh -- api user --jq .login
 
-# Inspect configured jobs and backup execution/delivery results (REPORTS → BACKUPS).
+# Inspect configured jobs and run history.
 openclaw agent-system automations list
 openclaw agent-system automations runs backup-agent --limit 10
 
-# Inspect source and agent update results (REPORTS → UPDATES).
 openclaw agent-system automations runs update-shared-sources --limit 10
 openclaw agent-system automations runs update-agent --limit 10
 ```
@@ -41,8 +40,9 @@ installs locked dependencies, runs Install with `--skip-setup`, then Doctor.
 Neither job resets local work or switches branches. Backup and both updaters share
 one exclusion lock; overlapping runs are skipped and reported.
 
-Reports appear in UPDATES with one table per job. Green means no action is needed
-for the reported work; warnings name the outstanding action, and command failures
+Backup and both update jobs report in **REPORTS → SYSTEM UPDATE**. Each update has
+its own results table. Green means no action is needed for the reported work;
+warnings name the outstanding action, and command failures
 are red. Setup being intentionally skipped is not a warning. Source/build success
 does not prove the running Gateway loaded new code. Gateway restart remains an
 operator action; neither updater performs it.
@@ -55,9 +55,10 @@ inspect the failed step and current state before an operator retry; do not delet
 a lock file to force entry. The next scheduled occurrence checks current state
 again and still honors native refusals.
 
-The declared backup schedule is 01:01 in `America/New_York`. Apply the automation
-configuration through Agent System Install and inspect the installed job to verify
-the schedule; changing the declaration alone does not change a running scheduler.
+The backup is scheduled for 01:01 in the OpenClaw Gateway host's time zone. Both
+update schedules also use that time zone. Apply the automation configuration
+through Agent System Install and inspect the installed job to verify the schedule;
+changing the declaration alone does not change a running scheduler.
 
 ## Helpful links
 
