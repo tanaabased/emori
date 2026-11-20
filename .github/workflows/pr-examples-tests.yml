@@ -30,6 +30,7 @@ jobs:
         uses: tanaabased/actions/setup-openclaw@v1
         with:
           agent-system: github:tanaabased/openclaw-agent-system#main
+          profile: ci-emori-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.example }}
       - name: Set up Bun
         uses: tanaabased/actions/setup-bun@v1
       - name: Install dependencies

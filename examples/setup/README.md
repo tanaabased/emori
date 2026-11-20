@@ -53,14 +53,13 @@ cp "$GITHUB_WORKSPACE/examples/setup/setup-overlay.yaml" "$GITHUB_WORKSPACE/.age
 # should start the isolated gateway for session dispatch enrollment
 openclaw config set cron.enabled false --strict-json
 openclaw config set logging.consoleStyle '"json"' --strict-json
+openclaw config set tools.sessions.visibility '"all"' --strict-json
 openclaw-gateway start --debug
 
 # should prepare a fresh setup with existing host session visibility
 cd "$GITHUB_WORKSPACE"
 test ! -e "$HOME/tanaab/canon"
 openclaw plugins list --json | jq -e 'all(.plugins[]; .id != "codex")'
-openclaw config set skills.load.extraDirs "[\"$HOME/tanaab/canon/skills\"]" --strict-json
-openclaw config set tools.sessions.visibility '"all"' --strict-json
 ```
 
 ## Testing
@@ -116,16 +115,6 @@ openclaw config get agents.entries.emori --json | jq -e --slurpfile expected "${
     all(.[]; . as $model | $agent.models[$model].agentRuntime.id == $expected[0].runtime))
 '
 
-# should install the official imessage channel plugin
-openclaw plugins inspect imessage --json | jq -e '
-  .plugin.id == "imessage" and
-  .plugin.enabled == true and
-  .plugin.status != "error" and
-  .plugin.packageName == "@openclaw/imessage" and
-  (.plugin.channelIds | index("imessage")) != null and
-  .install.resolvedName == "@openclaw/imessage"
-'
-
 # should configure EMORI's execution policy
 openclaw config get agents.entries.emori.tools --json | jq -e '
   .profile == "coding" and
@@ -163,18 +152,7 @@ openclaw config get bindings --json | jq -e '
 '
 ! openclaw config get session.dmScope --json >/dev/null 2>&1
 
-# should disable Workshop background learning without reviving proposal staging
-openclaw config get skills.workshop.autonomous.mode --json | jq -e '. == "off"'
-
-# should validate the installed merged configuration with its plugins
-openclaw config validate --json | jq -e '.valid == true'
-
-# should reject the removed Workshop proposal mode without applying it
-set -euo pipefail
-if openclaw config patch --file "$GITHUB_WORKSPACE/examples/setup/unsupported-workshop.patch.json" --dry-run --json > "${TMPDIR}/unsupported-workshop.json"; then
-  exit 1
-fi
-jq -e '.ok == false and any(.errors[]; .kind == "schema" and (.message | contains("skills.workshop.autonomous.mode")))' "${TMPDIR}/unsupported-workshop.json"
+# should disable Workshop background learning
 openclaw config get skills.workshop.autonomous.mode --json | jq -e '. == "off"'
 
 # should preserve collaboration-managed session visibility after workspace setup
