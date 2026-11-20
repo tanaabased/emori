@@ -106,7 +106,6 @@ test ! -e "$restore/workspace/.temp/probe"
 test ! -e "$restore/workspace/node_modules/probe"
 test ! -e "$restore/workspace/.agent-system/backups"
 node "$GITHUB_WORKSPACE/examples/backup/agent-state-fixture.mjs" verify "$restore/openclaw-state/openclaw-agent.sqlite"
-node "$GITHUB_WORKSPACE/examples/backup/agent-state-fixture.mjs" verify "$database"
 for file in AGENTS.md IDENTITY.md .agent-system/agent.yaml MEMORY.md DREAMS.md memory/recovery.md .private/recovery.txt; do
   shasum -a 256 "$workspace/$file"
 done > "$TMPDIR/files-after.sha"

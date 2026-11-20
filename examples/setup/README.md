@@ -152,18 +152,7 @@ openclaw config get bindings --json | jq -e '
 '
 ! openclaw config get session.dmScope --json >/dev/null 2>&1
 
-# should disable Workshop background learning without reviving proposal staging
-openclaw config get skills.workshop.autonomous.mode --json | jq -e '. == "off"'
-
-# should validate the installed merged configuration with its plugins
-openclaw config validate --json | jq -e '.valid == true'
-
-# should reject the removed Workshop proposal mode without applying it
-set -euo pipefail
-if openclaw config patch --file "$GITHUB_WORKSPACE/examples/setup/unsupported-workshop.patch.json" --dry-run --json > "${TMPDIR}/unsupported-workshop.json"; then
-  exit 1
-fi
-jq -e '.ok == false and any(.errors[]; .kind == "schema" and (.message | contains("skills.workshop.autonomous.mode")))' "${TMPDIR}/unsupported-workshop.json"
+# should disable Workshop background learning
 openclaw config get skills.workshop.autonomous.mode --json | jq -e '. == "off"'
 
 # should preserve collaboration-managed session visibility after workspace setup

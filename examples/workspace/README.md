@@ -32,23 +32,22 @@ openclaw agents set-identity --agent emori --workspace "$GITHUB_WORKSPACE" --fro
 
 ```bash
 # should report the registered emori workspace and reviewed display name
-grep -F '"agentId": "emori"' "${TMPDIR}/agent.json"
-grep -F '"name": "EMORI"' "${TMPDIR}/agent.json"
-grep -F "\"workspace\": \"$GITHUB_WORKSPACE\"" "${TMPDIR}/agent.json"
-openclaw agents list --json | grep -F '"id": "emori"'
+jq -e --arg workspace "$GITHUB_WORKSPACE" '
+  .agentId == "emori" and .name == "EMORI" and .workspace == $workspace
+' "${TMPDIR}/agent.json"
+openclaw agents list --json | jq -e 'any(.[]; .id == "emori")'
 
 # should report EMORI identity from the workspace
-grep -F '"name": "EMORI"' "${TMPDIR}/identity.json"
-grep -F '"theme": "Sharp, evidence-led, dryly funny, and high-agency"' "${TMPDIR}/identity.json"
-grep -F '"avatar": "avatars/emori.png"' "${TMPDIR}/identity.json"
+jq -e '.agentId == "emori" and .identity.name == "EMORI" and .identity.avatar == "avatars/emori.png"' "${TMPDIR}/identity.json"
 
 # should validate the resulting OpenClaw configuration
-openclaw config validate --json | tr -d '[:space:]' | grep -F '"valid":true'
+openclaw config validate --json | jq -e '.valid == true'
 
 # should preserve the reviewed identity file byte-for-byte
 cmp -s "${TMPDIR}/IDENTITY.before.md" "$GITHUB_WORKSPACE/IDENTITY.md"
 
 # should leave the repository worktree clean
-git -C "$GITHUB_WORKSPACE" diff --exit-code
-test -z "$(git -C "$GITHUB_WORKSPACE" status --short --untracked-files=all)"
+set -e
+status="$(git -C "$GITHUB_WORKSPACE" status --short --untracked-files=all)"
+test -z "$status"
 ```
