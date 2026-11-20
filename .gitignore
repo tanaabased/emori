@@ -7,6 +7,8 @@
 /BOOTSTRAP.md
 
 # Local-only workspace material
+/agent.local.yaml
+/.agent-system/agent.local.yaml
 /.private/
 /.scratch/
 /.worktrees/
