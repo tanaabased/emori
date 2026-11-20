@@ -1,5 +1,24 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
+### Features
+
+- Added nightly updates for EMORI, Canon, and Agent System. The shared-source job leaves Gateway restart to the operator. [#161](https://github.com/tanaabased/emori/pull/161) [#162](https://github.com/tanaabased/emori/pull/162) [#189](https://github.com/tanaabased/emori/pull/189)
+- Added scheduled issue pickup for the configured Agent System milestone. [#179](https://github.com/tanaabased/emori/pull/179)
+
+### Improvements
+
+- Renamed the backup job to `backup-agent` and grouped all three maintenance jobs in **REPORTS → SYSTEM UPDATE**. [#187](https://github.com/tanaabased/emori/pull/187) [#188](https://github.com/tanaabased/emori/pull/188) [#194](https://github.com/tanaabased/emori/pull/194)
+- Updated EMORI’s default and routed models to GPT-6.2. [#191](https://github.com/tanaabased/emori/pull/191)
+- Updated maintenance schedules to use the Gateway’s time zone. [#194](https://github.com/tanaabased/emori/pull/194)
+- Updated nightly backup cleanup to remove local job archives only after a successful upload and keep five on Drive. [#183](https://github.com/tanaabased/emori/pull/183)
+- Updated the supported OpenClaw setup to `2026.11.5`. [#198](https://github.com/tanaabased/emori/pull/198)
+
+### Bug Fixes
+
+- Fixed Canon setup requiring specific skills rather than checking that the linked plugin exposes skills. [#181](https://github.com/tanaabased/emori/pull/181)
+- Fixed iMessage setup rejecting the loaded official plugin when optional install metadata is absent. [#198](https://github.com/tanaabased/emori/pull/198)
+- Fixed `update-agent` reporting old automation failures as failures of the current run. [#196](https://github.com/tanaabased/emori/pull/196)
+
 ## v1.0.0 - [October 27, 2026](https://github.com/tanaabased/emori/releases/tag/v1.0.0)
 
 ### Features
