@@ -23,42 +23,19 @@ openclaw agent-system install --skip-setup
 # Confirm the GitHub identity is emoriwan.
 openclaw agent-system tool gh -- api user --jq .login
 
-# Inspect configured jobs and run history.
+# Check installed schedules after applying automation changes.
 openclaw agent-system automations list
-openclaw agent-system automations runs backup-agent --limit 10
 
+# Inspect recent backup and update runs.
+openclaw agent-system automations runs backup-agent --limit 10
 openclaw agent-system automations runs update-shared-sources --limit 10
 openclaw agent-system automations runs update-agent --limit 10
 ```
 
-Avoid editing the maintained checkouts while an update is running. The jobs do
-not reserve them against other work.
-
-The source job fast-forwards eligible clean `main` checkouts, installs locked
-dependencies, and runs Agent System's build/sync. The agent job updates EMORI,
-installs locked dependencies, runs Install with `--skip-setup`, then Doctor.
-Neither job resets local work or switches branches. Backup and both updaters share
-one exclusion lock; overlapping runs are skipped and reported.
-
-Backup and both update jobs report in **REPORTS → SYSTEM UPDATE**. Each update has
-its own results table. Green means no action is needed for the reported work;
-warnings name the outstanding action, and command failures
-are red. Setup being intentionally skipped is not a warning. Source/build success
-does not prove the running Gateway loaded new code. Gateway restart remains an
-operator action; neither updater performs it.
-
-Use the native run-history commands above to inspect earlier results. For a fresh
-health check without updating, run `openclaw agent-system doctor`. The old wrapper
-`--report-only` and `--verify-only` modes have been removed. Old private updater
-records are left untouched but no longer gate new runs. After an interruption,
-inspect the failed step and current state before an operator retry; do not delete
-a lock file to force entry. The next scheduled occurrence checks current state
-again and still honors native refusals.
-
-The backup is scheduled for 01:01 in the OpenClaw Gateway host's time zone. Both
-update schedules also use that time zone. Apply the automation configuration
-through Agent System Install and inspect the installed job to verify the schedule;
-changing the declaration alone does not change a running scheduler.
+All three jobs report in **REPORTS → SYSTEM UPDATE** and share a lock. An
+overlapping run skips its turn. Avoid editing the checkouts during updates.
+If an update stops, inspect its run history and checkout before retrying. Leave
+the lock in place and use Doctor for a fresh readiness check.
 
 ## Helpful links
 

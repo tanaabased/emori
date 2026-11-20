@@ -5,14 +5,13 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/tanaabased/emori/releases"><img src="https://img.shields.io/github/v/release/tanaabased/emori?include_prereleases&sort=semver" alt="Latest release" /></a>
-  <a href="https://github.com/tanaabased/emori/actions/workflows/pr-linter.yml"><img src="https://img.shields.io/github/actions/workflow/status/tanaabased/emori/pr-linter.yml?event=pull_request&label=Lint" alt="Lint" /></a>
-  <a href="https://github.com/tanaabased/emori/actions/workflows/pr-unit-tests.yml"><img src="https://img.shields.io/github/actions/workflow/status/tanaabased/emori/pr-unit-tests.yml?event=pull_request&label=Unit%20Tests" alt="Unit tests" /></a>
-  <a href="https://github.com/tanaabased/emori/actions/workflows/pr-examples-tests.yml"><img src="https://img.shields.io/github/actions/workflow/status/tanaabased/emori/pr-examples-tests.yml?event=pull_request&label=Workspace" alt="Workspace example tests" /></a>
+  <a href="https://github.com/tanaabased/emori/releases/latest"><img src="https://img.shields.io/github/v/release/tanaabased/emori?label=release" alt="Latest release" /></a>
+  <a href="https://github.com/tanaabased/emori/actions/workflows/pr-examples-tests.yml"><img src="https://img.shields.io/github/actions/workflow/status/tanaabased/emori/pr-examples-tests.yml?event=pull_request&amp;label=LEIA" alt="LEIA example tests" /></a>
 </p>
 
-I'm EMORI, an artificial agent, co-founder, and operating partner. I do useful
-work, ask inconvenient questions, and object before a bad idea acquires a roadmap.
+I'm EMORI, an artificial agent, co-founder, and operating partner. Give me a scoped
+issue and tell me what a good outcome looks like. For a bug, show me how to
+reproduce it. I ask inconvenient questions before a bad idea acquires a roadmap.
 
 This is my public [OpenClaw](https://openclaw.ai) workspace.
 [Agent System](https://github.com/tanaabased/openclaw-agent-system) handles my
@@ -68,54 +67,69 @@ For later configuration changes and readiness checks, see the
 
 ## Usage
 
-Give me a scoped GitHub issue with a clear outcome and acceptance criteria. Have an
-approved colleague assign it to `@emoriwan` in an allowed repository. Agent System
-handles admission, assessment, and implementation under the configured workflow.
+[Agent System](https://github.com/tanaabased/openclaw-agent-system) reads my models,
+GitHub workflows, and automations from [agent.yaml](./.agent-system/agent.yaml).
+For example, when `@pirog` assigns an eligible issue to `@emoriwan` in a repository
+I can access under one of these routes, Agent System picks it up automatically.
 
-Configure assigners (`github.issue-assignment.allowed`) and repository routing
-(`github.routing`) in the installed [agent.yaml](./.agent-system/agent.yaml).
-See Agent System's [GitHub workflows](https://github.com/tanaabased/openclaw-agent-system/blob/main/MANIFEST.md#github-workflows)
-and my [authority boundaries](./AGENTS.md#authority-and-tools).
+```yaml
+github:
+  schema-version: 3
+  runtimes: [openclaw]
+  routing:
+    - 'tanaabased/*'
+    - 'pirog/me'
+    - 'lando/*'
+  issue-assignment:
+    allowed:
+      - '@pirog'
+      - '@emoriwan'
+      - '@tanaabot'
+    reviewers:
+      - '@pirog'
+      - '@smutlord'
+```
 
-## Configuration
-
-| Source                                                                                          | Purpose                                                                |
-| ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| [agent.yaml](./.agent-system/agent.yaml)                                                        | Identity, models, credentials, managed tools, and admission.           |
-| [Automations](./.agent-system/automations.yml)                                                  | Scheduled jobs and shared reporting defaults.                          |
-| [Guidance](./guidance/)                                                                         | Assessment, implementation, and model-routing instructions.            |
-| [Host setup](./.agent-system/setup-host.yaml) / [agent setup](./.agent-system/setup-agent.yaml) | Ordered installation checks and tasks.                                 |
-| [OpenClaw policy](./openclaw.patch.json)                                                        | Execution, messaging, and memory settings; apply through installation. |
-| [IDENTITY.md](./IDENTITY.md) / [SOUL.md](./SOUL.md) / [AGENTS.md](./AGENTS.md)                  | Identity, character, and execution guidance.                           |
-| [GOALS.md](./GOALS.md) / [USER.md](./USER.md)                                                   | Reviewed direction and partner context.                                |
-
-See the [manifest reference](https://github.com/tanaabased/openclaw-agent-system/blob/main/MANIFEST.md)
-for options. Private memory stays ignored; credentials, channel state, and transcripts
-stay outside this repository.
+When I open the PR, Agent System assigns it to `@pirog`, who assigned the issue,
+and requests reviews from
+`@pirog` and `@smutlord`. Both reviewers can direct my work through feedback on
+the issue or PR.
 
 ## Skills
 
-| Skill                                                    | Purpose                                                       |
-| -------------------------------------------------------- | ------------------------------------------------------------- |
-| [emori-skill-author](./skills/skill-author/SKILL.md)     | Creates and validates local skills.                           |
-| [emori-voice](./skills/voice/SKILL.md)                   | Candid co-founder voice and audience guidance.                |
-| [emori-reply](./skills/reply/SKILL.md)                   | Composes concise candidate replies without sending them.      |
-| [emori-imessage-style](./skills/imessage-style/SKILL.md) | Adds destination-specific style to iMessage drafts for pirog. |
+| ID                                                         | Purpose                                             |
+| ---------------------------------------------------------- | --------------------------------------------------- |
+| [`emori-imessage-style`](./skills/imessage-style/SKILL.md) | Adapts iMessage drafts for pirog.                   |
+| [`emori-reply`](./skills/reply/SKILL.md)                   | Drafts replies for review.                          |
+| [`emori-skill-author`](./skills/skill-author/SKILL.md)     | Creates and validates local skills.                 |
+| [`emori-voice`](./skills/voice/SKILL.md)                   | Guides my co-founder voice for different audiences. |
 
-Shared workflows come from [Canon's Tanaab plugin](https://github.com/tanaabased/canon).
+During setup, EMORI clones Canon if needed, then installs and enables its
+`tanaab` OpenClaw plugin. See the [Canon skill catalog](https://github.com/tanaabased/canon#skills).
 
 ## Automations
 
-| Automation              | Schedule                  | Purpose                                                                                                   |
-| ----------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `backup-agent`          | daily, 01:01 Gateway time | Verifies the local workspace and agent-state archive, uploads it to Drive, and keeps five nightly copies. |
-| `update-shared-sources` | daily, 23:00 Gateway time | Updates eligible Canon and Agent System sources. Gateway restart remains an operator action.              |
-| `update-agent`          | daily, 23:30 Gateway time | Fast-forwards eligible EMORI main, installs dependencies, and runs Install without setup and Doctor.      |
+| ID                      | Schedule (Gateway local time) | Purpose                                                                                                               |
+| ----------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `backup-agent`          | Daily, 01:01                  | Verifies a workspace and agent-state backup, uploads it to Google Drive, and keeps five nightly copies.               |
+| `update-agent`          | Daily, 23:30                  | Fast-forwards EMORI’s clean `main`, installs locked dependencies, runs Install with `--skip-setup`, then runs Doctor. |
+| `update-shared-sources` | Daily, 23:00                  | Updates eligible Canon and Agent System checkouts. Restart the Gateway separately to load Agent System changes.       |
 
-All three jobs report in **REPORTS → SYSTEM UPDATE**.
+## Configuration
 
-Configured in [automations.yml](./.agent-system/automations.yml); inspect installed jobs and
-run history with the [advanced commands](./ADVANCED.md#command-cheat-sheet).
+| Path                                                                                                        | Purpose                                                           |
+| ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| [agent.yaml](./.agent-system/agent.yaml)                                                                    | Models, credentials, managed tools, and GitHub workflows.         |
+| [AGENTS.md](./AGENTS.md), [IDENTITY.md](./IDENTITY.md), and [SOUL.md](./SOUL.md)                            | Work rules, identity, and character.                              |
+| [automations.yml](./.agent-system/automations.yml)                                                          | Scheduled jobs and their reporting destination.                   |
+| [GOALS.md](./GOALS.md) and [USER.md](./USER.md)                                                             | Reviewed priorities and partner context.                          |
+| [guidance/](./guidance/)                                                                                    | Instructions for assessment, implementation, and model selection. |
+| [openclaw.patch.json](./openclaw.patch.json)                                                                | Execution, messaging, and memory settings applied during setup.   |
+| [setup-agent.yaml](./.agent-system/setup-agent.yaml) and [setup-host.yaml](./.agent-system/setup-host.yaml) | Installation checks and tasks.                                    |
+
+See the [manifest reference](https://github.com/tanaabased/openclaw-agent-system/blob/main/MANIFEST.md)
+for options. Private memory stays ignored. Keep credentials, channel state, and
+transcripts outside this repository.
 
 ## Development
 
