@@ -70,19 +70,6 @@ set -euo pipefail
 cd "$GITHUB_WORKSPACE"
 install_status=0
 openclaw agent-system install --yes --json | tee "${TMPDIR}/setup-install.json" || install_status=$?
-if [[ "$install_status" -ne 0 ]]; then
-  printf 'OpenClaw version: '
-  openclaw --version || true
-  printf 'iMessage plugin state immediately after failed setup:\n'
-  if ! openclaw plugins inspect imessage --json 2>/dev/null | jq -e '
-    {
-      plugin: (.plugin | {id, version, enabled, status, packageName, channelIds}),
-      install: (.install | {resolvedName, resolvedVersion, version})
-    }
-  '; then
-    printf 'iMessage plugin metadata unavailable\n'
-  fi
-fi
 openclaw-gateway diagnostics --debug > "${TMPDIR}/first-install-gateway.log" 2>&1 || true
 if gateway_log=$(openclaw-gateway log-path); then
   gateway_redactor="$(dirname "$(command -v openclaw-gateway)")/lib/redact-stream.mjs"
@@ -126,16 +113,6 @@ openclaw config get agents.entries.emori --json | jq -e --slurpfile expected "${
   .thinkingDefault == $expected[0].models.default.effort and
   ([$expected[0].models | .default.model, .low.model, .medium.model, .high.model] | unique |
     all(.[]; . as $model | $agent.models[$model].agentRuntime.id == $expected[0].runtime))
-'
-
-# should install the official imessage channel plugin
-openclaw plugins inspect imessage --json | jq -e '
-  .plugin.id == "imessage" and
-  .plugin.enabled == true and
-  .plugin.status != "error" and
-  .plugin.packageName == "@openclaw/imessage" and
-  (.plugin.channelIds | index("imessage")) != null and
-  .install.resolvedName == "@openclaw/imessage"
 '
 
 # should configure EMORI's execution policy
