@@ -7,11 +7,12 @@
 
 ### Improvements
 
+- Removed automatic Drive pruning. `backup-agent` deletes only the local archive it successfully uploaded. [#203](https://github.com/tanaabased/emori/pull/203)
+- Removed the shared maintenance lock and the Doctor check from `update-agent`. Run Doctor separately for readiness. [#203](https://github.com/tanaabased/emori/pull/203)
 - Renamed the backup job to `backup-agent` and grouped all three maintenance jobs in **REPORTS → SYSTEM UPDATE**. [#187](https://github.com/tanaabased/emori/pull/187) [#188](https://github.com/tanaabased/emori/pull/188) [#194](https://github.com/tanaabased/emori/pull/194)
 - Updated EMORI’s default and routed models to GPT-6.2. [#191](https://github.com/tanaabased/emori/pull/191)
 - Updated maintenance schedules to use the Gateway’s time zone. [#194](https://github.com/tanaabased/emori/pull/194)
-- Updated nightly backup cleanup to remove local job archives only after a successful upload and keep five on Drive. [#183](https://github.com/tanaabased/emori/pull/183)
-- Updated the supported OpenClaw setup to `2026.11.5`. [#198](https://github.com/tanaabased/emori/pull/198)
+- Updated the supported OpenClaw version to `2026.11.6`. [#202](https://github.com/tanaabased/emori/pull/202)
 
 ### Bug Fixes
 

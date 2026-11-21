@@ -11,7 +11,7 @@ Run individual commands as needed from the installed checkout.
 # Validate without applying changes.
 openclaw agent-system validate
 
-# Apply configuration and run setup; apply openclaw.patch.json through this installer.
+# Apply workspace configuration and run setup.
 openclaw agent-system install --yes
 
 # Check installed state without changing it.
@@ -32,10 +32,12 @@ openclaw agent-system automations runs update-shared-sources --limit 10
 openclaw agent-system automations runs update-agent --limit 10
 ```
 
-All three jobs report in **REPORTS → SYSTEM UPDATE** and share a lock. An
-overlapping run skips its turn. Avoid editing the checkouts during updates.
-If an update stops, inspect its run history and checkout before retrying. Leave
-the lock in place and use Doctor for a fresh readiness check.
+All three jobs report in **REPORTS → SYSTEM UPDATE**. Avoid editing checkouts
+during updates. If an update fails, check its run history and checkout before
+retrying. Run Doctor separately to check readiness.
+
+If a backup upload fails, the archive stays local. Review the backup run before
+retrying the upload.
 
 ## Helpful links
 
