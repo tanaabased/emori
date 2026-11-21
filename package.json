@@ -35,8 +35,5 @@
     "lint:examples": "bun scripts/validate-examples-task.js",
     "validate": "bun run lint && bun run test",
     "lint:skills": "bun scripts/validate-skills-task.js"
-  },
-  "dependencies": {
-    "@lickle/lock": "0.0.1"
   }
 }

@@ -109,11 +109,11 @@ During setup, EMORI clones Canon if needed, then installs and enables its
 
 ## Automations
 
-| ID                      | Schedule (Gateway local time) | Purpose                                                                                                               |
-| ----------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `backup-agent`          | Daily, 01:01                  | Verifies a workspace and agent-state backup, uploads it to Google Drive, and keeps five nightly copies.               |
-| `update-agent`          | Daily, 23:30                  | Fast-forwards EMORI’s clean `main`, installs locked dependencies, runs Install with `--skip-setup`, then runs Doctor. |
-| `update-shared-sources` | Daily, 23:00                  | Updates eligible Canon and Agent System checkouts. Restart the Gateway separately to load Agent System changes.       |
+| ID                      | Schedule (Gateway local time) | Purpose                                                                                                                                                    |
+| ----------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `backup-agent`          | Daily, 01:01                  | Creates a workspace and agent-state backup and uploads it to Google Drive. No automatic pruning.                                                           |
+| `update-agent`          | Daily, 23:30                  | Pulls EMORI’s configured upstream with `--ff-only`, installs locked dependencies, runs Install with `--skip-setup`.                                        |
+| `update-shared-sources` | Daily, 23:00                  | Pulls Canon and Agent System with `--ff-only`, installs dependencies, and syncs Agent System. Restart the Gateway separately to load Agent System changes. |
 
 ## Configuration
 
