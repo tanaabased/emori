@@ -16,15 +16,15 @@ automations:
     display-name: '⬇️ UPDATE SHARED SOURCES'
     schedule: '0 23 * * *'
     run:
-      - bun
-      - scripts/update-shared-sources-task.js
+      - bash
+      - scripts/update-shared-sources.sh
   - <<: *updates
     id: update-agent
     display-name: '⬇️ UPDATE AGENT'
     schedule: '30 23 * * *'
     run:
-      - bun
-      - scripts/update-agent-task.js
+      - bash
+      - scripts/update-agent.sh
   - <<: *updates
     id: backup-agent
     display-name: '💾 BACKUP AGENT'

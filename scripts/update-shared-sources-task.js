@@ -1,17 +1,11 @@
 #!/usr/bin/env bun
-import runSourceTask from '../lib/update-shared-sources/task.js';
+// Keep previously installed schedules working until the manifest is reapplied.
+import { fileURLToPath } from 'node:url';
 
-const controller = new AbortController();
-const cancel = () => controller.abort();
-process.once('SIGTERM', cancel);
-process.once('SIGINT', cancel);
-try {
-  process.exitCode = await runSourceTask({
-    argv: process.argv.slice(2),
-    cwd: process.cwd(),
-    signal: controller.signal,
-  });
-} finally {
-  process.removeListener('SIGTERM', cancel);
-  process.removeListener('SIGINT', cancel);
-}
+import { spawn } from 'bun';
+
+const script = fileURLToPath(new URL('./update-shared-sources.sh', import.meta.url));
+const child = spawn(['bash', script], { stdout: 'inherit', stderr: 'inherit' });
+process.once('SIGTERM', () => child.kill('SIGTERM'));
+process.once('SIGINT', () => child.kill('SIGINT'));
+process.exitCode = await child.exited;
