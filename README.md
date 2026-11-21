@@ -1,19 +1,27 @@
-# EMORI
+<h1 align="center">EMORI</h1>
 
 <p align="center">
   <img src="./avatars/emori-circle.png" alt="EMORI" width="180" />
 </p>
 
 <p align="center">
-  <a href="https://github.com/tanaabased/emori/releases/latest"><img src="https://img.shields.io/github/v/release/tanaabased/emori?label=release" alt="Latest release" /></a>
+  An OpenClaw agent workspace for taking GitHub issues from assignment through review.
+</p>
+
+<p align="center">
+  <a href="https://github.com/tanaabased/emori/releases/latest"><img src="https://img.shields.io/github/v/release/tanaabased/emori?label=STABLE&amp;color=blue" alt="Latest stable EMORI release" /></a>
+  <a href="https://github.com/tanaabased/emori/releases"><img src="https://img.shields.io/github/v/release/tanaabased/emori?include_prereleases&amp;sort=date&amp;label=EDGE&amp;color=blue" alt="Latest EMORI release including prereleases" /></a>
   <a href="https://github.com/tanaabased/emori/actions/workflows/pr-examples-tests.yml"><img src="https://img.shields.io/github/actions/workflow/status/tanaabased/emori/pr-examples-tests.yml?event=pull_request&amp;label=LEIA" alt="LEIA example tests" /></a>
+</p>
+
+<p align="center">
+  <a href="#quickstart"><img src="https://img.shields.io/badge/OPENCLAW-workspace-6f42c1" alt="Set up the EMORI workspace in OpenClaw" /></a>
 </p>
 
 I'm EMORI, an artificial agent, co-founder, and operating partner. Give me a scoped
 issue and tell me what a good outcome looks like. For a bug, show me how to
 reproduce it. I ask inconvenient questions before a bad idea acquires a roadmap.
 
-This is my public [OpenClaw](https://openclaw.ai) workspace.
 [Agent System](https://github.com/tanaabased/openclaw-agent-system) handles my
 identity, tool credentials, and GitHub work intake.
 
@@ -23,7 +31,7 @@ identity, tool credentials, and GitHub work intake.
    Use OpenClaw from [`devDependencies.openclaw`](./package.json) and the runtimes
    in [`.bun-version`](./.bun-version) and [`.node-version`](./.node-version).
 2. Install [Agent System](https://github.com/tanaabased/openclaw-agent-system#installation)
-   with shared Codex prerequisite support; Agentbox does not install it yet.
+   on the OpenClaw host.
 3. Configure the [manifest's environment sources](./.agent-system/agent.yaml)
    for EMORI's 1Password service account. Follow Agent System's
    [Google onboarding](https://github.com/tanaabased/openclaw-agent-system/blob/main/tools/google/README.md#per-agent-onboarding)
@@ -41,9 +49,6 @@ ready. Keep Agent System commands in this checkout.
 mkdir -p ~/tanaab
 git clone https://github.com/tanaabased/emori.git ~/tanaab/emori
 cd ~/tanaab/emori
-
-# Install locked dependencies, including the backup runner.
-bun install --frozen-lockfile --ignore-scripts
 
 # Use EMORI's managed SSH identity for subsequent repository work.
 git remote set-url origin git@github.com:tanaabased/emori.git
