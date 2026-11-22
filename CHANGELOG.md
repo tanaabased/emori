@@ -1,5 +1,7 @@
 ## {{ UNRELEASED_VERSION }} - [{{ UNRELEASED_DATE }}]({{ UNRELEASED_LINK }})
 
+## v1.1.0 - [November 22, 2026](https://github.com/tanaabased/emori/releases/tag/v1.1.0)
+
 ### Features
 
 - Added nightly updates for EMORI, Canon, and Agent System. The shared-source job leaves Gateway restart to the operator. [#161](https://github.com/tanaabased/emori/pull/161) [#162](https://github.com/tanaabased/emori/pull/162) [#189](https://github.com/tanaabased/emori/pull/189)
