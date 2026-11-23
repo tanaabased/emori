@@ -102,10 +102,15 @@ github:
     - "lando/*"
   issue-pickup:
     projects:
+      - repository: tanaabased/temenos
+        limit: 1
+        milestone: { number: 1, policy: only }
       - repository: tanaabased/openclaw-agent-system
-        milestone:
-          number: 14
-          policy: only
+        limit: 1
+        milestone: { number: 15, policy: only }
+      - repository: tanaabased/emori
+        limit: 1
+        milestone: { number: 1, policy: only }
   issue-assignment:
     allowed:
       - "@pirog"
