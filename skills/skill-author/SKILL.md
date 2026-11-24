@@ -61,11 +61,30 @@ the dependent work.
   EMORI-specific divergence explicit.
 - Keep OpenClaw metadata in `SKILL.md` and Codex interface metadata in
   `agents/openai.yaml`.
-- Reuse workspace icons from `assets/`; bundle copies only for standalone
-  exports. Keep distinct skill-specific artwork with its skill.
 - Keep coding-skill documentation, testing, optional deployment, and GitHub
   Actions projection aligned with the local template contract.
 - Prefer references and deterministic scripts over repeated doctrine.
+
+### Codex icons
+
+Choose the category by the skill’s primary job, not by its metadata type or tags.
+Use the glyph colors from [Tanaab Actions’ artwork guidance](https://github.com/tanaabased/actions/blob/85320f9cb9019f630c5ae273ed2e204a0e37688d/AGENTS.md#documentation), not the base or background colors.
+
+| Category    | Glyph     | EMORI skills                 |
+| ----------- | --------- | ---------------------------- |
+| Setup       | `#008f64` | —                            |
+| Preparation | `#9c1c55` | Skill Author                 |
+| Testing     | `#6f42c1` | —                            |
+| Publishing  | `#0069b8` | Reply, iMessage Style, Voice |
+
+After scaffolding, copy a matching category SVG into the skill’s `assets/` and
+set both `interface.icon_small` and `interface.icon_large` in `agents/openai.yaml`
+to `./assets/skill-icon-<category>.svg`, using the lowercase category name.
+Codex ignores icon paths outside the skill, so use the same SVG bytes in each
+skill in the category rather than linking to another skill’s copy. If the
+category has no variant yet, copy an existing variant and change only its two
+fill values to the matching glyph color. Keep the square border and witch mark
+the same. Leave the OpenClaw emoji and Codex `brand_color` unchanged.
 
 ## Anti-Patterns
 
@@ -92,7 +111,8 @@ the dependent work.
 4. Supply a skill-specific OpenClaw emoji, review whether `Optimization`
    applies to the persistent surface, and decide whether a coding skill has one
    material deployment mechanism worth retaining.
-5. Run [`./scripts/validate-skill.js`](./scripts/validate-skill.js), fix every
+5. Choose the Codex icon using the category guidance above.
+6. Run [`./scripts/validate-skill.js`](./scripts/validate-skill.js), fix every
    error, and review warnings and manual checks explicitly.
 
 ## Optimization

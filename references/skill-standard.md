@@ -77,9 +77,8 @@ skill-folder/
 - `[error]` `interface.short_description` must start with `EMORI-based`, the
   prompt must mention `$<machine-id>`, and the brand color must be `#00c88a`.
 - `[error]` Interface icon paths are relative to the skill directory and must
-  resolve. Workspace skills reuse `../../assets/composer-icon.svg` and
-  `../../assets/icon-large.png`; keep only distinct skill-specific artwork in
-  local `assets/`. Standalone exports bundle their icons to remain portable.
+  resolve. For Codex to load the category icons, bundle them inside each skill’s
+  `assets/` directory. Follow [Skill Author’s Codex icon guidance](../skills/skill-author/SKILL.md#codex-icons).
 
 ## Required Reading
 
