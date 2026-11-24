@@ -77,14 +77,19 @@ and their Tanaab Actions glyph colors for both the square border and the witch h
 | Code          | Build, test, review, or maintain code, including code-focused GitHub work | Blue `#0069b8`  | —                                   |
 | Miscellaneous | Handle work outside Agent and Code                                        | Green `#008f64` | Reply                               |
 
-After scaffolding, copy a matching category SVG into the skill’s `assets/` and
-set both `interface.icon_small` and `interface.icon_large` in `agents/openai.yaml`
-to `./assets/skill-icon-<category>.svg`, using the lowercase category name.
-Codex ignores icon paths outside the skill, so use the same SVG bytes in each
-skill in the category rather than linking to another skill’s copy. If the
-category has no variant yet, copy an existing variant and change only its two
-fill values to the matching glyph color. Keep the square border and witch mark
-the same. Leave the OpenClaw emoji and Codex `brand_color` unchanged.
+After scaffolding, copy the matching SVG into the skill’s `assets/`. Agent and
+Code are in [Skill Author assets](./assets/); Miscellaneous is in
+[Reply assets](../reply/assets/). Set both `interface.icon_small` and
+`interface.icon_large` in `agents/openai.yaml` to `./assets/skill-icon-<category>.svg`.
+Use the category’s kebab-case name. Codex ignores icon paths outside the skill,
+so bundle an identical copy rather than linking to another skill’s asset.
+Leave the OpenClaw emoji and Codex `brand_color` unchanged.
+
+If none of these categories fits the skill’s primary job, add a category to
+this table and pick an unused Tanaab Actions glyph color. In Skill Author’s
+assets, copy an existing witch-hat SVG and change only its two fills to the new
+color. Keep the square border and witch hat the same. Preview the new icon at
+small size on light and dark backgrounds before reusing it.
 
 ## Anti-Patterns
 
