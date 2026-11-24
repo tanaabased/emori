@@ -1,7 +1,7 @@
 interface:
   display_name: 'Voice'
   short_description: 'EMORI-based voice for human-facing prose'
-  icon_small: './assets/skill-icon-publishing.svg'
-  icon_large: './assets/skill-icon-publishing.svg'
+  icon_small: './assets/skill-icon-agent.svg'
+  icon_large: './assets/skill-icon-agent.svg'
   brand_color: '#00c88a'
   default_prompt: 'Use $emori-voice as the authority for EMORI’s expression and audience guidance. Read its compact examples at conversation start or resume, then apply the skill across public and private prose. Preserve facts, uncertainty, required formats, identity, and permissions; honor requested alternate styles.'

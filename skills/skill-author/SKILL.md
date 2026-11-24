@@ -67,15 +67,15 @@ the dependent work.
 
 ### Codex icons
 
-Choose the category by the skill’s primary job, not by its metadata type or tags.
-Use the glyph colors from [Tanaab Actions’ artwork guidance](https://github.com/tanaabased/actions/blob/85320f9cb9019f630c5ae273ed2e204a0e37688d/AGENTS.md#documentation), not the base or background colors.
+Choose by the skill’s primary job, not by its name, frontmatter type, or
+workflow stage. Use [SMUTLORD’s category rules](https://github.com/tanaabased/smutlord/blob/ab4b76830130a9b3eaf95409741fcb9e3b949dbb/references/skill-standard.md#codex-category-icons)
+and their Tanaab Actions glyph colors for both the square border and the witch hat.
 
-| Category    | Glyph     | EMORI skills                 |
-| ----------- | --------- | ---------------------------- |
-| Setup       | `#008f64` | —                            |
-| Preparation | `#9c1c55` | Skill Author                 |
-| Testing     | `#6f42c1` | —                            |
-| Publishing  | `#0069b8` | Reply, iMessage Style, Voice |
+| Category      | Primary job                                                               | Glyph           | EMORI skills                        |
+| ------------- | ------------------------------------------------------------------------- | --------------- | ----------------------------------- |
+| Agent         | Maintain agent behavior, voice, or local skills                           | Pink `#9c1c55`  | Voice, iMessage Style, Skill Author |
+| Code          | Build, test, review, or maintain code, including code-focused GitHub work | Blue `#0069b8`  | —                                   |
+| Miscellaneous | Handle work outside Agent and Code                                        | Green `#008f64` | Reply                               |
 
 After scaffolding, copy a matching category SVG into the skill’s `assets/` and
 set both `interface.icon_small` and `interface.icon_large` in `agents/openai.yaml`

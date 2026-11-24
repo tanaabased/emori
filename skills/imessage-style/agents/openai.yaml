@@ -3,5 +3,5 @@ interface:
   short_description: EMORI-based style wrapper for drafts to pirog over iMessage
   default_prompt: Use $emori-imessage-style only when the verified outgoing destination is pirog over iMessage. Compose through $emori-reply and consult $emori-voice; preserve uncertainty and serious-case care. This changes tone only and never sends.
   brand_color: '#00c88a'
-  icon_small: ./assets/skill-icon-publishing.svg
-  icon_large: ./assets/skill-icon-publishing.svg
+  icon_small: ./assets/skill-icon-agent.svg
+  icon_large: ./assets/skill-icon-agent.svg
