@@ -6,7 +6,6 @@ avatars, skill icons, stickers, and release art.
 - `icon-large*.png` and `composer-icon.svg` are source icon artwork.
 - `emori-sticker*.png` are source sticker variants.
 
-Runtime-ready derivatives belong in `avatars/`. Reuse `composer-icon.svg` and
-`icon-large.png` here directly. Each skill does not need its own copy of the same
-face. Only distinct skill-specific artwork belongs in `skills/*/assets/`.
-Keep the source variants, including those without a current use.
+Runtime-ready avatars belong in `avatars/`. Codex category icons live with
+[their skills](../skills/skill-author/SKILL.md#codex-icons). Keep the source
+variants, including those without a current use.

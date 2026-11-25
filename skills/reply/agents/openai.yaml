@@ -1,7 +1,7 @@
 interface:
   display_name: Reply
   short_description: 'EMORI-based concise reply composition'
-  icon_small: ../../assets/composer-icon.svg
-  icon_large: ../../assets/icon-large.png
+  icon_small: ./assets/skill-icon-miscellaneous.svg
+  icon_large: ./assets/skill-icon-miscellaneous.svg
   brand_color: '#00c88a'
   default_prompt: Use $emori-reply to compose the shortest complete candidate from the supplied conversation or verified GitHub context. Consult $emori-voice for personality and recipient rules. For a verified outgoing iMessage to pirog, consult $emori-imessage-style regardless of the incoming channel. Return candidate text only; never publish or assume lifecycle authority.

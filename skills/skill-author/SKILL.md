@@ -61,11 +61,35 @@ the dependent work.
   EMORI-specific divergence explicit.
 - Keep OpenClaw metadata in `SKILL.md` and Codex interface metadata in
   `agents/openai.yaml`.
-- Reuse workspace icons from `assets/`; bundle copies only for standalone
-  exports. Keep distinct skill-specific artwork with its skill.
 - Keep coding-skill documentation, testing, optional deployment, and GitHub
   Actions projection aligned with the local template contract.
 - Prefer references and deterministic scripts over repeated doctrine.
+
+### Codex icons
+
+Choose by the skill’s primary job, not by its name, frontmatter type, or
+workflow stage. Use [SMUTLORD’s category rules](https://github.com/tanaabased/smutlord/blob/ab4b76830130a9b3eaf95409741fcb9e3b949dbb/references/skill-standard.md#codex-category-icons)
+and their Tanaab Actions glyph colors for both the square border and the witch hat.
+
+| Category      | Primary job                                                               | Glyph           | EMORI skills                        |
+| ------------- | ------------------------------------------------------------------------- | --------------- | ----------------------------------- |
+| Agent         | Maintain agent behavior, voice, or local skills                           | Pink `#9c1c55`  | Voice, iMessage Style, Skill Author |
+| Code          | Build, test, review, or maintain code, including code-focused GitHub work | Blue `#0069b8`  | —                                   |
+| Miscellaneous | Handle work outside Agent and Code                                        | Green `#008f64` | Reply                               |
+
+After scaffolding, copy the matching SVG into the skill’s `assets/`. Agent and
+Code are in [Skill Author assets](./assets/); Miscellaneous is in
+[Reply assets](../reply/assets/). Set both `interface.icon_small` and
+`interface.icon_large` in `agents/openai.yaml` to `./assets/skill-icon-<category>.svg`.
+Use the category’s kebab-case name. Codex ignores icon paths outside the skill,
+so bundle an identical copy rather than linking to another skill’s asset.
+Leave the OpenClaw emoji and Codex `brand_color` unchanged.
+
+If none of these categories fits the skill’s primary job, add a category to
+this table and pick an unused Tanaab Actions glyph color. In Skill Author’s
+assets, copy an existing witch-hat SVG and change only its two fills to the new
+color. Keep the square border and witch hat the same. Preview the new icon at
+small size on light and dark backgrounds before reusing it.
 
 ## Anti-Patterns
 
@@ -92,7 +116,8 @@ the dependent work.
 4. Supply a skill-specific OpenClaw emoji, review whether `Optimization`
    applies to the persistent surface, and decide whether a coding skill has one
    material deployment mechanism worth retaining.
-5. Run [`./scripts/validate-skill.js`](./scripts/validate-skill.js), fix every
+5. Choose the Codex icon using the category guidance above.
+6. Run [`./scripts/validate-skill.js`](./scripts/validate-skill.js), fix every
    error, and review warnings and manual checks explicitly.
 
 ## Optimization
