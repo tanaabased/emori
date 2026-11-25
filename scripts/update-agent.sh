@@ -29,6 +29,6 @@ step Dependencies 'Frozen dependencies installed.' bun install --frozen-lockfile
 step Install 'Configuration applied; setup skipped.' openclaw agent-system install --skip-setup
 
 maintenance_report update-agent 'UPDATE AGENT' "$result" \
-  '| Step | Status | Result |' '| --- | --- | --- |' "${rows[@]}" \
+  '| STEP | STATUS | RESULT |' '| --- | --- | --- |' "${rows[@]}" \
   '| Doctor | — Not run | Not part of this update. |' || :
 exit "$result"
